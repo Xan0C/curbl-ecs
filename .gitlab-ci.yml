@@ -1,0 +1,18 @@
+image: node:latest
+
+cache:
+  paths:
+  - node_modules/
+
+stages:
+  - build_and_test
+    
+building:
+  stage: build_and_test
+  script:
+    - npm install -g typescript
+    - npm install
+    - tsc
+    - npm test
+  only:
+    - master

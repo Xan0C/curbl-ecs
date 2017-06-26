@@ -1,0 +1,32 @@
+{
+  "name": "curbl",
+  "version": "1.0.0",
+  "description": "Small Vanilla ES6 Entity Component System",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "typings": "./lib/index.d.ts",
+  "scripts": {
+    "pretest": "tsc -p ./test",
+    "test": "mocha --recursive"
+  },
+  "keywords": [
+    "ts",
+    "typescript",
+    "ecs",
+    "entity",
+    "component",
+    "system",
+    "decorators"
+  ],
+  "author": "Sören Vullriede",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^4.0.0",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.0.2",
+    "mocha": "^3.4.2",
+    "ts-loader": "^2.1.0",
+    "typescript": "^2.2.2",
+    "webpack": "^2.6.1"
+  }
+}

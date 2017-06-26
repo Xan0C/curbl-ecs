@@ -1,0 +1,8 @@
+node_modules/
+src/
+index.html
+.gitignore
+*.iml
+.idea/
+webpack.config.js
+/dist
