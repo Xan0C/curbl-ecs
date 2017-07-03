@@ -1,11 +1,14 @@
 import {IEntity} from "./Entity";
 import {ECS} from "./ECS";
+import {Signal} from "./Signal";
 /**
  * Created by Soeren on 28.06.2017.
  */
 export interface ISystem {
     readonly entities?:Map<string,IEntity>;
     readonly componentMask?:number;
+    readonly onEntityAdded?:Signal;
+    readonly onEntityRemoved?:Signal;
     has?(entity:IEntity):boolean;
     remove?(entity:IEntity,fromECS?:boolean,destroy?:boolean):void;
     dispose?():void;
@@ -18,7 +21,8 @@ export const SYSTEM_PROTOTYPE = {
 };
 
 export const SYSTEM_PROPERTIES = {
-
+    onEntityAdded:()=>{return new Signal();},
+    onEntityRemoved:()=>{return new Signal();}
 };
 
 export const SYSTEM_PROPERTY_DECORATOR = {
@@ -34,7 +38,7 @@ export const SYSTEM_PROPERTY_DECORATOR = {
     }
 };
 
-export function injectSystem(system:IEntity){
+export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
     for(let propKey in SYSTEM_PROPERTIES){
         if(system[propKey] === undefined || system[propKey] === null){
             system[propKey] = SYSTEM_PROPERTIES[propKey]();
@@ -56,11 +60,23 @@ export function injectSystem(system:IEntity){
             }
         }
     }
+    for(let protoKey of updateMethods){
+        if(system.constructor && system.constructor.prototype){
+            if(system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null){
+                system.constructor.prototype[protoKey] = ECS.noop;
+            }
+        }else{
+            if(system[protoKey] === undefined || system[protoKey] === null){
+                system[protoKey] = ECS.noop;
+            }
+        }
+    }
 }
 
 export class System implements ISystem {
     readonly entities:Map<string,IEntity>;
     readonly componentMask:number;
+
 
     has(entity:IEntity):boolean {
         return ECS.systemHasEntity(this,entity);

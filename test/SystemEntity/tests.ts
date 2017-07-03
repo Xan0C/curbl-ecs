@@ -46,10 +46,27 @@ class PositionSystem implements ISystem {
 }
 
 @ECS.System(NameComponent)
-class NameSystem implements ISystem{}
+class NameSystem implements ISystem{
+
+
+    entities:Map<string, IEntity>;
+
+    postUpdate(){
+        for(let entity of this.entities.values()){
+            entity.get(NameComponent).name = "NAME_COMP";
+        }
+    }
+}
 
 @ECS.System(PositionComponent,NameComponent)
-class FullSystem {}
+class FullSystem {
+
+    update(entities:Map<string,IEntity>){
+        for(let entity of entities.values()){
+            entity.get(NameComponent).name = "CHANGED_NAME";
+        }
+    }
+}
 
 describe('System_Entity', function() {
     var positionSystem:ISystem;
@@ -123,6 +140,27 @@ describe('System_Entity', function() {
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(false);
             chai.expect(fullSystem.has(entity)).to.equal(false);
+        });
+    });
+
+    describe('#systemUpdateMethods',()=>{
+        it('Calls ECS update method which calls update method of all systems',()=> {
+            let entity:IEntity = new FullEntity();
+            chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
+            ECS.update();
+            chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
+        });
+    });
+
+    describe('#callSystemUpdateMethod',()=>{
+        it('Calls ECS update method which calls update method of all systems',()=> {
+            let entity:IEntity = new FullEntity();
+            ECS.systemUpdateMethods = ["update","postUpdate"];
+            chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
+            ECS.callSystemMethod("update");
+            chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
+            ECS.update();
+            chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
         });
     });
 });

@@ -42,11 +42,21 @@ PositionSystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], PositionSystem);
 let NameSystem = class NameSystem {
+    postUpdate() {
+        for (let entity of this.entities.values()) {
+            entity.get(NameComponent).name = "NAME_COMP";
+        }
+    }
 };
 NameSystem = __decorate([
     ECS_1.ECS.System(NameComponent)
 ], NameSystem);
 let FullSystem = class FullSystem {
+    update(entities) {
+        for (let entity of entities.values()) {
+            entity.get(NameComponent).name = "CHANGED_NAME";
+        }
+    }
 };
 FullSystem = __decorate([
     ECS_1.ECS.System(PositionComponent, NameComponent)
@@ -69,9 +79,6 @@ describe('System_Entity', function () {
     describe('#CreateEntities', () => {
         it('Creates PositionEntity and checks if its added to the right System', () => {
             let entity = new PositionEntity();
-            console.log(entity);
-            console.log(positionSystem);
-            console.log(ECS_1.ECS.getEntitiesForSystem(positionSystem));
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(false);
             chai.expect(fullSystem.has(entity)).to.equal(false);
@@ -87,7 +94,7 @@ describe('System_Entity', function () {
             chai.expect(nameSystem.has(entity)).to.equal(false);
         });
         it('Creates a FullEntity and checks if its added to the right Systems', () => {
-            let entity = new NameEntity();
+            let entity = new FullEntity();
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(true);
             chai.expect(fullSystem.has(entity)).to.equal(true);
@@ -98,7 +105,46 @@ describe('System_Entity', function () {
         });
     });
     describe('#addComponent', () => {
-        it('Adds a NameComponent to the PositonEntity and checks if its added to the right Systems', () => {
+        it('Adds a NameComponent to the PositionEntity and checks if its added to the right Systems', () => {
+            let entity = new PositionEntity();
+            chai.expect(positionSystem.has(entity)).to.equal(true);
+            chai.expect(nameSystem.has(entity)).to.equal(false);
+            chai.expect(fullSystem.has(entity)).to.equal(false);
+            entity.add(new NameComponent());
+            chai.expect(positionSystem.has(entity)).to.equal(true);
+            chai.expect(nameSystem.has(entity)).to.equal(true);
+            chai.expect(fullSystem.has(entity)).to.equal(true);
+        });
+    });
+    describe('#removeComponent', () => {
+        it('Removes a NameComponent from the FullEntity and checks if its removed from the Systems', () => {
+            let entity = new FullEntity();
+            chai.expect(positionSystem.has(entity)).to.equal(true);
+            chai.expect(nameSystem.has(entity)).to.equal(true);
+            chai.expect(fullSystem.has(entity)).to.equal(true);
+            entity.remove(NameComponent);
+            chai.expect(positionSystem.has(entity)).to.equal(true);
+            chai.expect(nameSystem.has(entity)).to.equal(false);
+            chai.expect(fullSystem.has(entity)).to.equal(false);
+        });
+    });
+    describe('#systemUpdateMethods', () => {
+        it('Calls ECS update method which calls update method of all systems', () => {
+            let entity = new FullEntity();
+            chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
+            ECS_1.ECS.update();
+            chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
+        });
+    });
+    describe('#callSystemUpdateMethod', () => {
+        it('Calls ECS update method which calls update method of all systems', () => {
+            let entity = new FullEntity();
+            ECS_1.ECS.systemUpdateMethods = ["update", "postUpdate"];
+            chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
+            ECS_1.ECS.callSystemMethod("update");
+            chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
+            ECS_1.ECS.update();
+            chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
         });
     });
 });

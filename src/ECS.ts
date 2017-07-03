@@ -60,6 +60,8 @@ export class ECS {
         return ECS._instance = new ECS();
     }
 
+    static noop(){}
+
     static createEntity():IEntity{
         let entity = ECS.instance.ecm.pool.pop(Entity);
         if(!entity){
@@ -145,6 +147,14 @@ export class ECS {
         return ECS.instance.scm.get(constructor);
     }
 
+    static update():void{
+        ECS.instance.scm.update();
+    }
+
+    static callSystemMethod(func:string):void{
+        ECS.instance.scm.callSystemMethod(func);
+    }
+
     private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
         let comps = Object.create(null);
         for(let dec of components){
@@ -159,7 +169,7 @@ export class ECS {
             let DecoratorSystem:any = function(...args){
                 let system = wrapper.apply(this,args);
                 Object.setPrototypeOf(system,Object.getPrototypeOf(this));
-                injectSystem(system);
+                injectSystem(system,ECS.instance.scm.systemUpdateMethods);
                 ECS.instance.scm.add(system,components);
                 return system;
             };
@@ -251,5 +261,13 @@ export class ECS {
 
     static get onEntityRemovedFromSystem():Signal{
         return ECS.instance.scm.onEntityRemovedFromSystem;
+    }
+
+    static get systemUpdateMethods():Array<string>{
+        return ECS.instance.scm.systemUpdateMethods;
+    }
+
+    static set systemUpdateMethods(value:Array<string>){
+        ECS.instance.scm.systemUpdateMethods = value;
     }
 }

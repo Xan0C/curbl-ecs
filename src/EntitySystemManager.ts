@@ -1,4 +1,4 @@
-import {ISystem} from "./System";
+import {injectSystem, ISystem} from "./System";
 import {IEntity} from "./Entity";
 import {ComponentBitmaskMap} from "./Component";
 import {Signal} from "./Signal";
@@ -11,9 +11,12 @@ export interface IEntitySystemManager {
     readonly onSystemRemoved:Signal;
     readonly onEntityAddedToSystem:Signal;
     readonly onEntityRemovedFromSystem:Signal;
+    systemUpdateMethods:Array<string>;
     add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>):void;
     has(system:ISystem):boolean;
     remove(system:ISystem):boolean;
+    callSystemMethod(func:string);
+    update():void;
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
     removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
     get<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T;
@@ -36,12 +39,14 @@ export class EntitySystemManager implements IEntitySystemManager {
     private systems:Map<string,ISystem>;
     private systemEntityMap:WeakMap<ISystem,Map<string,IEntity>>;
     private systemComponentMask:WeakMap<ISystem,number>;
+    private _systemUpdateMethods:Array<string>;
 
     constructor(componentBitmaskMap:ComponentBitmaskMap){
         this._onSystemAdded = new Signal();
         this._onSystemRemoved = new Signal();
         this._onEntityAddedToSystem = new Signal();
         this._onEntityRemovedFromSystem = new Signal();
+        this._systemUpdateMethods = ["update"];
         this.componentBitmask = componentBitmaskMap;
         this.systems = new Map<string,ISystem>();
         this.systemEntityMap = new WeakMap<ISystem,Map<string,IEntity>>();
@@ -51,6 +56,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     /**
      * Add system and the componentmask used for it into the ECS
      * @param system
+     * @param silent
      * @param componentMask
      */
     add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>,silent:boolean=false):void{
@@ -175,11 +181,13 @@ export class EntitySystemManager implements IEntitySystemManager {
         if(system){
             if( (entity.componentMask & system.componentMask) === system.componentMask){
                 this.systemEntityMap.get(system).set(entity.id,entity);
+                system.onEntityAdded.dispatch(entity);
             }
         }else{
             for(let system of this.systems.values()){
                 if((entity.componentMask & system.componentMask) === system.componentMask){
                     this.systemEntityMap.get(system).set(entity.id,entity);
+                    system.onEntityAdded.dispatch(entity);
                 }
             }
         }
@@ -203,9 +211,11 @@ export class EntitySystemManager implements IEntitySystemManager {
     removeEntity(entity:IEntity,system?:ISystem,silent:boolean=false):void{
         if(system){
             this.systemEntityMap.get(system).delete(entity.id);
+            system.onEntityRemoved.dispatch(entity);
         }else{
             for(let system of this.systems.values()){
                 this.systemEntityMap.get(system).delete(entity.id);
+                system.onEntityRemoved.dispatch(entity);
             }
         }
         if(!silent){
@@ -240,6 +250,20 @@ export class EntitySystemManager implements IEntitySystemManager {
         }
     }
 
+    callSystemMethod(func:string) {
+        for(let system of this.systems.values()){
+            system[func](this.getEntities(system));
+        }
+    }
+
+    update():void {
+        for(let func of this.systemUpdateMethods) {
+            for (let system of this.systems.values()) {
+                system[func](this.getEntities(system));
+            }
+        }
+    }
+
     public get onSystemAdded():Signal {
         return this._onSystemAdded;
     }
@@ -254,5 +278,16 @@ export class EntitySystemManager implements IEntitySystemManager {
 
     public get onEntityRemovedFromSystem():Signal {
         return this._onEntityRemovedFromSystem;
+    }
+
+    public get systemUpdateMethods():Array<string> {
+        return this._systemUpdateMethods;
+    }
+
+    public set systemUpdateMethods(value:Array<string>) {
+        this._systemUpdateMethods = value;
+        for(let system of this.systems.values()){
+            injectSystem(system,this.systemUpdateMethods);
+        }
     }
 }
