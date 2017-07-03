@@ -29,10 +29,23 @@ const ENTITY_PROTOTYPE = {
     dispose:()=>{return Entity.prototype.dispose;}
 };
 
+export const ENTITY_PROPERTY_DECORATOR = {
+    componentMask:(obj)=>{
+        Object.defineProperty(obj,"componentMask",{
+            get: function(){return ECS.getEntityComponentMask(this);}
+        });
+    }
+};
+
 export function injectEntity(entity:IEntity){
     for(let propKey in ENTITY_PROPERTIES){
         if(entity[propKey] === undefined || entity[propKey] === null){
             entity[propKey] = ENTITY_PROPERTIES[propKey]();
+        }
+    }
+    for(let propKey in ENTITY_PROPERTY_DECORATOR){
+        if(entity[propKey] === undefined || entity[propKey] === null){
+            ENTITY_PROPERTY_DECORATOR[propKey](entity);
         }
     }
     for(let protoKey in ENTITY_PROTOTYPE){

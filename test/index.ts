@@ -1,8 +1,8 @@
-import * as MetaDecoratorTest from "./MetaDecorator/tests";
 import * as EntityTest from "./Entity/tests";
+import * as SystemTest from "./System/tests";
+import * as SystemEntityTest from "./SystemEntity/tests";
 
 
-
-
-MetaDecoratorTest['ENSURE_IMPORT'] = true;
 EntityTest['ENSURE_IMPORT'] = true;
+SystemTest['ENSURE_IMPORT'] = true;
+SystemEntityTest['ENSURE_IMPORT'] = true;

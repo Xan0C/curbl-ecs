@@ -1,7 +1,6 @@
 import * as chai from "chai";
 import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
-import getOwnPropertyDescriptor = Reflect.getOwnPropertyDescriptor;
 import {ISystem} from "../../lib/System";
 /**
  * Created by Soeren on 29.06.2017.
@@ -31,7 +30,7 @@ class System implements ISystem {
     }
 }
 
-describe('EntityDecorator', function() {
+describe('SystemDecorator', function() {
     var system:ISystem;
     this.timeout(0);
 
@@ -45,14 +44,14 @@ describe('EntityDecorator', function() {
 
     describe('#entities', () => {
         it('Checks that a entities property descriptor got created', () => {
-
-
+            chai.expect(system.entities).to.not.equal(undefined);
         });
     });
 
     describe('#componentMask', ()=> {
         it('Checks that the componentMask properties descriptor got created for the system',()=> {
-
+            chai.expect(system.componentMask).to.equal(ECS.getSystemComponentMask(system));
+            chai.expect(system.componentMask).to.not.equal(0);
         });
     });
 
@@ -70,7 +69,21 @@ describe('EntityDecorator', function() {
 
     describe('#dispose',()=>{
         it('Disposed the System and removes it from the ECS',()=>{
-
+            chai.expect(ECS.hasSystem(system)).to.equal(true);
+            system.dispose();
+            chai.expect(ECS.hasSystem(system)).to.equal(false);
         });
     })
+});
+
+describe('ECS_System_Functions', function() {
+
+    this.timeout(0);
+
+    beforeEach(() => {
+
+    });
+
+    afterEach(() => {
+    });
 });

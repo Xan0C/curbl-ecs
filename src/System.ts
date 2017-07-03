@@ -34,25 +34,25 @@ export const SYSTEM_PROPERTY_DECORATOR = {
     }
 };
 
-export function injectSystem(entity:IEntity){
+export function injectSystem(system:IEntity){
     for(let propKey in SYSTEM_PROPERTIES){
-        if(entity[propKey] === undefined || entity[propKey] === null){
-            entity[propKey] = SYSTEM_PROPERTIES[propKey]();
+        if(system[propKey] === undefined || system[propKey] === null){
+            system[propKey] = SYSTEM_PROPERTIES[propKey]();
         }
     }
     for(let propKey in SYSTEM_PROPERTY_DECORATOR){
-        if(entity[propKey] === undefined || entity[propKey] === null){
-            SYSTEM_PROPERTY_DECORATOR[propKey](entity);
+        if(system[propKey] === undefined || system[propKey] === null){
+            SYSTEM_PROPERTY_DECORATOR[propKey](system);
         }
     }
     for(let protoKey in SYSTEM_PROTOTYPE){
-        if(entity.constructor && entity.constructor.prototype){
-            if(entity.constructor.prototype[protoKey] === undefined || entity.constructor.prototype[protoKey] === null){
-                entity.constructor.prototype[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
+        if(system.constructor && system.constructor.prototype){
+            if(system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null){
+                system.constructor.prototype[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
             }
         }else{
-            if(entity[protoKey] === undefined || entity[protoKey] === null){
-                entity[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
+            if(system[protoKey] === undefined || system[protoKey] === null){
+                system[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
             }
         }
     }

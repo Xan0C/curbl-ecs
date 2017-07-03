@@ -79,9 +79,9 @@ describe('EntityDecorator', function () {
     });
     describe('#dispose', () => {
         it('Disposed the Entity and removes it from the ECS', () => {
-            chai.expect(ECS_1.ECS["instance"].ecm.entities.has(entity)).to.equal(true);
+            chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(true);
             entity.dispose(true);
-            chai.expect(ECS_1.ECS["instance"].ecm.entities.has(entity)).to.equal(false);
+            chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(false);
         });
     });
 });

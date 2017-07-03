@@ -3,6 +3,7 @@ import {EntityComponentManager, IEntityComponentManager} from "./EntityComponent
 import {ComponentBitmaskMap, IComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
 import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
+import {Signal} from "./Signal";
 /**
  * Created by Soeren on 29.06.2017.
  */
@@ -18,6 +19,38 @@ export class ECS {
         this.componentBitmaskMap = new ComponentBitmaskMap();
         this.ecm = new EntityComponentManager(this.componentBitmaskMap);
         this.scm = new EntitySystemManager(this.componentBitmaskMap);
+        this.registerEvents();
+    }
+
+    private registerEvents(){
+        this.ecm.onEntityAdded.add("onEntityAdded",this);
+        this.ecm.onEntityRemoved.add("onEntityRemoved",this);
+        this.ecm.onComponentAdded.add("onComponentAdded",this);
+        this.ecm.onComponentRemoved.add("onComponentRemoved",this);
+
+        this.scm.onSystemAdded.add("onSystemAdded",this);
+    }
+
+    private onEntityAdded(entity:IEntity){
+        ECS.instance.scm.updateEntity(entity);
+    }
+
+    private onEntityRemoved(entity:IEntity){
+        ECS.instance.scm.updateEntity(entity);
+    }
+
+    private onComponentAdded(entity:IEntity,component:IComponent){
+        ECS.instance.scm.updateEntity(entity);
+    }
+
+    private onComponentRemoved(entity:IEntity,component:IComponent){
+        ECS.instance.scm.updateEntity(entity);
+    }
+
+    private onSystemAdded(system:ISystem){
+        for(let entity of ECS.instance.ecm.entities.values()){
+            ECS.instance.scm.updateEntity(entity,system);
+        }
     }
 
     private static get instance():ECS{
@@ -42,6 +75,10 @@ export class ECS {
 
     static removeEntity(entity:IEntity,destroy?:boolean):boolean{
         return ECS.instance.ecm.removeEntity(entity,destroy);
+    }
+
+    static hasEntity(entity:IEntity):boolean{
+        return ECS.instance.ecm.hasEntity(entity);
     }
 
     static getComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):T{
@@ -72,12 +109,24 @@ export class ECS {
         return ECS.instance.scm.has(system);
     }
 
+    static hasSystemOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean{
+        return ECS.instance.scm.hasOf(constructor);
+    }
+
     static removeSystem(system:ISystem):boolean{
         return ECS.instance.scm.remove(system);
     }
 
+    static removeSystemOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean{
+        return ECS.instance.scm.removeOf(constructor);
+    }
+
     static getSystemComponentMask(system:ISystem):number{
         return ECS.instance.scm.getComponentMask(system);
+    }
+
+    static getSystemComponentMaskOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):number{
+        return ECS.instance.scm.getComponentMaskOf(constructor);
     }
 
     static removeEntityFromSystem(entity:IEntity,system?:ISystem):void{
@@ -160,6 +209,7 @@ export class ECS {
                 injectEntity(entity);
             }
             ECS.instance.ecm.addEntity(entity,ECS.createComponentsFromDecorator(components));
+            target[propKey] = entity;
         }
     }
 
@@ -169,5 +219,37 @@ export class ECS {
 
     static set uuid(value:()=>string){
         ECS.instance.ecm.uuid = value;
+    }
+
+    static get onEntityAdded():Signal{
+        return ECS.instance.ecm.onEntityAdded;
+    }
+
+    static get onEntityRemoved():Signal{
+        return ECS.instance.ecm.onEntityRemoved;
+    }
+
+    static get onComponentAdded():Signal{
+        return ECS.instance.ecm.onComponentAdded;
+    }
+
+    static get onComponentRemoved():Signal{
+        return ECS.instance.ecm.onComponentRemoved;
+    }
+
+    static get onSystemAdded():Signal{
+        return ECS.instance.scm.onSystemAdded;
+    }
+
+    static get onSystemRemoved():Signal{
+        return ECS.instance.scm.onSystemRemoved;
+    }
+
+    static get onEntityAddedToSystem():Signal{
+        return ECS.instance.scm.onEntityAddedToSystem;
+    }
+
+    static get onEntityRemovedFromSystem():Signal{
+        return ECS.instance.scm.onEntityRemovedFromSystem;
     }
 }
