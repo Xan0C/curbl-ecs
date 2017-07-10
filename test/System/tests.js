@@ -31,7 +31,7 @@ describe('SystemDecorator', function () {
     var system;
     this.timeout(0);
     beforeEach(() => {
-        system = new System({ x: 42, y: 12 });
+        system = ECS_1.ECS.addSystem(new System({ x: 42, y: 12 }));
     });
     afterEach(() => {
         system.dispose();
@@ -61,12 +61,5 @@ describe('SystemDecorator', function () {
             system.dispose();
             chai.expect(ECS_1.ECS.hasSystem(system)).to.equal(false);
         });
-    });
-});
-describe('ECS_System_Functions', function () {
-    this.timeout(0);
-    beforeEach(() => {
-    });
-    afterEach(() => {
     });
 });

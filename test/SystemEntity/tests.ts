@@ -48,7 +48,6 @@ class PositionSystem implements ISystem {
 @ECS.System(NameComponent)
 class NameSystem implements ISystem{
 
-
     entities:Map<string, IEntity>;
 
     postUpdate(){
@@ -59,7 +58,7 @@ class NameSystem implements ISystem{
 }
 
 @ECS.System(PositionComponent,NameComponent)
-class FullSystem {
+class FullSystem implements ISystem {
 
     update(entities:Map<string,IEntity>){
         for(let entity of entities.values()){
@@ -75,9 +74,9 @@ describe('System_Entity', function() {
     this.timeout(0);
 
     beforeEach(() => {
-        positionSystem = new PositionSystem();
-        nameSystem = new NameSystem();
-        fullSystem = new FullSystem();
+        positionSystem = ECS.addSystem(new PositionSystem());
+        nameSystem = ECS.addSystem(new NameSystem());
+        fullSystem = ECS.addSystem(new FullSystem());
     });
 
     afterEach(() => {
@@ -88,7 +87,7 @@ describe('System_Entity', function() {
 
     describe('#CreateEntities', () => {
         it('Creates PositionEntity and checks if its added to the right System', () => {
-            let entity:IEntity = new PositionEntity();
+            let entity:IEntity = ECS.addEntity(new PositionEntity());
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(false);
             chai.expect(fullSystem.has(entity)).to.equal(false);
@@ -97,7 +96,7 @@ describe('System_Entity', function() {
         });
 
         it('Creates a NameEntity and checks if its added to the right System',()=>{
-           let entity:IEntity = new NameEntity();
+           let entity:IEntity = ECS.addEntity(new NameEntity());
             chai.expect(positionSystem.has(entity)).to.equal(false);
             chai.expect(nameSystem.has(entity)).to.equal(true);
             chai.expect(fullSystem.has(entity)).to.equal(false);
@@ -106,7 +105,7 @@ describe('System_Entity', function() {
         });
 
         it('Creates a FullEntity and checks if its added to the right Systems',()=>{
-            let entity:IEntity = new FullEntity();
+            let entity:IEntity = ECS.addEntity(new FullEntity());
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(true);
             chai.expect(fullSystem.has(entity)).to.equal(true);
@@ -119,7 +118,7 @@ describe('System_Entity', function() {
 
     describe('#addComponent', ()=> {
         it('Adds a NameComponent to the PositionEntity and checks if its added to the right Systems',()=> {
-            let entity:IEntity = new PositionEntity();
+            let entity:IEntity = ECS.addEntity(new PositionEntity());
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(false);
             chai.expect(fullSystem.has(entity)).to.equal(false);
@@ -132,7 +131,7 @@ describe('System_Entity', function() {
 
     describe('#removeComponent', ()=> {
         it('Removes a NameComponent from the FullEntity and checks if its removed from the Systems',()=> {
-            let entity:IEntity = new FullEntity();
+            let entity:IEntity = ECS.addEntity(new FullEntity());
             chai.expect(positionSystem.has(entity)).to.equal(true);
             chai.expect(nameSystem.has(entity)).to.equal(true);
             chai.expect(fullSystem.has(entity)).to.equal(true);
@@ -145,7 +144,7 @@ describe('System_Entity', function() {
 
     describe('#systemUpdateMethods',()=>{
         it('Calls ECS update method which calls update method of all systems',()=> {
-            let entity:IEntity = new FullEntity();
+            let entity:IEntity = ECS.addEntity(new FullEntity());
             chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
             ECS.update();
             chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
@@ -154,7 +153,7 @@ describe('System_Entity', function() {
 
     describe('#callSystemUpdateMethod',()=>{
         it('Calls ECS update method which calls update method of all systems',()=> {
-            let entity:IEntity = new FullEntity();
+            let entity:IEntity = ECS.addEntity(new FullEntity());
             ECS.systemUpdateMethods = ["update","postUpdate"];
             chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
             ECS.callSystemMethod("update");

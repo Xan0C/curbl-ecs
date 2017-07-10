@@ -45,7 +45,7 @@ describe('EntityDecorator', function() {
     this.timeout(0);
 
     beforeEach(() => {
-        entity = new Entity({x:42,y:12});
+        entity = ECS.addEntity(new Entity({x:42,y:12}));
     });
 
     afterEach(() => {

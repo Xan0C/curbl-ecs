@@ -63,9 +63,10 @@ export function injectEntity(entity:IEntity){
 
 export class Entity implements IEntity{
 
-    readonly componentMask:number;
+    readonly id:string;
 
     constructor(){
+        this.id = ENTITY_PROPERTIES.id();
     }
 
     get<T extends IComponent>(component:{ new(...args):T }):T {
@@ -86,5 +87,9 @@ export class Entity implements IEntity{
 
     dispose(destroy?:boolean):boolean{
         return ECS.removeEntity(this,destroy)
+    }
+
+    get componentMask():number{
+        return ECS.getEntityComponentMask(this);
     }
 }

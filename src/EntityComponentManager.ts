@@ -1,6 +1,6 @@
 import {ComponentBitmaskMap, IComponent} from "./Component";
 import {DynamicObjectPool} from "./ObjectPool";
-import {IEntity} from "./Entity";
+import {Entity, IEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
 import {Signal} from "./Signal";
 
@@ -12,7 +12,8 @@ export interface IEntityComponentManager {
     readonly onComponentRemoved:Signal;
     readonly entities:Map<string,IEntity>;
     uuid:()=>string;
-    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent?:boolean):void;
+    createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
+    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent?:boolean):IEntity;
     removeEntity(entity:IEntity,destroy?:boolean,silent?:boolean):boolean;
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
@@ -48,12 +49,36 @@ export class EntityComponentManager implements IEntityComponentManager {
     }
 
     /**
+     * Creates an Entity, adds it to the EntityComponentMap but not to the active entities or actual ECS,
+     * so if the entity is deleted/gc it will be removed from the WeakMap
      * @param entity
      * @param components
      */
-    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent:boolean=false):void{
-        this._entities.set(entity.id,entity);
+    createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity{
+        if(!entity){
+            entity = this.pool.pop(Entity);
+            if(!entity){
+                entity = new Entity();
+            }
+        }
         this.entityComponentMap.set(entity,components||Object.create(null));
+        this.componentMask.set(entity,0);
+        for(let key in this.entityComponentMap.get(entity)){
+            this.componentMask.set(entity,this.componentMask.get(entity)|this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
+        }
+        return entity;
+    }
+
+    /**
+     * Adds the Entity with the provided Components(or existing ones) to the ECS,
+     * @param entity - Entity to add to the ECS
+     * @param components - Components for the entity, if provided this will override the current components of the entity if any
+     * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
+     */
+    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent:boolean=false):IEntity{
+        this._entities.set(entity.id,entity);
+        let entityComponents = this.entityComponentMap.get(entity);
+        this.entityComponentMap.set(entity, components || entityComponents || Object.create(null));
         this.componentMask.set(entity,0);
         for(let key in this.entityComponentMap.get(entity)){
             this.componentMask.set(entity,this.componentMask.get(entity)|this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
@@ -61,13 +86,14 @@ export class EntityComponentManager implements IEntityComponentManager {
         if(!silent) {
             this._onEntityAdded.dispatch(entity);
         }
+        return entity;
     }
 
     /**
      *
-     * @param entity
-     * @param destroy
-     * @param silent
+     * @param entity - Entity to remove
+     * @param destroy - if true the Entity will be destroyed instead of pooled
+     * @param silent - Dispatch onEntityRemoved Signal(Removing the Entity from the Systems)
      * @returns {boolean}
      */
     removeEntity(entity:IEntity,destroy?:boolean,silent:boolean=false):boolean{
@@ -82,7 +108,7 @@ export class EntityComponentManager implements IEntityComponentManager {
             }
             this.componentMask.delete(entity);
             this.entityComponentMap.delete(entity);
-            if(!silent) {
+            if(!silent && this.entities.has(entity.id)) {
                 this._onEntityRemoved.dispatch(entity);
             }
             return this._entities.delete(entity.id);
@@ -90,30 +116,37 @@ export class EntityComponentManager implements IEntityComponentManager {
         return false;
     }
 
+    /**
+     * Returns true if the entity is in the ECS
+     * @param entity
+     * @returns {boolean}
+     */
     hasEntity(entity:IEntity):boolean{
         return this._entities.has(entity.id);
     }
 
     /**
-     * @param entity
-     * @param component
-     * @param silent
+     * Adds a component to the Entity
+     * @param entity - Entity
+     * @param component - Component to add
+     * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
      */
     addComponent(entity:IEntity,component:IComponent,silent:boolean=false):void{
         if(this.entityComponentMap.has(entity)) {
             this.entityComponentMap.get(entity)[component.constructor.name] = component;
             this.componentMask.set(entity,this.componentMask.get(entity) | this.componentBitmask.get(component.constructor.name));
-            if(!silent) {
+            if(!silent && this.entities.has(entity.id)) {
                 this._onComponentAdded.dispatch(entity, component);
             }
         }
     }
 
     /**
-     * @param entity
-     * @param component
-     * @param destroy
-     * @param silent
+     * Removes a component from the Entity
+     * @param entity - Entity
+     * @param component - Component type to remove
+     * @param destroy - If true the component is destroyed otherwise its added to the ObjectPool
+     * @param silent - If true the onComponentRemoved signal is not dispatched and no system will be updated
      * @returns {boolean}
      */
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy:boolean=false,silent:boolean=false):boolean{
@@ -124,7 +157,7 @@ export class EntityComponentManager implements IEntityComponentManager {
                     this._pool.push(comp);
                 }
                 this.componentMask.set(entity,this.componentMask.get(entity) ^ this.componentBitmask.get(component));
-                if(!silent) {
+                if(!silent && this.entities.has(entity.id)) {
                     this._onComponentRemoved.dispatch(entity, comp);
                 }
                 return delete this.entityComponentMap.get(entity)[component.prototype.constructor.name];

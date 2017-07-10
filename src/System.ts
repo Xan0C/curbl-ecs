@@ -9,12 +9,14 @@ export interface ISystem {
     readonly componentMask?:number;
     readonly onEntityAdded?:Signal;
     readonly onEntityRemoved?:Signal;
+    init?():void;
     has?(entity:IEntity):boolean;
     remove?(entity:IEntity,fromECS?:boolean,destroy?:boolean):void;
     dispose?():void;
 }
 
 export const SYSTEM_PROTOTYPE = {
+    init:()=>{return ECS.noop;},
     has:()=>{return System.prototype.has;},
     remove:()=>{return System.prototype.remove;},
     dispose:()=>{return System.prototype.dispose}
@@ -74,9 +76,13 @@ export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
 }
 
 export class System implements ISystem {
-    readonly entities:Map<string,IEntity>;
-    readonly componentMask:number;
+    readonly onEntityAdded:Signal;
+    readonly onEntityRemoved:Signal;
 
+    constructor(){
+        this.onEntityAdded = SYSTEM_PROPERTIES.onEntityAdded();
+        this.onEntityRemoved = SYSTEM_PROPERTIES.onEntityRemoved();
+    }
 
     has(entity:IEntity):boolean {
         return ECS.systemHasEntity(this,entity);
@@ -91,5 +97,13 @@ export class System implements ISystem {
 
     dispose() {
         ECS.removeSystem(this);
+    }
+
+    get entities():Map<string,IEntity>{
+        return ECS.getEntitiesForSystem(this);
+    }
+
+    get componentMask():number{
+        return ECS.getSystemComponentMask(this);
     }
 }

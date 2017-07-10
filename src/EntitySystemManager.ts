@@ -2,30 +2,31 @@ import {injectSystem, ISystem} from "./System";
 import {IEntity} from "./Entity";
 import {ComponentBitmaskMap} from "./Component";
 import {Signal} from "./Signal";
+
 /**
  * Created by Soeren on 28.06.2017.
  */
-
 export interface IEntitySystemManager {
     readonly onSystemAdded:Signal;
     readonly onSystemRemoved:Signal;
     readonly onEntityAddedToSystem:Signal;
     readonly onEntityRemovedFromSystem:Signal;
     systemUpdateMethods:Array<string>;
-    add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>):void;
+    create(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem;
+    add(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):ISystem;
     has(system:ISystem):boolean;
-    remove(system:ISystem):boolean;
+    remove(system:ISystem,silent?:boolean):boolean;
     callSystemMethod(func:string);
     update():void;
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
-    removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
+    removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T},silent?:boolean):boolean;
     get<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T;
     getEntities(system:ISystem):Map<string,IEntity>;
     getEntitiesOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,IEntity>;
     getComponentMask(system:ISystem):number;
     getComponentMaskOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):number;
-    addEntity(entity:IEntity,system?:ISystem):void;
-    removeEntity(entity:IEntity,system?:ISystem):void;
+    addEntity(entity:IEntity,system?:ISystem,silent?:boolean):void;
+    removeEntity(entity:IEntity,system?:ISystem,silent?:boolean):void;
     hasEntity(entity:IEntity,system:ISystem):boolean;
     updateEntity(entity:IEntity,system?:ISystem):void;
 }
@@ -54,25 +55,48 @@ export class EntitySystemManager implements IEntitySystemManager {
     }
 
     /**
-     * Add system and the componentmask used for it into the ECS
+     * Creates the System but wont add it to the ECS
      * @param system
-     * @param silent
      * @param componentMask
      */
-    add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>,silent:boolean=false):void{
-        if(!this.systems.has(system.constructor.name)) {
-            this.systems.set(system.constructor.name,system);
+    create(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[]):ISystem{
+        if(!this.systemEntityMap.has(system)){
             this.systemEntityMap.set(system, new Map<string, IEntity>());
             this.systemComponentMask.set(system,0);
             for(let component of componentMask){
                 this.systemComponentMask.set(system,this.systemComponentMask.get(system) | this.componentBitmask.get(component));
             }
+        }
+        return system;
+    }
+
+    /**
+     * Add the system to the ECS so its methods will be called by the update methods
+     * Before the existing entities get added into the system the init method is called
+     * @param system
+     * @param silent
+     * @param componentMask
+     */
+    add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):ISystem{
+        if(!this.systems.has(system.constructor.name)) {
+            this.systems.set(system.constructor.name,system);
+            this.systemEntityMap.set(system, new Map<string, IEntity>());
+            if(componentMask.length > 0) {
+                this.systemComponentMask.set(system,0);
+                for(let component of componentMask){
+                    this.systemComponentMask.set(system,this.systemComponentMask.get(system) | this.componentBitmask.get(component));
+                }
+            }else{
+                this.systemComponentMask.set(system, this.systemComponentMask.get(system) || 0);
+            }
+            system.init();
             if(!silent){
                 this._onSystemAdded.dispatch(system);
             }
         }else{
-            console.warn('System of this type already exists and needs to be removed before adding it again!');
+            console.warn('System '+system+' with same type already exists! And can only exists ones');
         }
+        return system;
     }
 /*
     addComponentInterest(system:ISystem,component:{new(config?:{[x:string]:any})}):void{
@@ -94,7 +118,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @returns {boolean}
      */
     has(system:ISystem):boolean{
-        return this.systemEntityMap.has(system);
+        return this.systems.has(system.constructor.name) && this.systemEntityMap.has(system);
     }
 
     /**
@@ -191,7 +215,7 @@ export class EntitySystemManager implements IEntitySystemManager {
                 }
             }
         }
-        if(!silent){
+        if(!silent && (!system || this.has(system)) ){
             this._onEntityAddedToSystem.dispatch(entity,system);
         }
     }
@@ -218,7 +242,7 @@ export class EntitySystemManager implements IEntitySystemManager {
                 system.onEntityRemoved.dispatch(entity);
             }
         }
-        if(!silent){
+        if(!silent && (!system || this.has(system)) ){
             this._onEntityRemovedFromSystem.dispatch(entity,system);
         }
     }

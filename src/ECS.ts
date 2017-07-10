@@ -62,17 +62,13 @@ export class ECS {
 
     static noop(){}
 
-    static createEntity():IEntity{
-        let entity = ECS.instance.ecm.pool.pop(Entity);
-        if(!entity){
-            entity = new Entity();
-        }
-        return entity;
+    static createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity{
+        return ECS.instance.ecm.createEntity(entity,components);
     }
 
-    static addEntity(entity:IEntity,components?:{[x:string]:IComponent}):void{
+    static addEntity(entity:IEntity,components?:{[x:string]:IComponent}):IEntity{
         injectEntity(entity);
-        ECS.instance.ecm.addEntity(entity,components);
+        return ECS.instance.ecm.addEntity(entity,components);
     }
 
     static removeEntity(entity:IEntity,destroy?:boolean):boolean{
@@ -103,8 +99,8 @@ export class ECS {
         return ECS.instance.ecm.getMask(entity);
     }
 
-    static addSystem(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>):void{
-        ECS.instance.scm.add(system,componentMask);
+    static addSystem(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem{
+        return ECS.instance.scm.add(system,componentMask);
     }
 
     static hasSystem(system:ISystem):boolean{
@@ -163,6 +159,24 @@ export class ECS {
         return comps;
     }
 
+    static Component():(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
+        return function(constructor:{new(...args):ISystem}){
+            var wrapper = function (args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            let DecoratorSystem:any = function(...args){
+                let component = ECS.instance.ecm.pool.pop(constructor);
+                if(!component) {
+                    component = wrapper.apply(this, args);
+                    Object.setPrototypeOf(component, Object.getPrototypeOf(this));
+                }else{
+                    component = wrapper.apply(component,args);
+                }
+                return component;
+            };
+            DecoratorSystem.prototype = constructor.prototype;
+            return DecoratorSystem;
+        }
+    }
+
     static System(...components:{new(config?:{[x:string]:any}):any}[]):(constructor:{ new(config?:{[x:string]:any}):ISystem }) => any{
         return function(constructor:{new(...args):ISystem}){
             var wrapper = function (args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
@@ -170,7 +184,7 @@ export class ECS {
                 let system = wrapper.apply(this,args);
                 Object.setPrototypeOf(system,Object.getPrototypeOf(this));
                 injectSystem(system,ECS.instance.scm.systemUpdateMethods);
-                ECS.instance.scm.add(system,components);
+                ECS.instance.scm.create(system,components);
                 return system;
             };
             DecoratorSystem.prototype = constructor.prototype;
@@ -203,7 +217,7 @@ export class ECS {
                     Object.setPrototypeOf(entity,Object.getPrototypeOf(this));
                     injectEntity(entity);
                 }
-                ECS.instance.ecm.addEntity(entity,ECS.createComponentsFromDecorator(components));
+                ECS.instance.ecm.createEntity(entity,ECS.createComponentsFromDecorator(components));
                 return entity;
             };
             DecoratorEntity.prototype = constructor.prototype;
@@ -218,7 +232,7 @@ export class ECS {
                 entity = new Entity();
                 injectEntity(entity);
             }
-            ECS.instance.ecm.addEntity(entity,ECS.createComponentsFromDecorator(components));
+            ECS.instance.ecm.createEntity(entity,ECS.createComponentsFromDecorator(components));
             target[propKey] = entity;
         }
     }
