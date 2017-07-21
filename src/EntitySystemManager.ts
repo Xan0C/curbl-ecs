@@ -13,13 +13,16 @@ export interface IEntitySystemManager {
     readonly onEntityRemovedFromSystem:Signal;
     systemUpdateMethods:Array<string>;
     create(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem;
-    add(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):ISystem;
+    add<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):T;
+    addSubsystem<T extends ISystem>(system:ISystem,subsystem:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):T;
     has(system:ISystem):boolean;
     remove(system:ISystem,silent?:boolean):boolean;
     callSystemMethod(func:string);
     update():void;
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
     removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T},silent?:boolean):boolean;
+    getSubsystemsOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,ISystem>;
+    getSubsystems(system:ISystem):Map<string,ISystem>;
     get<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T;
     getEntities(system:ISystem):Map<string,IEntity>;
     getEntitiesOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,IEntity>;
@@ -38,6 +41,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     private _onEntityAddedToSystem:Signal;
     private _onEntityRemovedFromSystem:Signal;
     private systems:Map<string,ISystem>;
+    private systemGroups:WeakMap<ISystem,Map<string,ISystem>>;
     private systemEntityMap:WeakMap<ISystem,Map<string,IEntity>>;
     private systemComponentMask:WeakMap<ISystem,number>;
     private _systemUpdateMethods:Array<string>;
@@ -50,6 +54,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         this._systemUpdateMethods = ["update"];
         this.componentBitmask = componentBitmaskMap;
         this.systems = new Map<string,ISystem>();
+        this.systemGroups = new WeakMap<ISystem,Map<string,ISystem>>();
         this.systemEntityMap = new WeakMap<ISystem,Map<string,IEntity>>();
         this.systemComponentMask = new WeakMap<ISystem,number>();
     }
@@ -61,8 +66,9 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     create(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[]):ISystem{
         if(!this.systemEntityMap.has(system)){
-            this.systemEntityMap.set(system, new Map<string, IEntity>());
+            this.systemEntityMap.set(system,new Map<string, IEntity>());
             this.systemComponentMask.set(system,0);
+            this.systemGroups.set(system,new Map<string,ISystem>());
             for(let component of componentMask){
                 this.systemComponentMask.set(system,this.systemComponentMask.get(system) | this.componentBitmask.get(component));
             }
@@ -71,24 +77,53 @@ export class EntitySystemManager implements IEntitySystemManager {
     }
 
     /**
+     * Adds the System as a Subsystem to the system
+     * @param system
+     * @param subsystem
+     * @param componentMask
+     * @param silent
+     */
+    public addSubsystem<T extends ISystem>(system:ISystem,subsystem:T,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):T{
+        if(this.systems.has(subsystem.constructor.name)){
+            this.remove(subsystem);
+        }
+        this.addSystemToMaps(subsystem,componentMask);
+        if(subsystem.parent){
+            this.systemGroups.get(subsystem.parent).delete(subsystem.constructor.name);
+        }
+        subsystem.parent = system;
+        this.systemGroups.get(system).set(subsystem.constructor.name,subsystem);
+        subsystem.init();
+        if(!silent){
+            this._onSystemAdded.dispatch(subsystem);
+        }
+        return subsystem;
+    }
+
+    private addSystemToMaps(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[]):void{
+        this.systemEntityMap.set(system, this.systemEntityMap.get(system) || new Map<string, IEntity>());
+        this.systemGroups.set(system,this.systemGroups.get(system) || new Map<string,ISystem>());
+        if(componentMask.length > 0) {
+            this.systemComponentMask.set(system,0);
+            for(let component of componentMask){
+                this.systemComponentMask.set(system,this.systemComponentMask.get(system) | this.componentBitmask.get(component));
+            }
+        }else{
+            this.systemComponentMask.set(system, this.systemComponentMask.get(system) || 0);
+        }
+    }
+
+    /**
      * Add the system to the ECS so its methods will be called by the update methods
      * Before the existing entities get added into the system the init method is called
      * @param system
-     * @param silent
      * @param componentMask
+     * @param silent
      */
-    add(system:ISystem,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):ISystem{
+    add<T extends ISystem>(system:T,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):T{
         if(!this.systems.has(system.constructor.name)) {
             this.systems.set(system.constructor.name,system);
-            this.systemEntityMap.set(system, new Map<string, IEntity>());
-            if(componentMask.length > 0) {
-                this.systemComponentMask.set(system,0);
-                for(let component of componentMask){
-                    this.systemComponentMask.set(system,this.systemComponentMask.get(system) | this.componentBitmask.get(component));
-                }
-            }else{
-                this.systemComponentMask.set(system, this.systemComponentMask.get(system) || 0);
-            }
+            this.addSystemToMaps(system,componentMask);
             system.init();
             if(!silent){
                 this._onSystemAdded.dispatch(system);
@@ -113,12 +148,16 @@ export class EntitySystemManager implements IEntitySystemManager {
 */
 
     /**
-     * Checks if the is in the ECS
+     * Checks if the system is in the ECS
      * @param system
      * @returns {boolean}
      */
     has(system:ISystem):boolean{
-        return this.systems.has(system.constructor.name) && this.systemEntityMap.has(system);
+        let next = system;
+        while(next.parent != undefined){
+            next = next.parent;
+        }
+        return this.systems.has(next.constructor.name) && this.systemEntityMap.has(system);
     }
 
     /**
@@ -127,7 +166,30 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @returns {boolean}
      */
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean{
-        return this.systems.has(constructor.prototype.constructor.name);
+        if(this.systems.has(constructor.prototype.constructor.name)){
+            return true;
+        }
+        for(let system of this.systems.values()) {
+            if(this.systemHasOf(system,constructor)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private systemHasOf<T extends ISystem>(system:ISystem,constructor:{new(config?:{[x:string]:any}):T}):boolean{
+        if(system.constructor.name === constructor.prototype.constructor.name){
+            return true;
+        }
+        if(!this.systemGroups.has(system)){
+            return false;
+        }
+        for(let child of this.systemGroups.get(system).values()){
+            if(this.systemHasOf(child,constructor)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -138,11 +200,12 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     remove(system:ISystem,silent:boolean=false):boolean{
         if(this.has(system)) {
-            this.systemComponentMask.delete(system);
-            this.systemEntityMap.delete(system);
             if(!silent){
                 this._onSystemRemoved.dispatch(system);
             }
+            this.systemComponentMask.delete(system);
+            this.systemEntityMap.delete(system);
+            this.systemGroups.delete(system);
             return this.systems.delete(system.constructor.name);
         }
         return false;
@@ -155,7 +218,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @returns {boolean}
      */
     removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T},silent?:boolean):boolean{
-        return this.remove(this.systems.get(constructor.prototype.constructor.name),silent);
+        return this.remove(this.get(constructor),silent);
     }
 
     /**
@@ -173,7 +236,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @returns {undefined|Map<string, IEntity>}
      */
     getEntitiesOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,IEntity>{
-        let system = this.systems.get(constructor.prototype.constructor.name);
+        let system = this.get(constructor);
         return this.systemEntityMap.get(system);
     }
 
@@ -187,12 +250,42 @@ export class EntitySystemManager implements IEntitySystemManager {
     }
 
     getComponentMaskOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):number{
-        let system = this.systems.get(constructor.prototype.constructor.name);
+        let system =this.get(constructor);
         return this.systemComponentMask.get(system);
     }
 
+    getSubsystems(system:ISystem):Map<string,ISystem>{
+        return this.systemGroups.get(system);
+    }
+
+    getSubsystemsOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,ISystem>{
+        return this.getSubsystems(this.get(constructor));
+    }
+
     get<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T{
-        return this.systems.get(constructor.prototype.constructor.name) as T;
+        if(this.systems.has(constructor.prototype.constructor.name)){
+            return this.systems.get(constructor.prototype.constructor.name) as T;
+        }
+        for(let system of this.systems.values()){
+            if(this.getOf(system,constructor)){
+                return this.getOf(system,constructor) as T;
+            }
+        }
+        return undefined;
+    }
+
+    private getOf<T extends ISystem>(system:T,constructor:{new(config?:{[x:string]:any}):T}):T{
+        if(system.constructor.name === constructor.prototype.constructor.name){
+            return system;
+        }
+        if(!this.systemGroups.has(system)){
+            return undefined;
+        }
+        for(let child of this.systemGroups.get(system).values()){
+            if(this.getOf(child,constructor)){
+                return child as T;
+            }
+        }
     }
 
     /**
@@ -254,37 +347,53 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     updateEntity(entity:IEntity,system?:ISystem):void{
         if(system){
-            if ((entity.componentMask & system.componentMask) === system.componentMask) {
-                if(!this.hasEntity(entity,system)) {
-                    this.addEntity(entity, system);
-                }
-            } else if (this.hasEntity(entity, system)) {
-                this.removeEntity(entity, system);
-            }
+            this.addEntityToSystem(system,entity);
         }else {
             for (let system of this.systems.values()) {
-                if ((entity.componentMask & system.componentMask) === system.componentMask) {
-                    if(!this.hasEntity(entity,system)) {
-                        this.addEntity(entity, system);
-                    }
-                } else if (this.hasEntity(entity, system)) {
-                    this.removeEntity(entity, system);
-                }
+                this.addEntityToSystem(system,entity);
             }
         }
     }
 
+    private addEntityToSystem(system:ISystem,entity:IEntity):void{
+        if ((entity.componentMask & system.componentMask) === system.componentMask) {
+            if(!this.hasEntity(entity,system)) {
+                this.addEntity(entity, system);
+            }
+        } else if (this.hasEntity(entity, system)) {
+            this.removeEntity(entity, system);
+        }
+        for(let child of this.systemGroups.get(system).values()){
+            this.addEntityToSystem(child,entity);
+        }
+    }
+
+    /**
+     * Calls the Method for all Systems and Subsystems
+     * @param func
+     */
     callSystemMethod(func:string) {
         for(let system of this.systems.values()){
             system[func](this.getEntities(system));
+            for(let child of this.systemGroups.get(system).values()){
+                this.updateSystem(func,child);
+            }
         }
     }
 
+    /**
+     * Calls all system update methods for all system and child systems
+     */
     update():void {
         for(let func of this.systemUpdateMethods) {
-            for (let system of this.systems.values()) {
-                system[func](this.getEntities(system));
-            }
+            this.callSystemMethod(func);
+        }
+    }
+
+    private updateSystem(func:string,system:ISystem){
+        system[func](this.getEntities(system));
+        for(let child of this.systemGroups.get(system).values()){
+            this.updateSystem(func,child);
         }
     }
 

@@ -13,7 +13,7 @@ export interface IEntityComponentManager {
     readonly entities:Map<string,IEntity>;
     uuid:()=>string;
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
-    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent?:boolean):IEntity;
+    addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent?:boolean):T;
     removeEntity(entity:IEntity,destroy?:boolean,silent?:boolean):boolean;
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
@@ -75,7 +75,7 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param components - Components for the entity, if provided this will override the current components of the entity if any
      * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
      */
-    addEntity(entity:IEntity,components?:{[x:string]:IComponent},silent:boolean=false):IEntity{
+    addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent:boolean=false):T{
         this._entities.set(entity.id,entity);
         let entityComponents = this.entityComponentMap.get(entity);
         this.entityComponentMap.set(entity, components || entityComponents || Object.create(null));

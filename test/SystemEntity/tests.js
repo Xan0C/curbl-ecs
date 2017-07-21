@@ -10,7 +10,16 @@ const chai = require("chai");
 const ECS_1 = require("../../lib/ECS");
 class NameComponent {
     constructor(config = { name: "" }) {
-        this.name = config.name;
+        this._name = config.name;
+    }
+    changeNameToPROPS() {
+        this._name = 'PROPS';
+    }
+    get name() {
+        return this._name;
+    }
+    set name(value) {
+        this._name = value;
     }
 }
 class PositionComponent {
@@ -145,6 +154,27 @@ describe('System_Entity', function () {
             chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
             ECS_1.ECS.update();
             chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
+        });
+    });
+    describe('#bind', () => {
+        it('Bind the NameComponents name', () => {
+            let entity = ECS_1.ECS.addEntity(new FullEntity());
+            let component = entity.get(NameComponent);
+            //Kinda stupid test :D
+            ECS_1.ECS.bind(component, 'name').onPropertySet.add('changeNameToPROPS', component);
+            component.name = 'TEST';
+            chai.expect(component.name).to.equal('PROPS');
+        });
+    });
+    describe('#unbind', () => {
+        it('Bind the NameComponents name and unbind it', () => {
+            let entity = ECS_1.ECS.addEntity(new FullEntity());
+            let component = entity.get(NameComponent);
+            //Kinda stupid test :D
+            ECS_1.ECS.bind(component, 'name').onPropertySet.add('changeNameToPROPS', component);
+            ECS_1.ECS.unbind(component);
+            component.name = 'TEST';
+            chai.expect(component.name).to.equal('TEST');
         });
     });
 });

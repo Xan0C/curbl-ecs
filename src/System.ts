@@ -5,11 +5,14 @@ import {Signal} from "./Signal";
  * Created by Soeren on 28.06.2017.
  */
 export interface ISystem {
+    parent?:ISystem;
+    readonly subsystems?:Map<string,ISystem>
     readonly entities?:Map<string,IEntity>;
     readonly componentMask?:number;
     readonly onEntityAdded?:Signal;
     readonly onEntityRemoved?:Signal;
     init?():void;
+    addSubsystem?<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T;
     has?(entity:IEntity):boolean;
     remove?(entity:IEntity,fromECS?:boolean,destroy?:boolean):void;
     dispose?():void;
@@ -19,10 +22,12 @@ export const SYSTEM_PROTOTYPE = {
     init:()=>{return ECS.noop;},
     has:()=>{return System.prototype.has;},
     remove:()=>{return System.prototype.remove;},
-    dispose:()=>{return System.prototype.dispose}
+    dispose:()=>{return System.prototype.dispose},
+    addSubsystem:()=>{return System.prototype.addSubsystem}
 };
 
 export const SYSTEM_PROPERTIES = {
+    parent:()=>{return undefined;},
     onEntityAdded:()=>{return new Signal();},
     onEntityRemoved:()=>{return new Signal();}
 };
@@ -37,7 +42,12 @@ export const SYSTEM_PROPERTY_DECORATOR = {
       Object.defineProperty(obj,"componentMask",{
             get: function(){return ECS.getSystemComponentMask(this);}
       });
-    }
+    },
+    subsystems:(obj)=>{
+        Object.defineProperty(obj,"subsystems", {
+            get: function(){return ECS.getSubsystems(this);}
+        });
+    },
 };
 
 export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
@@ -76,12 +86,18 @@ export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
 }
 
 export class System implements ISystem {
+    readonly parent:ISystem;
     readonly onEntityAdded:Signal;
     readonly onEntityRemoved:Signal;
 
     constructor(){
+        this.parent = SYSTEM_PROPERTIES.parent();
         this.onEntityAdded = SYSTEM_PROPERTIES.onEntityAdded();
         this.onEntityRemoved = SYSTEM_PROPERTIES.onEntityRemoved();
+    }
+
+    addSubsystem<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T{
+        return ECS.addSubsystem(this,system,componentMask);
     }
 
     has(entity:IEntity):boolean {
@@ -105,5 +121,9 @@ export class System implements ISystem {
 
     get componentMask():number{
         return ECS.getSystemComponentMask(this);
+    }
+
+    get subsystems():Map<string,ISystem>{
+        return ECS.getSubsystems(this);
     }
 }

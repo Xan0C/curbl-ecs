@@ -11,22 +11,53 @@ const ECS_1 = require("../../lib/ECS");
 /**
  * Created by Soeren on 29.06.2017.
  */
-class PositionComponent {
+let PositionComponent = class PositionComponent {
     constructor(config) {
         this.x = config.x;
         this.y = config.y;
     }
-}
+};
+PositionComponent = __decorate([
+    ECS_1.ECS.Component()
+], PositionComponent);
 exports.PositionComponent = PositionComponent;
 let System = class System {
     constructor(config) {
         this.x = config.x;
         this.y = config.y;
     }
+    update(entities) {
+        for (let entity of entities.values()) {
+            entity.get(PositionComponent).x = 42;
+            entity.get(PositionComponent).y = 42;
+        }
+    }
 };
 System = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], System);
+let SystemTwo = class SystemTwo {
+    update(entities) {
+        for (let entity of entities.values()) {
+            entity.get(PositionComponent).x = 12;
+            entity.get(PositionComponent).y = 12;
+        }
+    }
+};
+SystemTwo = __decorate([
+    ECS_1.ECS.System(PositionComponent)
+], SystemTwo);
+let Subsystem = class Subsystem {
+    update(entities) {
+        for (let entity of entities.values()) {
+            entity.get(PositionComponent).x = 1337;
+            entity.get(PositionComponent).y = 1337;
+        }
+    }
+};
+Subsystem = __decorate([
+    ECS_1.ECS.System(PositionComponent)
+], Subsystem);
 describe('SystemDecorator', function () {
     var system;
     this.timeout(0);
@@ -49,10 +80,53 @@ describe('SystemDecorator', function () {
     });
     describe('#has', () => {
         it('Checks if the Entity is in the system', () => {
+            let entity = ECS_1.ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
+            chai.expect(system.has(entity)).to.equal(false);
+            ECS_1.ECS.addEntity(entity);
+            chai.expect(system.has(entity)).to.equal(true);
         });
     });
     describe('#remove', () => {
-        it('Removes an Entity from the System, or from all systems', () => {
+        it('Removes an Entity from ECS and from all systems', () => {
+            let entity = ECS_1.ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
+            chai.expect(system.has(entity)).to.equal(false);
+            ECS_1.ECS.addEntity(entity);
+            chai.expect(system.has(entity)).to.equal(true);
+            system.remove(entity);
+            chai.expect(system.has(entity)).to.equal(false);
+        });
+        it('Removes an Entity from the System but not from the ECS', () => {
+            let scdSystem = new SystemTwo();
+            ECS_1.ECS.addSystem(scdSystem);
+            let entity = ECS_1.ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
+            chai.expect(system.has(entity)).to.equal(false);
+            chai.expect(scdSystem.has(entity)).to.equal(false);
+            ECS_1.ECS.addEntity(entity);
+            chai.expect(system.has(entity)).to.equal(true);
+            chai.expect(scdSystem.has(entity)).to.equal(true);
+            system.remove(entity, false);
+            chai.expect(system.has(entity)).to.equal(false);
+            chai.expect(scdSystem.has(entity)).to.equal(true);
+            scdSystem.dispose();
+        });
+    });
+    describe('#addSubsystem', () => {
+        it('Adds a Subsystem ', () => {
+            let scdSystem = new SystemTwo();
+            ECS_1.ECS.addSystem(scdSystem);
+            let entity = ECS_1.ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
+            ECS_1.ECS.addEntity(entity);
+            let subSystem = new Subsystem();
+            ECS_1.ECS.addSubsystem(system, subSystem);
+            chai.expect(ECS_1.ECS.hasSystemOf(System)).to.equal(true);
+            chai.expect(ECS_1.ECS.hasSystemOf(SystemTwo)).to.equal(true);
+            chai.expect(ECS_1.ECS.hasSystemOf(Subsystem)).to.equal(true);
+            ECS_1.ECS.update();
+            chai.expect(entity.get(PositionComponent).x).to.equal(12);
         });
     });
     describe('#dispose', () => {

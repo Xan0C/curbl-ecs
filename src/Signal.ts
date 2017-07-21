@@ -13,7 +13,7 @@ class SignalNode {
         this.next = undefined;
     }
     /**
-     * Dipose this SignalBinding
+     * Dispose this SignalBinding
      * This sets the parent.next and child.parent element new
      * @returns {SignalNode} - The child element of this node
      */

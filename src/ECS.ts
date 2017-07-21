@@ -4,6 +4,7 @@ import {ComponentBitmaskMap, IComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
 import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
 import {Signal} from "./Signal";
+import {PropertyDescriptorBinder} from "./PropertyDescriptorBinder";
 /**
  * Created by Soeren on 29.06.2017.
  */
@@ -13,12 +14,14 @@ export class ECS {
     private static _instance:ECS;
     private ecm:IEntityComponentManager;
     private scm:IEntitySystemManager;
+    private propertyDescriptorBinder:PropertyDescriptorBinder;
     private componentBitmaskMap:ComponentBitmaskMap;
 
     private constructor(){
         this.componentBitmaskMap = new ComponentBitmaskMap();
         this.ecm = new EntityComponentManager(this.componentBitmaskMap);
         this.scm = new EntitySystemManager(this.componentBitmaskMap);
+        this.propertyDescriptorBinder = new PropertyDescriptorBinder();
         this.registerEvents();
     }
 
@@ -60,13 +63,36 @@ export class ECS {
         return ECS._instance = new ECS();
     }
 
+    /**
+     * Binds to signals to the PropertyAccessor
+     * onPropertySet called each time the property is changed and dispatches the object and propertyKey
+     * onPropertyGet called each time the property is accessed and dispatched the object,propertyKey and value
+     * @param object
+     * @param propertyKey
+     * @returns {{onPropertySet: Signal, onPropertyGet: Signal}}
+     */
+    static bind(object:any,propertyKey:string):{onPropertyGet:Signal,onPropertySet:Signal}{
+        return ECS.instance.propertyDescriptorBinder.bind(object,propertyKey);
+    }
+
+    /**
+     * Unbind the Binding to the property
+     * @param object
+     * @param propertyKey
+     * @param restore - default:true restores the previous acessor when the property was binded
+     * @returns {boolean}
+     */
+    static unbind(object:any,propertyKey?:string,restore?:boolean):boolean{
+        return ECS.instance.propertyDescriptorBinder.unbind(object,propertyKey,restore);
+    }
+
     static noop(){}
 
     static createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity{
         return ECS.instance.ecm.createEntity(entity,components);
     }
 
-    static addEntity(entity:IEntity,components?:{[x:string]:IComponent}):IEntity{
+    static addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent}):T{
         injectEntity(entity);
         return ECS.instance.ecm.addEntity(entity,components);
     }
@@ -99,8 +125,12 @@ export class ECS {
         return ECS.instance.ecm.getMask(entity);
     }
 
-    static addSystem(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem{
+    static addSystem<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T{
         return ECS.instance.scm.add(system,componentMask);
+    }
+
+    static addSubsystem<T extends ISystem>(system:ISystem,subsystem:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T{
+        return ECS.instance.scm.addSubsystem(system,subsystem,componentMask);
     }
 
     static hasSystem(system:ISystem):boolean{
@@ -141,6 +171,14 @@ export class ECS {
 
     static getSystem<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T{
         return ECS.instance.scm.get(constructor);
+    }
+
+    static getSubsystems(system:ISystem):Map<string,ISystem>{
+        return ECS.instance.scm.getSubsystems(system);
+    }
+
+    static getSubsystemsOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,ISystem>{
+        return ECS.instance.scm.getSubsystemsOf(constructor);
     }
 
     static update():void{
