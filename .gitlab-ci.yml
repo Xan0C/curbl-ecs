@@ -10,14 +10,9 @@ cache:
 
 stages:
   - build
-  - test
 
-building:
+build_and_test:
   stage: build
   script:
     - tsc
-
-testing:
-  stage: test
-  script:
     - npm test
