@@ -43,6 +43,7 @@ let SystemTwo = class SystemTwo {
             entity.get(PositionComponent).y = 12;
         }
     }
+    init() { }
 };
 SystemTwo = __decorate([
     ECS_1.ECS.System(PositionComponent)
@@ -54,6 +55,7 @@ let Subsystem = class Subsystem {
             entity.get(PositionComponent).y = 1337;
         }
     }
+    init() { }
 };
 Subsystem = __decorate([
     ECS_1.ECS.System(PositionComponent)

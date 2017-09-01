@@ -3,6 +3,7 @@ import {ECS} from "../../lib/ECS";
 import {IEntity} from "../../lib/Entity";
 import {ISystem} from "../../lib/System";
 
+@ECS.Component()
 class NameComponent {
     private _name:string;
 
@@ -23,6 +24,7 @@ class NameComponent {
     }
 }
 
+@ECS.Component()
 class PositionComponent {
     public x;
     public y;
@@ -80,6 +82,9 @@ class FullSystem implements ISystem {
         for (let entity of entities.values()) {
             entity.get(NameComponent).name = "CHANGED_NAME";
         }
+    }
+
+    init():void {
     }
 }
 

@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const ECS_1 = require("../../lib/ECS");
-class NameComponent {
+let NameComponent = class NameComponent {
     constructor(config = { name: "" }) {
         this._name = config.name;
     }
@@ -21,13 +21,19 @@ class NameComponent {
     set name(value) {
         this._name = value;
     }
-}
-class PositionComponent {
+};
+NameComponent = __decorate([
+    ECS_1.ECS.Component()
+], NameComponent);
+let PositionComponent = class PositionComponent {
     constructor(config = { x: 0, y: 0 }) {
         this.x = config.x;
         this.y = config.y;
     }
-}
+};
+PositionComponent = __decorate([
+    ECS_1.ECS.Component()
+], PositionComponent);
 let NameEntity = class NameEntity {
 };
 NameEntity = __decorate([
@@ -65,6 +71,8 @@ let FullSystem = class FullSystem {
         for (let entity of entities.values()) {
             entity.get(NameComponent).name = "CHANGED_NAME";
         }
+    }
+    init() {
     }
 };
 FullSystem = __decorate([

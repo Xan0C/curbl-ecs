@@ -11,17 +11,23 @@ const ECS_1 = require("../../lib/ECS");
 /**
  * Created by Soeren on 29.06.2017.
  */
-class NameComponent {
+let NameComponent = class NameComponent {
     constructor(config = { name: "" }) {
         this.name = config.name;
     }
-}
-class PositionComponent {
+};
+NameComponent = __decorate([
+    ECS_1.ECS.Component()
+], NameComponent);
+let PositionComponent = class PositionComponent {
     constructor(config = { x: 0, y: 0 }) {
         this.x = config.x;
         this.y = config.y;
     }
-}
+};
+PositionComponent = __decorate([
+    ECS_1.ECS.Component()
+], PositionComponent);
 let Entity = class Entity {
     constructor(config) {
         this.x = config.x;

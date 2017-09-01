@@ -6,7 +6,7 @@ import getOwnPropertyDescriptor = Reflect.getOwnPropertyDescriptor;
  * Created by Soeren on 29.06.2017.
  */
 
-
+@ECS.Component()
 class NameComponent {
     public name:string;
 
@@ -15,6 +15,7 @@ class NameComponent {
     }
 }
 
+@ECS.Component()
 class PositionComponent{
     public x;
     public y;

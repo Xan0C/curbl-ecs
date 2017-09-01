@@ -49,6 +49,8 @@ class SystemTwo implements ISystem {
             entity.get(PositionComponent).y = 12;
         }
     }
+
+    init():void{}
 }
 
 @ECS.System(PositionComponent)
@@ -60,6 +62,8 @@ class Subsystem implements ISystem {
             entity.get(PositionComponent).y = 1337;
         }
     }
+
+    init():void{}
 }
 
 describe('SystemDecorator', function() {
