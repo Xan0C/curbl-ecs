@@ -34,6 +34,9 @@ class SignalNode {
     }
 }
 
+/**
+ * Implementation of Signals as double linked list
+ */
 export class Signal {
     private root:SignalNode;
 
@@ -41,27 +44,44 @@ export class Signal {
         this.root = undefined;
     }
 
-    private addNode(cbName:string,cbObject:string,once?:boolean):Signal{
+    private addNode(cbName:string,cbObject:string,once?:boolean,front:boolean=true):Signal{
         if(!this.root){
             this.root = new SignalNode(cbName,cbObject,once);
             return;
         }
-        let node = this.root;
-        while(node.next){
-            node = node.next;
+        const node = new SignalNode(cbName,cbObject,once);
+        if(front){
+            this.insertAsRoot(node);
+        }else{
+            this.insertEnd(node);
         }
-        node.next = new SignalNode(cbName,cbObject,once);
-        node.next.parent = node;
         return this;
     }
 
-    public add(cbFunc:string,cbObject:any):Signal{
-        this.addNode(cbFunc,cbObject,false);
+    private insertEnd(node:SignalNode):Signal{
+        let current = this.root;
+        while(current.next){
+            current = current.next;
+        }
+        current.next = node;
+        current.next.parent = current;
         return this;
     }
 
-    public addOnce(cbFunc:string,cbObject:any):Signal{
-        this.addNode(cbFunc,cbObject,true);
+    private insertAsRoot(node:SignalNode):Signal{
+        this.root.parent = node;
+        node.next = this.root;
+        this.root = node;
+        return this;
+    }
+
+    public add(cbFunc:string,cbObject:any,front?:boolean):Signal{
+        this.addNode(cbFunc,cbObject,false,front);
+        return this;
+    }
+
+    public addOnce(cbFunc:string,cbObject:any,front?:boolean):Signal{
+        this.addNode(cbFunc,cbObject,true,front);
         return this;
     }
 

@@ -343,7 +343,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     /**
      * Updates the Entity adds it to the right systems and removes if from systems it does not fit anymore
      * @param entity
-     * @param system - optional if only update for one Entity(ether add or remove from the system)
+     * @param system - optional if only update for two Entity(ether add or remove from the system)
      */
     updateEntity(entity:IEntity,system?:ISystem):void{
         if(system){

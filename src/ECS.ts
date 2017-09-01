@@ -199,13 +199,14 @@ export class ECS {
 
     static Component():(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
         return function(constructor:{new(...args):ISystem}){
-            var wrapper = function (args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorSystem:any = function(...args){
                 let component = ECS.instance.ecm.pool.pop(constructor);
                 if(!component) {
                     component = wrapper.apply(this, args);
                     Object.setPrototypeOf(component, Object.getPrototypeOf(this));
                 }else{
+                    //TODO: Dont create new Instance add remove and init method to Component
                     component = wrapper.apply(component,args);
                 }
                 return component;
@@ -217,7 +218,7 @@ export class ECS {
 
     static System(...components:{new(config?:{[x:string]:any}):any}[]):(constructor:{ new(config?:{[x:string]:any}):ISystem }) => any{
         return function(constructor:{new(...args):ISystem}){
-            var wrapper = function (args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorSystem:any = function(...args){
                 let system = wrapper.apply(this,args);
                 Object.setPrototypeOf(system,Object.getPrototypeOf(this));
@@ -247,7 +248,7 @@ export class ECS {
 
     private static decoratorEntityClass(components:EntityDecoratorComponent[]):(constructor:{ new(...args):IEntity }) => any{
         return function(constructor:{new(...args):IEntity}){
-            var wrapper = function (args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorEntity:any = function(...args){
                 let entity = ECS.instance.ecm.pool.pop(constructor);
                 if(!entity){

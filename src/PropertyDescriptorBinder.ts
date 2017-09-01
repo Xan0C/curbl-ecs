@@ -1,8 +1,8 @@
 import {Signal} from "./Signal";
-/**
- * Created by Soeren on 21.07.2017.
- */
 
+/**
+ * Quick and Dirty PropertyBindings wrapping/creating a PropertyDescriptor that
+ */
 export class PropertyDescriptorBinder {
 
     private propertySignals:WeakMap<Object,Map<string,{
@@ -68,7 +68,7 @@ export class PropertyDescriptorBinder {
         });
     }
 
-    unbind(object:any,propertyKey?:string,restore:boolean=true):boolean{
+    public unbind(object:any,propertyKey?:string,restore:boolean=true):boolean{
         if(propertyKey && this.propertySignals.has(object) && this.propertySignals.get(object).has(propertyKey)){
             if(restore){
                 this.restorePropertyDescriptor(object,propertyKey);
