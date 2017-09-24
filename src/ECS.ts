@@ -1,14 +1,14 @@
 import {Entity, EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
 import {EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
-import {ComponentBitmaskMap, IComponent} from "./Component";
+import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
 import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
 import {Signal} from "./Signal";
 import {PropertyDescriptorBinder} from "./PropertyDescriptorBinder";
+
 /**
  * Created by Soeren on 29.06.2017.
  */
-
 export class ECS {
 
     private static _instance:ECS;
@@ -198,16 +198,16 @@ export class ECS {
     }
 
     static Component():(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
-        return function(constructor:{new(...args):ISystem}){
+        return function(constructor:{new(...args):IComponent}){
             var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorSystem:any = function(...args){
                 let component = ECS.instance.ecm.pool.pop(constructor);
                 if(!component) {
                     component = wrapper.apply(this, args);
                     Object.setPrototypeOf(component, Object.getPrototypeOf(this));
+                    injectComponent(component);
                 }else{
-                    //TODO: Dont create new Instance add remove and init method to Component
-                    component = wrapper.apply(component,args);
+                    component.init(...args);
                 }
                 return component;
             };

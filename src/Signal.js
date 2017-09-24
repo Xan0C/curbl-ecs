@@ -1,11 +1,7 @@
-export class SignalNode {
-    public parent:SignalNode;
-    public next:SignalNode;
-    public cbFunc:string;
-    public cbContext:any;
-    public once:boolean;
-
-    constructor(cbFunc:string,cbContext:any=null,once:boolean=false){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class SignalNode {
+    constructor(cbFunc, cbContext = null, once = false) {
         this.cbFunc = cbFunc;
         this.cbContext = cbContext;
         this.once = once;
@@ -17,12 +13,12 @@ export class SignalNode {
      * This sets the parent.next and child.parent element new
      * @returns {SignalNode} - The child element of this node
      */
-    public dispose():SignalNode{
+    dispose() {
         let next = this.next;
-        if(this.parent){
+        if (this.parent) {
             this.parent.next = this.next;
         }
-        if(this.next){
+        if (this.next) {
             this.next.parent = this.parent;
         }
         this.parent = undefined;
@@ -33,131 +29,124 @@ export class SignalNode {
         return next;
     }
 }
-
+exports.SignalNode = SignalNode;
 /**
  * Implementation of Signals as double linked list
  */
-export class Signal {
-    private root:SignalNode;
-
-    constructor(){
+class Signal {
+    constructor() {
         this.root = undefined;
     }
-
-    private addNode(cbName:string,context?:any,once?:boolean,parent?:SignalNode):Signal{
-        const node = new SignalNode(cbName,context,once);
-        this.insertAfter(parent,node);
+    addNode(cbName, context, once, parent) {
+        const node = new SignalNode(cbName, context, once);
+        this.insertAfter(parent, node);
         return this;
     }
-
-    private insertAfter(parent:SignalNode,node:SignalNode):Signal{
-        if(node){
-            if(!parent){
+    insertAfter(parent, node) {
+        if (node) {
+            if (!parent) {
                 return this.insertAsRoot(node);
             }
             let next = parent.next;
             parent.next = node;
             node.parent = parent;
-            if(next){
+            if (next) {
                 node.next = next;
                 next.parent = node;
             }
         }
         return this;
     }
-
-    private insertAsRoot(node:SignalNode):Signal{
-        if(this.root) {
+    insertAsRoot(node) {
+        if (this.root) {
             this.root.parent = node;
             node.next = this.root;
         }
         this.root = node;
         return this;
     }
-
-    public add(cbFunc:string,context?:any,parent?:SignalNode):Signal{
-        this.addNode(cbFunc,context,false,parent);
+    add(cbFunc, context, parent) {
+        this.addNode(cbFunc, context, false, parent);
         return this;
     }
-
-    public addOnce(cbFunc:string,context?:any,parent?:SignalNode):Signal{
-        this.addNode(cbFunc,context,true,parent);
+    addOnce(cbFunc, context, parent) {
+        this.addNode(cbFunc, context, true, parent);
         return this;
     }
-
-    public getNode(cbFunc:string,context?:any):SignalNode{
+    getNode(cbFunc, context) {
         let node = this.root;
-        while(node){
-            if(node.cbFunc === cbFunc && (context && node.cbContext === context)){
+        while (node) {
+            if (node.cbFunc === cbFunc && (context && node.cbContext === context)) {
                 return node;
             }
         }
         return undefined;
     }
-
-    public remove(cbObject:any,cbFunc?:string):Signal{
+    remove(cbObject, cbFunc) {
         let node = this.root;
-        while(node){
-            if(node.cbContext === cbObject){
-                if(cbFunc && node.cbFunc === cbFunc){
+        while (node) {
+            if (node.cbContext === cbObject) {
+                if (cbFunc && node.cbFunc === cbFunc) {
                     node = node.dispose();
-                }else if(!cbFunc) {
+                }
+                else if (!cbFunc) {
                     node = node.dispose();
-                }else{
+                }
+                else {
                     node = node.next;
                 }
-            }else{
+            }
+            else {
                 node = node.next;
             }
-            if(!this.root || !this.root.cbContext){
+            if (!this.root || !this.root.cbContext) {
                 this.root = node;
             }
         }
         return this;
     }
-
-    public dispatch(a0?, a1?, a2?, a3?, a4?, a5?, a6?, a7?):Signal{
+    dispatch(a0, a1, a2, a3, a4, a5, a6, a7) {
         let node = this.root;
-        while(node){
-            node.cbContext[node.cbFunc](a0,a1,a2,a3,a4,a5,a6,a7);
-            if(node.once){
+        while (node) {
+            node.cbContext[node.cbFunc](a0, a1, a2, a3, a4, a5, a6, a7);
+            if (node.once) {
                 node = node.dispose();
-            }else{
+            }
+            else {
                 node = node.next;
             }
         }
         return this;
     }
-
     /**
      * Checks if the signal contains the given object
      * @param cbObject
      * @returns {boolean}
      */
-    has(cbObject:any,cbName?:string):boolean{
+    has(cbObject, cbName) {
         let node = this.root;
-        while(node){
-            if( (node.cbContext === cbObject) && (node.cbFunc === cbName || !cbName)){
+        while (node) {
+            if ((node.cbContext === cbObject) && (node.cbFunc === cbName || !cbName)) {
                 return true;
-            }else{
+            }
+            else {
                 node = node.next;
             }
         }
         return false;
     }
-
-    public clear():Signal {
+    clear() {
         let node = this.root;
-        while(node){
+        while (node) {
             node = node.dispose();
         }
-        if(this.root) {
+        if (this.root) {
             this.root = this.root.dispose();
         }
         return this;
     }
-
-    public dispose(){
+    dispose() {
         this.clear();
     }
 }
+exports.Signal = Signal;

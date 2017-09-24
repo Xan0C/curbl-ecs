@@ -13,7 +13,12 @@ const ECS_1 = require("../../lib/ECS");
  */
 let NameComponent = class NameComponent {
     constructor(config = { name: "" }) {
+        this.init(config);
+    }
+    init(config = { name: "" }) {
         this.name = config.name;
+    }
+    remove() {
     }
 };
 NameComponent = __decorate([
@@ -23,6 +28,12 @@ let PositionComponent = class PositionComponent {
     constructor(config = { x: 0, y: 0 }) {
         this.x = config.x;
         this.y = config.y;
+    }
+    init(config = { x: 0, y: 0 }) {
+        this.x = config.x;
+        this.y = config.y;
+    }
+    remove() {
     }
 };
 PositionComponent = __decorate([

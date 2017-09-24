@@ -2,13 +2,21 @@ import * as chai from "chai";
 import {ECS} from "../../lib/ECS";
 import {IEntity} from "../../lib/Entity";
 import {ISystem} from "../../lib/System";
+import {IComponent} from "../../src/Component";
 
 @ECS.Component()
-class NameComponent {
+class NameComponent implements IComponent {
     private _name:string;
 
     constructor(config:{ name:string } = {name:""}) {
+        this.init(config);
+    }
+
+    init(config:{ name:string } = {name:""}):void {
         this._name = config.name;
+    }
+
+    remove():void {
     }
 
     public changeNameToPROPS():void{
@@ -30,8 +38,15 @@ class PositionComponent {
     public y;
 
     constructor(config:{ x:number, y:number } = {x:0, y:0}) {
+        this.init(config);
+    }
+
+    init(config:{ x:number, y:number } = {x:0, y:0}):void {
         this.x = config.x;
         this.y = config.y;
+    }
+
+    remove():void {
     }
 }
 

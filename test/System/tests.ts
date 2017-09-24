@@ -2,19 +2,27 @@ import * as chai from "chai";
 import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
 import {ISystem} from "../../lib/System";
+import {IComponent} from "../../src/Component";
 /**
  * Created by Soeren on 29.06.2017.
  */
 
 @ECS.Component()
-export class PositionComponent {
+export class PositionComponent implements IComponent {
 
     public x;
     public y;
 
     constructor(config:{x:number,y:number}){
+        this.init(config);
+    }
+
+    init(config:{x:number,y:number}):void {
         this.x = config.x;
         this.y = config.y;
+    }
+
+    remove():void {
     }
 }
 

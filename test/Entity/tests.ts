@@ -1,22 +1,29 @@
 import * as chai from "chai";
 import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
-import getOwnPropertyDescriptor = Reflect.getOwnPropertyDescriptor;
+import {IComponent} from "../../src/Component";
+
 /**
  * Created by Soeren on 29.06.2017.
  */
-
 @ECS.Component()
-class NameComponent {
+class NameComponent implements IComponent {
     public name:string;
 
     constructor(config:{name:string}={name:""}){
+        this.init(config);
+    }
+
+    init(config:{name:string}={name:""}):void {
         this.name = config.name;
+    }
+
+    remove():void {
     }
 }
 
 @ECS.Component()
-class PositionComponent{
+class PositionComponent implements IComponent {
     public x;
     public y;
 
@@ -24,6 +31,15 @@ class PositionComponent{
         this.x = config.x;
         this.y = config.y;
     }
+
+    init(config:{x:number,y:number}={x:0,y:0}):void {
+        this.x = config.x;
+        this.y = config.y;
+    }
+
+    remove():void {
+    }
+
 }
 
 @ECS.Entity(

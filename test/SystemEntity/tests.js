@@ -10,7 +10,12 @@ const chai = require("chai");
 const ECS_1 = require("../../lib/ECS");
 let NameComponent = class NameComponent {
     constructor(config = { name: "" }) {
+        this.init(config);
+    }
+    init(config = { name: "" }) {
         this._name = config.name;
+    }
+    remove() {
     }
     changeNameToPROPS() {
         this._name = 'PROPS';
@@ -27,8 +32,13 @@ NameComponent = __decorate([
 ], NameComponent);
 let PositionComponent = class PositionComponent {
     constructor(config = { x: 0, y: 0 }) {
+        this.init(config);
+    }
+    init(config = { x: 0, y: 0 }) {
         this.x = config.x;
         this.y = config.y;
+    }
+    remove() {
     }
 };
 PositionComponent = __decorate([

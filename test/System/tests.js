@@ -13,8 +13,13 @@ const ECS_1 = require("../../lib/ECS");
  */
 let PositionComponent = class PositionComponent {
     constructor(config) {
+        this.init(config);
+    }
+    init(config) {
         this.x = config.x;
         this.y = config.y;
+    }
+    remove() {
     }
 };
 PositionComponent = __decorate([

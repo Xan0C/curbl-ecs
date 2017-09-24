@@ -160,6 +160,7 @@ export class EntityComponentManager implements IEntityComponentManager {
                 if(!silent && this.entities.has(entity.id)) {
                     this._onComponentRemoved.dispatch(entity, comp);
                 }
+                comp.remove();
                 return delete this.entityComponentMap.get(entity)[component.prototype.constructor.name];
             }
         }
