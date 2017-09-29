@@ -6,6 +6,7 @@ const ENTITY_PROPERTIES = {
 };
 const ENTITY_PROTOTYPE = {
     get: () => { return Entity.prototype.get; },
+    getAll: () => { return Entity.prototype.getAll; },
     has: () => { return Entity.prototype.has; },
     add: () => { return Entity.prototype.add; },
     remove: () => { return Entity.prototype.remove; },
@@ -46,6 +47,9 @@ exports.injectEntity = injectEntity;
 class Entity {
     constructor() {
         this.id = ENTITY_PROPERTIES.id();
+    }
+    getAll() {
+        return ECS_1.ECS.getComponents(this);
     }
     get(component) {
         return ECS_1.ECS.getComponent(this, component);

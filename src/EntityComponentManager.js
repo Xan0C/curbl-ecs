@@ -4,6 +4,12 @@ const ObjectPool_1 = require("./ObjectPool");
 const Entity_1 = require("./Entity");
 const UUIDGenerator_1 = require("./UUIDGenerator");
 const Signal_1 = require("./Signal");
+/**
+ * The EntityComponentManager stores and manages all Entities and their components
+ * Entities itself are just empty objects with an id, the Manager maps those ids to the components
+ * Its also responsible for adding and removing components from and entity or creating/removing entities
+ * By default all Components are stored in an ObjectPool if no longer used instead of being destroyed/gc
+ */
 class EntityComponentManager {
     constructor(componentBitmaskMap, uuid = UUIDGenerator_1.UUIDGenerator.uuid) {
         this._pool = new ObjectPool_1.DynamicObjectPool();
@@ -141,6 +147,16 @@ class EntityComponentManager {
             return this.entityComponentMap.get(entity)[component.prototype.constructor.name];
         }
         return undefined;
+    }
+    /**
+     * Returns an Object with all components this entity contains
+     * @param {IEntity} entity
+     * @returns {{[p: string]: IComponent}}
+     */
+    getComponents(entity) {
+        if (this.entityComponentMap.has(entity)) {
+            return this.entityComponentMap.get(entity);
+        }
     }
     /**
      *

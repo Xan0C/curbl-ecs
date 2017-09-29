@@ -85,6 +85,9 @@ class ECS {
     static getComponent(entity, component) {
         return ECS.instance.ecm.getComponent(entity, component);
     }
+    static getComponents(entity) {
+        return ECS.instance.ecm.getComponents(entity);
+    }
     static hasComponent(entity, component) {
         return ECS.instance.ecm.hasComponent(entity, component);
     }

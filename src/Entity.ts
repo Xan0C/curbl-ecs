@@ -11,6 +11,7 @@ export interface IEntity {
     readonly id?:string;
     readonly componentMask?:number;
     get?<T extends IComponent>(comp:{new(...args):T}):T;
+    getAll?():{[id:string]:IComponent};
     has?<T extends IComponent>(comp:{new(...args):T}):boolean;
     add?(component:IComponent):void;
     remove?<T extends IComponent>(component:{new(...args):T}):boolean;

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Signal_1 = require("./Signal");
 /**
  * Quick and Dirty PropertyBindings wrapping/creating a PropertyDescriptor that
+ * dispatched a Signal each time its set or get accessor is called
  */
 class PropertyDescriptorBinder {
     constructor() {
