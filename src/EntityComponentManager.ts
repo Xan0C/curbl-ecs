@@ -19,11 +19,21 @@ export interface IEntityComponentManager {
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy?:boolean,silent?:boolean):boolean;
     getComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):T;
+    getComponents(entity:IEntity):{[x:string]:IComponent};
     hasComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean;
     getMask(entity:IEntity):number;
 }
 
+/**
+ * The EntityComponentManager stores and manages all Entities and their components
+ * Entities itself are just empty objects with an id, the Manager maps those ids to the components
+ * Its also responsible for adding and removing components from and entity or creating/removing entities
+ * By default all Components are stored in an ObjectPool if no longer used instead of being destroyed/gc
+ */
 export class EntityComponentManager implements IEntityComponentManager {
+    /**
+     * Stores removed components that are reused
+     */
     private _pool:DynamicObjectPool;
     private _onEntityAdded:Signal;
     private _onEntityRemoved:Signal;
@@ -31,8 +41,17 @@ export class EntityComponentManager implements IEntityComponentManager {
     private _onComponentRemoved:Signal;
     private _uuid:()=>string;
     private componentBitmask:ComponentBitmaskMap;
+    /**
+     * Maps ids to their Entity
+     */
     private _entities:Map<string,IEntity>;
+    /**
+     * Maps components to their Entity
+     */
     private entityComponentMap: WeakMap<IEntity,{[x:string]:IComponent}>;
+    /**
+     * Stores the ComponentMask for each Entity
+     */
     private componentMask:WeakMap<IEntity,number>;
 
     constructor(componentBitmaskMap:ComponentBitmaskMap,uuid:()=>string=UUIDGenerator.uuid){
@@ -178,6 +197,17 @@ export class EntityComponentManager implements IEntityComponentManager {
             return this.entityComponentMap.get(entity)[component.prototype.constructor.name] as T;
         }
         return undefined;
+    }
+
+    /**
+     * Returns an Object with all components this entity contains
+     * @param {IEntity} entity
+     * @returns {{[p: string]: IComponent}}
+     */
+    getComponents(entity:IEntity):{[x:string]:IComponent}{
+        if(this.entityComponentMap.has(entity)) {
+            return this.entityComponentMap.get(entity);
+        }
     }
 
     /**

@@ -40,10 +40,28 @@ export class EntitySystemManager implements IEntitySystemManager {
     private _onSystemRemoved:Signal;
     private _onEntityAddedToSystem:Signal;
     private _onEntityRemovedFromSystem:Signal;
+    /**
+     * Map of all Systems in the ECS
+     */
     private systems:Map<string,ISystem>;
+    /**
+     * Each System can have a list of subsystems
+     * Creating a SystemTree instead of a list
+     */
     private systemGroups:WeakMap<ISystem,Map<string,ISystem>>;
+    /**
+     * Maps a map of entities to each System
+     */
     private systemEntityMap:WeakMap<ISystem,Map<string,IEntity>>;
+    /**
+     * Maps each system to a ComponentMask deciding which Entities are added to the System
+     */
     private systemComponentMask:WeakMap<ISystem,number>;
+
+    /**
+     * TODO: Just use Signals for this
+     * Methods that are called for each system in each iteration
+     */
     private _systemUpdateMethods:Array<string>;
 
     constructor(componentBitmaskMap:ComponentBitmaskMap){

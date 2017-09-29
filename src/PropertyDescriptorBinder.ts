@@ -2,6 +2,7 @@ import {Signal} from "./Signal";
 
 /**
  * Quick and Dirty PropertyBindings wrapping/creating a PropertyDescriptor that
+ * dispatched a Signal each time its set or get accessor is called
  */
 export class PropertyDescriptorBinder {
 

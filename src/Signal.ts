@@ -88,7 +88,7 @@ export class Signal {
     public getNode(cbFunc:string,context?:any):SignalNode{
         let node = this.root;
         while(node){
-            if(node.cbFunc === cbFunc && (context && node.cbContext === context)){
+            if(node.cbFunc === cbFunc && (!context || node.cbContext === context)){
                 return node;
             }
         }

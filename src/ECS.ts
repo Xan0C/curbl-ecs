@@ -109,6 +109,10 @@ export class ECS {
         return ECS.instance.ecm.getComponent(entity,component);
     }
 
+    static getComponents(entity:IEntity):{[x:string]:IComponent}{
+        return ECS.instance.ecm.getComponents(entity);
+    }
+
     static hasComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean{
         return ECS.instance.ecm.hasComponent(entity,component);
     }

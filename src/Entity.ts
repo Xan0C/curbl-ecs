@@ -23,6 +23,7 @@ const ENTITY_PROPERTIES = {
 
 const ENTITY_PROTOTYPE = {
     get:()=>{return Entity.prototype.get;},
+    getAll:()=>{return Entity.prototype.getAll;},
     has:()=>{return Entity.prototype.has;},
     add:()=>{return Entity.prototype.add;},
     remove:()=>{return Entity.prototype.remove;},
@@ -67,6 +68,10 @@ export class Entity implements IEntity{
 
     constructor(){
         this.id = ENTITY_PROPERTIES.id();
+    }
+
+    getAll():{[id:string]:IComponent}{
+        return ECS.getComponents(this);
     }
 
     get<T extends IComponent>(component:{ new(...args):T }):T {
