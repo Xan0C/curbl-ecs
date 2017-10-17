@@ -1,6 +1,10 @@
-# CURBL
+# CURBL-ECS
 
-Curbl is a simple Entity Component System written in ES6 without any other dependencies resulting in low overhead.
-Its written in Typescript and uses Decorators for simple usage.
- - Entities and Components in curbl are pooled and are automatical reused.
- - Easy to integrate in existing Frameworks(Phaser,PIXI etc.)
+Curbl-ecs is a simple Entity Component System in plain ES2015(Typescript).
+ - Its using Decorators to simply add Component,Entities and Systems.
+ - Components are pooled and are automatical reused if the Component class is marked with a Component Decorator.
+ - Its easy to add multiple System functions, to integrate with existing frameworks
+ - Event handling with Signals
+ 
+ ## Changelog
+ - Remove string identifier and replace them with numbers/Integers

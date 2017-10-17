@@ -145,8 +145,8 @@ class ECS {
     static update() {
         ECS.instance.scm.update();
     }
-    static callSystemMethod(func) {
-        ECS.instance.scm.callSystemMethod(func);
+    static callSystemMethod(funcId) {
+        ECS.instance.scm.callSystemMethod(funcId);
     }
     static createComponentsFromDecorator(components) {
         let comps = Object.create(null);
@@ -230,6 +230,20 @@ class ECS {
             target[propKey] = entity;
         };
     }
+    static Update(updateId) {
+        return function (target, key, descriptor) {
+            let dirty = false;
+            console.log(target);
+            if (!ECS.instance.scm.systemUpdateMethods[updateId]) {
+                ECS.instance.scm.systemUpdateMethods[updateId] = new WeakMap();
+                dirty = true;
+            }
+            ECS.instance.scm.systemUpdateMethods[updateId].set(target, key);
+            if (dirty) {
+                ECS.instance.scm.updateSystemMethods();
+            }
+        };
+    }
     static get uuid() {
         return ECS.instance.ecm.uuid;
     }
@@ -259,12 +273,6 @@ class ECS {
     }
     static get onEntityRemovedFromSystem() {
         return ECS.instance.scm.onEntityRemovedFromSystem;
-    }
-    static get systemUpdateMethods() {
-        return ECS.instance.scm.systemUpdateMethods;
-    }
-    static set systemUpdateMethods(value) {
-        ECS.instance.scm.systemUpdateMethods = value;
     }
 }
 exports.ECS = ECS;

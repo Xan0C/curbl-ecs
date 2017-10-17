@@ -38,6 +38,9 @@ let System = class System {
         }
     }
 };
+__decorate([
+    ECS_1.ECS.Update(0)
+], System.prototype, "update", null);
 System = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], System);
@@ -50,6 +53,9 @@ let SystemTwo = class SystemTwo {
     }
     init() { }
 };
+__decorate([
+    ECS_1.ECS.Update(0)
+], SystemTwo.prototype, "update", null);
 SystemTwo = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], SystemTwo);
@@ -62,6 +68,9 @@ let Subsystem = class Subsystem {
     }
     init() { }
 };
+__decorate([
+    ECS_1.ECS.Update(0)
+], Subsystem.prototype, "update", null);
 Subsystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], Subsystem);

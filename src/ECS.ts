@@ -189,8 +189,8 @@ export class ECS {
         ECS.instance.scm.update();
     }
 
-    static callSystemMethod(func:string):void{
-        ECS.instance.scm.callSystemMethod(func);
+    static callSystemMethod(funcId:number):void{
+        ECS.instance.scm.callSystemMethod(funcId);
     }
 
     private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
@@ -280,6 +280,21 @@ export class ECS {
         }
     }
 
+    public static Update(updateId:number) {
+        return function<T>(target, key:string, descriptor:TypedPropertyDescriptor<T>):TypedPropertyDescriptor<T> | void {
+            let dirty = false;
+            console.log(target);
+            if(!ECS.instance.scm.systemUpdateMethods[updateId]) {
+                ECS.instance.scm.systemUpdateMethods[updateId] = new WeakMap();
+                dirty = true;
+            }
+            ECS.instance.scm.systemUpdateMethods[updateId].set(target,key);
+            if(dirty){
+                ECS.instance.scm.updateSystemMethods();
+            }
+        }
+    }
+
     static get uuid():()=>string{
         return ECS.instance.ecm.uuid;
     }
@@ -318,13 +333,5 @@ export class ECS {
 
     static get onEntityRemovedFromSystem():Signal{
         return ECS.instance.scm.onEntityRemovedFromSystem;
-    }
-
-    static get systemUpdateMethods():Array<string>{
-        return ECS.instance.scm.systemUpdateMethods;
-    }
-
-    static set systemUpdateMethods(value:Array<string>){
-        ECS.instance.scm.systemUpdateMethods = value;
     }
 }

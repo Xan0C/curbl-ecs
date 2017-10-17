@@ -38,6 +38,7 @@ class System implements ISystem {
         this.y = config.y;
     }
 
+    @ECS.Update(0)
     update(entities:Map<string,IEntity>):void{
         for(let entity of entities.values()){
             entity.get(PositionComponent).x = 42;
@@ -51,6 +52,7 @@ class SystemTwo implements ISystem {
 
     public mockValue:string;
 
+    @ECS.Update(0)
     update(entities:Map<string,IEntity>):void{
         for(let entity of entities.values()){
             entity.get(PositionComponent).x = 12;
@@ -64,6 +66,7 @@ class SystemTwo implements ISystem {
 @ECS.System(PositionComponent)
 class Subsystem implements ISystem {
 
+    @ECS.Update(0)
     update(entities:Map<string,IEntity>):void{
         for(let entity of entities.values()){
             entity.get(PositionComponent).x = 1337;

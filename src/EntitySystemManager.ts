@@ -11,13 +11,14 @@ export interface IEntitySystemManager {
     readonly onSystemRemoved:Signal;
     readonly onEntityAddedToSystem:Signal;
     readonly onEntityRemovedFromSystem:Signal;
-    systemUpdateMethods:Array<string>;
+    systemUpdateMethods:Array<WeakMap<ObjectConstructor,string>>;
+    updateSystemMethods():void;
     create(system:ISystem,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem;
     add<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):T;
     addSubsystem<T extends ISystem>(system:ISystem,subsystem:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>,silent?:boolean):T;
     has(system:ISystem):boolean;
     remove(system:ISystem,silent?:boolean):boolean;
-    callSystemMethod(func:string);
+    callSystemMethod(funcId:number);
     update():void;
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
     removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T},silent?:boolean):boolean;
@@ -59,17 +60,16 @@ export class EntitySystemManager implements IEntitySystemManager {
     private systemComponentMask:WeakMap<ISystem,number>;
 
     /**
-     * TODO: Just use Signals for this
      * Methods that are called for each system in each iteration
      */
-    private _systemUpdateMethods:Array<string>;
+    private _systemUpdateMethods:Array<WeakMap<ObjectConstructor,string>>;
 
     constructor(componentBitmaskMap:ComponentBitmaskMap){
         this._onSystemAdded = new Signal();
         this._onSystemRemoved = new Signal();
         this._onEntityAddedToSystem = new Signal();
         this._onEntityRemovedFromSystem = new Signal();
-        this._systemUpdateMethods = ["update"];
+        this._systemUpdateMethods = [];
         this.componentBitmask = componentBitmaskMap;
         this.systems = new Map<string,ISystem>();
         this.systemGroups = new WeakMap<ISystem,Map<string,ISystem>>();
@@ -388,13 +388,12 @@ export class EntitySystemManager implements IEntitySystemManager {
 
     /**
      * Calls the Method for all Systems and Subsystems
-     * @param func
      */
-    callSystemMethod(func:string) {
+    callSystemMethod(id:number) {
         for(let system of this.systems.values()){
-            system[func](this.getEntities(system));
+            system[this._systemUpdateMethods[id].get(system.constructor.prototype)](this.getEntities(system));
             for(let child of this.systemGroups.get(system).values()){
-                this.updateSystem(func,child);
+                this.updateSystem(id,child);
             }
         }
     }
@@ -403,15 +402,25 @@ export class EntitySystemManager implements IEntitySystemManager {
      * Calls all system update methods for all system and child systems
      */
     update():void {
-        for(let func of this.systemUpdateMethods) {
-            this.callSystemMethod(func);
+        this.updateSystemMethods();
+        for(let i = 0; i < this._systemUpdateMethods.length; i++) {
+            this.callSystemMethod(i);
         }
     }
 
-    private updateSystem(func:string,system:ISystem){
-        system[func](this.getEntities(system));
+    private updateSystem(id:number,system:ISystem){
+        system[this._systemUpdateMethods[id].get(system.constructor.prototype)](this.getEntities(system));
         for(let child of this.systemGroups.get(system).values()){
-            this.updateSystem(func,child);
+            this.updateSystem(id,child);
+        }
+    }
+
+    /**
+     * Injects the SystemMethods into all systems if the methods does not exist a noop method will be added
+     */
+    updateSystemMethods():void{
+        for(let system of this.systems.values()){
+            injectSystem(system,this.systemUpdateMethods);
         }
     }
 
@@ -431,14 +440,11 @@ export class EntitySystemManager implements IEntitySystemManager {
         return this._onEntityRemovedFromSystem;
     }
 
-    public get systemUpdateMethods():Array<string> {
+    public get systemUpdateMethods():Array<WeakMap<ObjectConstructor,string>> {
         return this._systemUpdateMethods;
     }
 
-    public set systemUpdateMethods(value:Array<string>) {
+    public set systemUpdateMethods(value:Array<WeakMap<ObjectConstructor,string>>) {
         this._systemUpdateMethods = value;
-        for(let system of this.systems.values()){
-            injectSystem(system,this.systemUpdateMethods);
-        }
     }
 }

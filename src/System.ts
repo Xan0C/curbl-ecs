@@ -50,7 +50,7 @@ export const SYSTEM_PROPERTY_DECORATOR = {
     },
 };
 
-export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
+export function injectSystem(system:ISystem,updateMap:Array<WeakMap<ObjectConstructor,string>>){
     for(let propKey in SYSTEM_PROPERTIES){
         if(system[propKey] === undefined || system[propKey] === null){
             system[propKey] = SYSTEM_PROPERTIES[propKey]();
@@ -72,13 +72,17 @@ export function injectSystem(system:ISystem,updateMethods:Array<string>=[]){
             }
         }
     }
-    for(let protoKey of updateMethods){
-        if(system.constructor && system.constructor.prototype){
-            if(system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null){
+    for(let map of updateMap) {
+        if(!map.has(system.constructor.prototype)){
+            map.set(system.constructor.prototype,'noop');
+        }
+        const protoKey =map.get(system.constructor.prototype);
+        if (system.constructor && system.constructor.prototype) {
+            if (system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null) {
                 system.constructor.prototype[protoKey] = ECS.noop;
             }
-        }else{
-            if(system[protoKey] === undefined || system[protoKey] === null){
+        } else {
+            if (system[protoKey] === undefined || system[protoKey] === null) {
                 system[protoKey] = ECS.noop;
             }
         }

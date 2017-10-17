@@ -8,7 +8,7 @@ class EntitySystemManager {
         this._onSystemRemoved = new Signal_1.Signal();
         this._onEntityAddedToSystem = new Signal_1.Signal();
         this._onEntityRemovedFromSystem = new Signal_1.Signal();
-        this._systemUpdateMethods = ["update"];
+        this._systemUpdateMethods = [];
         this.componentBitmask = componentBitmaskMap;
         this.systems = new Map();
         this.systemGroups = new WeakMap();
@@ -310,13 +310,12 @@ class EntitySystemManager {
     }
     /**
      * Calls the Method for all Systems and Subsystems
-     * @param func
      */
-    callSystemMethod(func) {
+    callSystemMethod(id) {
         for (let system of this.systems.values()) {
-            system[func](this.getEntities(system));
+            system[this._systemUpdateMethods[id].get(system.constructor.prototype)](this.getEntities(system));
             for (let child of this.systemGroups.get(system).values()) {
-                this.updateSystem(func, child);
+                this.updateSystem(id, child);
             }
         }
     }
@@ -324,14 +323,23 @@ class EntitySystemManager {
      * Calls all system update methods for all system and child systems
      */
     update() {
-        for (let func of this.systemUpdateMethods) {
-            this.callSystemMethod(func);
+        this.updateSystemMethods();
+        for (let i = 0; i < this._systemUpdateMethods.length; i++) {
+            this.callSystemMethod(i);
         }
     }
-    updateSystem(func, system) {
-        system[func](this.getEntities(system));
+    updateSystem(id, system) {
+        system[this._systemUpdateMethods[id].get(system.constructor.prototype)](this.getEntities(system));
         for (let child of this.systemGroups.get(system).values()) {
-            this.updateSystem(func, child);
+            this.updateSystem(id, child);
+        }
+    }
+    /**
+     * Injects the SystemMethods into all systems if the methods does not exist a noop method will be added
+     */
+    updateSystemMethods() {
+        for (let system of this.systems.values()) {
+            System_1.injectSystem(system, this.systemUpdateMethods);
         }
     }
     get onSystemAdded() {
@@ -351,9 +359,6 @@ class EntitySystemManager {
     }
     set systemUpdateMethods(value) {
         this._systemUpdateMethods = value;
-        for (let system of this.systems.values()) {
-            System_1.injectSystem(system, this.systemUpdateMethods);
-        }
     }
 }
 exports.EntitySystemManager = EntitySystemManager;

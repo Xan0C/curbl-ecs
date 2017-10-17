@@ -31,7 +31,7 @@ exports.SYSTEM_PROPERTY_DECORATOR = {
         });
     },
 };
-function injectSystem(system, updateMethods = []) {
+function injectSystem(system, updateMap) {
     for (let propKey in exports.SYSTEM_PROPERTIES) {
         if (system[propKey] === undefined || system[propKey] === null) {
             system[propKey] = exports.SYSTEM_PROPERTIES[propKey]();
@@ -54,7 +54,11 @@ function injectSystem(system, updateMethods = []) {
             }
         }
     }
-    for (let protoKey of updateMethods) {
+    for (let map of updateMap) {
+        if (!map.has(system.constructor.prototype)) {
+            map.set(system.constructor.prototype, 'noop');
+        }
+        const protoKey = map.get(system.constructor.prototype);
         if (system.constructor && system.constructor.prototype) {
             if (system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null) {
                 system.constructor.prototype[protoKey] = ECS_1.ECS.noop;

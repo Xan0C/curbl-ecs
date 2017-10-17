@@ -66,16 +66,6 @@ let PositionSystem = class PositionSystem {
 PositionSystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], PositionSystem);
-let NameSystem = class NameSystem {
-    postUpdate() {
-        for (let entity of this.entities.values()) {
-            entity.get(NameComponent).name = "NAME_COMP";
-        }
-    }
-};
-NameSystem = __decorate([
-    ECS_1.ECS.System(NameComponent)
-], NameSystem);
 let FullSystem = class FullSystem {
     update(entities) {
         for (let entity of entities.values()) {
@@ -85,9 +75,25 @@ let FullSystem = class FullSystem {
     init() {
     }
 };
+__decorate([
+    ECS_1.ECS.Update(0)
+], FullSystem.prototype, "update", null);
 FullSystem = __decorate([
     ECS_1.ECS.System(PositionComponent, NameComponent)
 ], FullSystem);
+let NameSystem = class NameSystem {
+    postUpdate() {
+        for (let entity of this.entities.values()) {
+            entity.get(NameComponent).name = "NAME_COMP";
+        }
+    }
+};
+__decorate([
+    ECS_1.ECS.Update(1)
+], NameSystem.prototype, "postUpdate", null);
+NameSystem = __decorate([
+    ECS_1.ECS.System(NameComponent)
+], NameSystem);
 describe('System_Entity', function () {
     var positionSystem;
     var nameSystem;
@@ -160,15 +166,14 @@ describe('System_Entity', function () {
             let entity = ECS_1.ECS.addEntity(new FullEntity());
             chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
             ECS_1.ECS.update();
-            chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
+            chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
         });
     });
     describe('#callSystemUpdateMethod', () => {
         it('Calls ECS update method which calls update method of all systems', () => {
             let entity = ECS_1.ECS.addEntity(new FullEntity());
-            ECS_1.ECS.systemUpdateMethods = ["update", "postUpdate"];
             chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
-            ECS_1.ECS.callSystemMethod("update");
+            ECS_1.ECS.callSystemMethod(0);
             chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
             ECS_1.ECS.update();
             chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
