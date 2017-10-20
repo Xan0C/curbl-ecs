@@ -9,7 +9,8 @@ export declare type EntityDecoratorComponent = {component:{new(config?:{[x:strin
 
 export interface IEntity {
     readonly id?:string;
-    readonly componentMask?:number;
+    components?:{[id:string]:IComponent};
+    bitmask?:number;
     get?<T extends IComponent>(comp:{new(...args):T}):T;
     getAll?():{[id:string]:IComponent};
     has?<T extends IComponent>(comp:{new(...args):T}):boolean;
@@ -19,7 +20,9 @@ export interface IEntity {
 }
 
 const ENTITY_PROPERTIES = {
-    id:()=>{return ECS.uuid();}
+    id:()=>{return ECS.uuid();},
+    components:()=>{return Object.create(null);},
+    bitmask:()=>{return 0;}
 };
 
 const ENTITY_PROTOTYPE = {
@@ -32,11 +35,7 @@ const ENTITY_PROTOTYPE = {
 };
 
 export const ENTITY_PROPERTY_DECORATOR = {
-    componentMask:(obj)=>{
-        Object.defineProperty(obj,"componentMask",{
-            get: function(){return ECS.getEntityComponentMask(this);}
-        });
-    }
+
 };
 
 export function injectEntity(entity:IEntity){
@@ -66,21 +65,25 @@ export function injectEntity(entity:IEntity){
 export class Entity implements IEntity{
 
     readonly id:string;
+    readonly components:{[id:string]:IComponent};
+    readonly bitmask:number;
 
     constructor(){
         this.id = ENTITY_PROPERTIES.id();
+        this.components = ENTITY_PROPERTIES.components();
+        this.bitmask = ENTITY_PROPERTIES.bitmask();
     }
 
     getAll():{[id:string]:IComponent}{
-        return ECS.getComponents(this);
+        return this.components;
     }
 
     get<T extends IComponent>(component:{ new(...args):T }):T {
-        return ECS.getComponent(this,component);
+        return this.components[component.prototype.constructor.name] as T;
     }
 
     has<T extends IComponent>(component:{ new(...args):T }):boolean {
-        return ECS.hasComponent(this,component);
+        return !!this.components[component.prototype.constructor.name];
     }
 
     add(component:IComponent):void{
@@ -93,9 +96,5 @@ export class Entity implements IEntity{
 
     dispose(destroy?:boolean):boolean{
         return ECS.removeEntity(this,destroy)
-    }
-
-    get componentMask():number{
-        return ECS.getEntityComponentMask(this);
     }
 }

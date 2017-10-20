@@ -5,12 +5,12 @@ import {injectSystem, ISystem} from "./System";
 import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
 import {Signal} from "./Signal";
 import {PropertyDescriptorBinder} from "./PropertyDescriptorBinder";
+import {InjectorService} from "./InjectorService";
 
 /**
  * Created by Soeren on 29.06.2017.
  */
 export class ECS {
-
     private static _instance:ECS;
     private ecm:IEntityComponentManager;
     private scm:IEntitySystemManager;
@@ -51,8 +51,8 @@ export class ECS {
     }
 
     private onSystemAdded(system:ISystem){
-        for(let entity of ECS.instance.ecm.entities.values()){
-            ECS.instance.scm.updateEntity(entity,system);
+        for(let id in ECS.instance.ecm.entities){
+            ECS.instance.scm.updateEntity(ECS.instance.ecm.entities[id],system);
         }
     }
 
@@ -61,6 +61,10 @@ export class ECS {
             return ECS._instance;
         }
         return ECS._instance = new ECS();
+    }
+
+    public static get Injector():InjectorService{
+        return InjectorService.instance;
     }
 
     /**
@@ -93,7 +97,6 @@ export class ECS {
     }
 
     static addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent}):T{
-        injectEntity(entity);
         return ECS.instance.ecm.addEntity(entity,components);
     }
 
@@ -105,18 +108,6 @@ export class ECS {
         return ECS.instance.ecm.hasEntity(entity);
     }
 
-    static getComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):T{
-        return ECS.instance.ecm.getComponent(entity,component);
-    }
-
-    static getComponents(entity:IEntity):{[x:string]:IComponent}{
-        return ECS.instance.ecm.getComponents(entity);
-    }
-
-    static hasComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean{
-        return ECS.instance.ecm.hasComponent(entity,component);
-    }
-
     static removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean{
         return ECS.instance.ecm.removeComponent(entity,component);
     }
@@ -125,16 +116,8 @@ export class ECS {
         return ECS.instance.ecm.addComponent(entity,component);
     }
 
-    static getEntityComponentMask(entity:IEntity):number{
-        return ECS.instance.ecm.getMask(entity);
-    }
-
     static addSystem<T extends ISystem>(system:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T{
         return ECS.instance.scm.add(system,componentMask);
-    }
-
-    static addSubsystem<T extends ISystem>(system:ISystem,subsystem:T,componentMask?:Array<{new(config?:{[x:string]:any}):any}>):T{
-        return ECS.instance.scm.addSubsystem(system,subsystem,componentMask);
     }
 
     static hasSystem(system:ISystem):boolean{
@@ -153,10 +136,6 @@ export class ECS {
         return ECS.instance.scm.removeOf(constructor);
     }
 
-    static getSystemComponentMask(system:ISystem):number{
-        return ECS.instance.scm.getComponentMask(system);
-    }
-
     static getSystemComponentMaskOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):number{
         return ECS.instance.scm.getComponentMaskOf(constructor);
     }
@@ -165,31 +144,15 @@ export class ECS {
         ECS.instance.scm.removeEntity(entity,system);
     }
 
-    static systemHasEntity(system:ISystem,entity:IEntity):boolean{
-        return ECS.instance.scm.hasEntity(entity,system);
-    }
-
-    static getEntitiesForSystem(system:ISystem):Map<string,IEntity>{
-        return ECS.instance.scm.getEntities(system);
-    }
-
     static getSystem<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T{
         return ECS.instance.scm.get(constructor);
-    }
-
-    static getSubsystems(system:ISystem):Map<string,ISystem>{
-        return ECS.instance.scm.getSubsystems(system);
-    }
-
-    static getSubsystemsOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):Map<string,ISystem>{
-        return ECS.instance.scm.getSubsystemsOf(constructor);
     }
 
     static update():void{
         ECS.instance.scm.update();
     }
 
-    static callSystemMethod(funcId:number):void{
+    static callSystemMethod(funcId:string):void{
         ECS.instance.scm.callSystemMethod(funcId);
     }
 
@@ -227,7 +190,7 @@ export class ECS {
                 let system = wrapper.apply(this,args);
                 Object.setPrototypeOf(system,Object.getPrototypeOf(this));
                 injectSystem(system,ECS.instance.scm.systemUpdateMethods);
-                ECS.instance.scm.create(system,components);
+                ECS.instance.scm.updateBitmask(system,components);
                 return system;
             };
             DecoratorSystem.prototype = constructor.prototype;
@@ -236,21 +199,6 @@ export class ECS {
     }
 
     static Entity(...components:EntityDecoratorComponent[]):((constructor:{ new(config?:{[x:string]:any}):IEntity }) => any)&((target:Object, propKey:number | string) => void)  {
-        return function (...args:any[]) {
-            switch (args.length) {
-                case 1:
-                    return ECS.decoratorEntityClass(components).apply(this,args);
-                case 2 | 3:
-                    if(!args[2]) {
-                        return ECS.decoratorEntityProperty(components).apply(this,args);
-                    }
-                    return;
-            }
-            return;
-        }
-    }
-
-    private static decoratorEntityClass(components:EntityDecoratorComponent[]):(constructor:{ new(...args):IEntity }) => any{
         return function(constructor:{new(...args):IEntity}){
             var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorEntity:any = function(...args){
@@ -265,33 +213,6 @@ export class ECS {
             };
             DecoratorEntity.prototype = constructor.prototype;
             return DecoratorEntity;
-        }
-    }
-
-    private static decoratorEntityProperty(components:EntityDecoratorComponent[]):(target:Object, propKey:number | string) => void{
-        return function(target:Object,propKey:number|string){
-            let entity = ECS.instance.ecm.pool.pop(Entity);
-            if(!entity){
-                entity = new Entity();
-                injectEntity(entity);
-            }
-            ECS.instance.ecm.createEntity(entity,ECS.createComponentsFromDecorator(components));
-            target[propKey] = entity;
-        }
-    }
-
-    public static Update(updateId:number) {
-        return function<T>(target, key:string, descriptor:TypedPropertyDescriptor<T>):TypedPropertyDescriptor<T> | void {
-            let dirty = false;
-            console.log(target);
-            if(!ECS.instance.scm.systemUpdateMethods[updateId]) {
-                ECS.instance.scm.systemUpdateMethods[updateId] = new WeakMap();
-                dirty = true;
-            }
-            ECS.instance.scm.systemUpdateMethods[updateId].set(target,key);
-            if(dirty){
-                ECS.instance.scm.updateSystemMethods();
-            }
         }
     }
 
@@ -333,5 +254,13 @@ export class ECS {
 
     static get onEntityRemovedFromSystem():Signal{
         return ECS.instance.scm.onEntityRemovedFromSystem;
+    }
+
+    static get systemUpdateMethods():Array<string>{
+        return ECS.instance.scm.systemUpdateMethods;
+    }
+
+    static set systemUpdateMethods(methods:Array<string>){
+        ECS.instance.scm.systemUpdateMethods = methods;
     }
 }

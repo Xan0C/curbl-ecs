@@ -3,35 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ECS_1 = require("./ECS");
 const Signal_1 = require("./Signal");
 exports.SYSTEM_PROTOTYPE = {
-    init: () => { return ECS_1.ECS.noop; },
+    setUp: () => { return ECS_1.ECS.noop; },
+    tearDown: () => { return ECS_1.ECS.noop; },
     has: () => { return System.prototype.has; },
     remove: () => { return System.prototype.remove; },
-    dispose: () => { return System.prototype.dispose; },
-    addSubsystem: () => { return System.prototype.addSubsystem; }
+    dispose: () => { return System.prototype.dispose; }
 };
 exports.SYSTEM_PROPERTIES = {
-    parent: () => { return undefined; },
+    bitmask: () => { return 0; },
+    entities: () => { return []; },
     onEntityAdded: () => { return new Signal_1.Signal(); },
     onEntityRemoved: () => { return new Signal_1.Signal(); }
 };
-exports.SYSTEM_PROPERTY_DECORATOR = {
-    entities: (obj) => {
-        Object.defineProperty(obj, "entities", {
-            get: function () { return ECS_1.ECS.getEntitiesForSystem(this); }
-        });
-    },
-    componentMask: (obj) => {
-        Object.defineProperty(obj, "componentMask", {
-            get: function () { return ECS_1.ECS.getSystemComponentMask(this); }
-        });
-    },
-    subsystems: (obj) => {
-        Object.defineProperty(obj, "subsystems", {
-            get: function () { return ECS_1.ECS.getSubsystems(this); }
-        });
-    },
-};
-function injectSystem(system, updateMap) {
+exports.SYSTEM_PROPERTY_DECORATOR = {};
+function injectSystem(system, updateMethods) {
     for (let propKey in exports.SYSTEM_PROPERTIES) {
         if (system[propKey] === undefined || system[propKey] === null) {
             system[propKey] = exports.SYSTEM_PROPERTIES[propKey]();
@@ -54,11 +39,7 @@ function injectSystem(system, updateMap) {
             }
         }
     }
-    for (let map of updateMap) {
-        if (!map.has(system.constructor.prototype)) {
-            map.set(system.constructor.prototype, 'noop');
-        }
-        const protoKey = map.get(system.constructor.prototype);
+    for (let i = 0, protoKey; protoKey = updateMethods[i]; i++) {
         if (system.constructor && system.constructor.prototype) {
             if (system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null) {
                 system.constructor.prototype[protoKey] = ECS_1.ECS.noop;
@@ -74,15 +55,13 @@ function injectSystem(system, updateMap) {
 exports.injectSystem = injectSystem;
 class System {
     constructor() {
-        this.parent = exports.SYSTEM_PROPERTIES.parent();
+        this.bitmask = exports.SYSTEM_PROPERTIES.bitmask();
+        this.entities = exports.SYSTEM_PROPERTIES.entities();
         this.onEntityAdded = exports.SYSTEM_PROPERTIES.onEntityAdded();
         this.onEntityRemoved = exports.SYSTEM_PROPERTIES.onEntityRemoved();
     }
-    addSubsystem(system, componentMask) {
-        return ECS_1.ECS.addSubsystem(this, system, componentMask);
-    }
     has(entity) {
-        return ECS_1.ECS.systemHasEntity(this, entity);
+        return this.entities.indexOf(entity) !== -1;
     }
     remove(entity, fromECS = true, destroy) {
         if (fromECS) {
@@ -92,15 +71,6 @@ class System {
     }
     dispose() {
         ECS_1.ECS.removeSystem(this);
-    }
-    get entities() {
-        return ECS_1.ECS.getEntitiesForSystem(this);
-    }
-    get componentMask() {
-        return ECS_1.ECS.getSystemComponentMask(this);
-    }
-    get subsystems() {
-        return ECS_1.ECS.getSubsystems(this);
     }
 }
 exports.System = System;

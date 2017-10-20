@@ -19,9 +19,7 @@ class EntityComponentManager {
         this._onComponentRemoved = new Signal_1.Signal();
         this._uuid = uuid;
         this.componentBitmask = componentBitmaskMap;
-        this._entities = new Map();
-        this.entityComponentMap = new WeakMap();
-        this.componentMask = new WeakMap();
+        this._entities = Object.create(null);
     }
     /**
      * Creates an Entity, adds it to the EntityComponentMap but not to the active entities or actual ECS,
@@ -36,12 +34,15 @@ class EntityComponentManager {
                 entity = new Entity_1.Entity();
             }
         }
-        this.entityComponentMap.set(entity, components || Object.create(null));
-        this.componentMask.set(entity, 0);
-        for (let key in this.entityComponentMap.get(entity)) {
-            this.componentMask.set(entity, this.componentMask.get(entity) | this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
-        }
+        entity.components = components || Object.create(null);
+        entity.bitmask = 0;
+        this.updateComponentBitmask(entity);
         return entity;
+    }
+    updateComponentBitmask(entity) {
+        for (let key in entity.components) {
+            entity.bitmask = entity.bitmask | this.componentBitmask.get(entity.components[key].constructor.name);
+        }
     }
     /**
      * Adds the Entity with the provided Components(or existing ones) to the ECS,
@@ -50,12 +51,11 @@ class EntityComponentManager {
      * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
      */
     addEntity(entity, components, silent = false) {
-        this._entities.set(entity.id, entity);
-        let entityComponents = this.entityComponentMap.get(entity);
-        this.entityComponentMap.set(entity, components || entityComponents || Object.create(null));
-        this.componentMask.set(entity, 0);
-        for (let key in this.entityComponentMap.get(entity)) {
-            this.componentMask.set(entity, this.componentMask.get(entity) | this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
+        this._entities[entity.id] = entity;
+        entity.components = components || entity.components || Object.create(null);
+        entity.bitmask = entity.bitmask || 0;
+        if (components) {
+            this.updateComponentBitmask(entity);
         }
         if (!silent) {
             this._onEntityAdded.dispatch(entity);
@@ -70,21 +70,19 @@ class EntityComponentManager {
      * @returns {boolean}
      */
     removeEntity(entity, destroy, silent = false) {
-        if (this.entityComponentMap.has(entity)) {
-            //TODO: Find a better way to pool the components of an entity
-            for (let key in this.entityComponentMap.get(entity)) {
-                let component = this.entityComponentMap.get(entity)[key];
-                this.removeComponent(entity, component.constructor, destroy, true);
+        if (this._entities[entity.id]) {
+            for (let key in entity.components) {
+                this.removeComponent(entity, entity.components[key].constructor, destroy, true);
             }
             if (!destroy) {
                 this._pool.push(entity);
             }
-            this.componentMask.delete(entity);
-            this.entityComponentMap.delete(entity);
-            if (!silent && this.entities.has(entity.id)) {
+            entity.bitmask = 0;
+            entity.components = Object.create(null);
+            if (!silent && this.hasEntity(entity)) {
                 this._onEntityRemoved.dispatch(entity);
             }
-            return this._entities.delete(entity.id);
+            return delete this._entities[entity.id];
         }
         return false;
     }
@@ -94,7 +92,7 @@ class EntityComponentManager {
      * @returns {boolean}
      */
     hasEntity(entity) {
-        return this._entities.has(entity.id);
+        return !!this._entities[entity.id];
     }
     /**
      * Adds a component to the Entity
@@ -103,12 +101,10 @@ class EntityComponentManager {
      * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
      */
     addComponent(entity, component, silent = false) {
-        if (this.entityComponentMap.has(entity)) {
-            this.entityComponentMap.get(entity)[component.constructor.name] = component;
-            this.componentMask.set(entity, this.componentMask.get(entity) | this.componentBitmask.get(component.constructor.name));
-            if (!silent && this.entities.has(entity.id)) {
-                this._onComponentAdded.dispatch(entity, component);
-            }
+        entity.components[component.constructor.name] = component;
+        entity.bitmask = entity.bitmask | this.componentBitmask.get(component.constructor.name);
+        if (!silent && this.hasEntity(entity)) {
+            this._onComponentAdded.dispatch(entity, component);
         }
     }
     /**
@@ -120,63 +116,20 @@ class EntityComponentManager {
      * @returns {boolean}
      */
     removeComponent(entity, component, destroy = false, silent = false) {
-        if (this.entityComponentMap.has(entity)) {
-            let comp = this.entityComponentMap.get(entity)[component.prototype.constructor.name];
-            if (comp) {
-                if (!destroy) {
-                    this._pool.push(comp);
-                }
-                this.componentMask.set(entity, this.componentMask.get(entity) ^ this.componentBitmask.get(component));
-                if (!silent && this.entities.has(entity.id)) {
-                    this._onComponentRemoved.dispatch(entity, comp);
-                }
-                comp.remove();
-                return delete this.entityComponentMap.get(entity)[component.prototype.constructor.name];
+        let comp = entity.components[component.prototype.constructor.name];
+        if (comp) {
+            if (!destroy) {
+                this._pool.push(comp);
             }
+            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(component.prototype.constructor.name);
+            if (!silent && this.hasEntity(entity)) {
+                this._onComponentRemoved.dispatch(entity, comp);
+            }
+            comp.remove();
+            //TODO: Delete is slow
+            return delete entity.components[component.prototype.constructor.name];
         }
         return false;
-    }
-    /**
-     *
-     * @param entity
-     * @param component
-     * @returns {any}
-     */
-    getComponent(entity, component) {
-        if (this.entityComponentMap.has(entity)) {
-            return this.entityComponentMap.get(entity)[component.prototype.constructor.name];
-        }
-        return undefined;
-    }
-    /**
-     * Returns an Object with all components this entity contains
-     * @param {IEntity} entity
-     * @returns {{[p: string]: IComponent}}
-     */
-    getComponents(entity) {
-        if (this.entityComponentMap.has(entity)) {
-            return this.entityComponentMap.get(entity);
-        }
-    }
-    /**
-     *
-     * @param entity
-     * @param component
-     * @returns {boolean}
-     */
-    hasComponent(entity, component) {
-        if (this.entityComponentMap.has(entity)) {
-            return !!this.entityComponentMap.get(entity)[component.prototype.constructor.name];
-        }
-        return false;
-    }
-    /**
-     * Return the bitmask for the entity
-     * @param entity
-     * @returns {number}
-     */
-    getMask(entity) {
-        return this.componentMask.get(entity) || 0;
     }
     get pool() {
         return this._pool;

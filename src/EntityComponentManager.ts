@@ -1,6 +1,6 @@
 import {ComponentBitmaskMap, IComponent} from "./Component";
 import {DynamicObjectPool} from "./ObjectPool";
-import {Entity, IEntity} from "./Entity";
+import {Entity, IEntity, injectEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
 import {Signal} from "./Signal";
 
@@ -10,7 +10,7 @@ export interface IEntityComponentManager {
     readonly onEntityRemoved:Signal;
     readonly onComponentAdded:Signal;
     readonly onComponentRemoved:Signal;
-    readonly entities:Map<string,IEntity>;
+    readonly entities:{[id:string]:IEntity};
     uuid:()=>string;
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
     addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent?:boolean):T;
@@ -18,10 +18,6 @@ export interface IEntityComponentManager {
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy?:boolean,silent?:boolean):boolean;
-    getComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):T;
-    getComponents(entity:IEntity):{[x:string]:IComponent};
-    hasComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean;
-    getMask(entity:IEntity):number;
 }
 
 /**
@@ -41,18 +37,11 @@ export class EntityComponentManager implements IEntityComponentManager {
     private _onComponentRemoved:Signal;
     private _uuid:()=>string;
     private componentBitmask:ComponentBitmaskMap;
+
     /**
      * Maps ids to their Entity
      */
-    private _entities:Map<string,IEntity>;
-    /**
-     * Maps components to their Entity
-     */
-    private entityComponentMap: WeakMap<IEntity,{[x:string]:IComponent}>;
-    /**
-     * Stores the ComponentMask for each Entity
-     */
-    private componentMask:WeakMap<IEntity,number>;
+    private _entities:{[id:string]:IEntity};
 
     constructor(componentBitmaskMap:ComponentBitmaskMap,uuid:()=>string=UUIDGenerator.uuid){
         this._pool = new DynamicObjectPool();
@@ -62,9 +51,7 @@ export class EntityComponentManager implements IEntityComponentManager {
         this._onComponentRemoved = new Signal();
         this._uuid = uuid;
         this.componentBitmask = componentBitmaskMap;
-        this._entities = new Map<string,IEntity>();
-        this.entityComponentMap = new WeakMap<IEntity,{[x:string]:IComponent}>();
-        this.componentMask = new WeakMap<IEntity,number>();
+        this._entities = Object.create(null);
     }
 
     /**
@@ -80,12 +67,16 @@ export class EntityComponentManager implements IEntityComponentManager {
                 entity = new Entity();
             }
         }
-        this.entityComponentMap.set(entity,components||Object.create(null));
-        this.componentMask.set(entity,0);
-        for(let key in this.entityComponentMap.get(entity)){
-            this.componentMask.set(entity,this.componentMask.get(entity)|this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
-        }
+        entity.components = components||Object.create(null);
+        entity.bitmask = 0;
+        this.updateComponentBitmask(entity);
         return entity;
+    }
+
+    private updateComponentBitmask(entity:IEntity):void{
+        for(let key in entity.components){
+            entity.bitmask = entity.bitmask|this.componentBitmask.get(entity.components[key].constructor.name);
+        }
     }
 
     /**
@@ -95,12 +86,11 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
      */
     addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent:boolean=false):T{
-        this._entities.set(entity.id,entity);
-        let entityComponents = this.entityComponentMap.get(entity);
-        this.entityComponentMap.set(entity, components || entityComponents || Object.create(null));
-        this.componentMask.set(entity,0);
-        for(let key in this.entityComponentMap.get(entity)){
-            this.componentMask.set(entity,this.componentMask.get(entity)|this.componentBitmask.get(this.entityComponentMap.get(entity)[key].constructor.name));
+        this._entities[entity.id] = entity;
+        entity.components = components || entity.components || Object.create(null);
+        entity.bitmask = entity.bitmask||0;
+        if(components) {
+            this.updateComponentBitmask(entity);
         }
         if(!silent) {
             this._onEntityAdded.dispatch(entity);
@@ -116,21 +106,19 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @returns {boolean}
      */
     removeEntity(entity:IEntity,destroy?:boolean,silent:boolean=false):boolean{
-        if(this.entityComponentMap.has(entity)){
-            //TODO: Find a better way to pool the components of an entity
-            for(let key in this.entityComponentMap.get(entity)){
-                let component = this.entityComponentMap.get(entity)[key];
-                this.removeComponent(entity,component.constructor as any,destroy,true);
+        if(this._entities[entity.id]){
+            for(let key in entity.components){
+                this.removeComponent(entity,entity.components[key].constructor as any,destroy,true);
             }
-            if(!destroy) {
+            if(!destroy){
                 this._pool.push(entity);
             }
-            this.componentMask.delete(entity);
-            this.entityComponentMap.delete(entity);
-            if(!silent && this.entities.has(entity.id)) {
+            entity.bitmask = 0;
+            entity.components = Object.create(null);
+            if(!silent && this.hasEntity(entity)) {
                 this._onEntityRemoved.dispatch(entity);
             }
-            return this._entities.delete(entity.id);
+            return delete this._entities[entity.id];
         }
         return false;
     }
@@ -141,7 +129,7 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @returns {boolean}
      */
     hasEntity(entity:IEntity):boolean{
-        return this._entities.has(entity.id);
+        return !!this._entities[entity.id];
     }
 
     /**
@@ -151,12 +139,10 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
      */
     addComponent(entity:IEntity,component:IComponent,silent:boolean=false):void{
-        if(this.entityComponentMap.has(entity)) {
-            this.entityComponentMap.get(entity)[component.constructor.name] = component;
-            this.componentMask.set(entity,this.componentMask.get(entity) | this.componentBitmask.get(component.constructor.name));
-            if(!silent && this.entities.has(entity.id)) {
-                this._onComponentAdded.dispatch(entity, component);
-            }
+        entity.components[component.constructor.name] = component;
+        entity.bitmask = entity.bitmask | this.componentBitmask.get(component.constructor.name);
+        if(!silent && this.hasEntity(entity)) {
+            this._onComponentAdded.dispatch(entity, component);
         }
     }
 
@@ -169,74 +155,27 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @returns {boolean}
      */
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy:boolean=false,silent:boolean=false):boolean{
-        if(this.entityComponentMap.has(entity)) {
-            let comp = this.entityComponentMap.get(entity)[component.prototype.constructor.name];
-            if(comp){
-                if(!destroy) {
-                    this._pool.push(comp);
-                }
-                this.componentMask.set(entity,this.componentMask.get(entity) ^ this.componentBitmask.get(component));
-                if(!silent && this.entities.has(entity.id)) {
-                    this._onComponentRemoved.dispatch(entity, comp);
-                }
-                comp.remove();
-                return delete this.entityComponentMap.get(entity)[component.prototype.constructor.name];
+        let comp = entity.components[component.prototype.constructor.name];
+        if(comp){
+            if(!destroy){
+                this._pool.push(comp);
             }
+            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(component.prototype.constructor.name);
+            if(!silent && this.hasEntity(entity)) {
+                this._onComponentRemoved.dispatch(entity, comp);
+            }
+            comp.remove();
+            //TODO: Delete is slow
+            return delete entity.components[component.prototype.constructor.name];
         }
         return false;
-    }
-
-    /**
-     *
-     * @param entity
-     * @param component
-     * @returns {any}
-     */
-    getComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):T{
-        if(this.entityComponentMap.has(entity)) {
-            return this.entityComponentMap.get(entity)[component.prototype.constructor.name] as T;
-        }
-        return undefined;
-    }
-
-    /**
-     * Returns an Object with all components this entity contains
-     * @param {IEntity} entity
-     * @returns {{[p: string]: IComponent}}
-     */
-    getComponents(entity:IEntity):{[x:string]:IComponent}{
-        if(this.entityComponentMap.has(entity)) {
-            return this.entityComponentMap.get(entity);
-        }
-    }
-
-    /**
-     *
-     * @param entity
-     * @param component
-     * @returns {boolean}
-     */
-    hasComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean{
-        if(this.entityComponentMap.has(entity)){
-            return !!this.entityComponentMap.get(entity)[component.prototype.constructor.name];
-        }
-        return false;
-    }
-
-    /**
-     * Return the bitmask for the entity
-     * @param entity
-     * @returns {number}
-     */
-    getMask(entity:IEntity):number{
-        return this.componentMask.get(entity)||0;
     }
 
     public get pool():DynamicObjectPool {
         return this._pool;
     }
 
-    public get entities():Map<string, IEntity> {
+    public get entities():{ [p:string]:IEntity } {
         return this._entities;
     }
 

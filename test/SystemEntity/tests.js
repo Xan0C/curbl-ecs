@@ -67,30 +67,24 @@ PositionSystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], PositionSystem);
 let FullSystem = class FullSystem {
-    update(entities) {
-        for (let entity of entities.values()) {
+    update() {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(NameComponent).name = "CHANGED_NAME";
         }
     }
     init() {
     }
 };
-__decorate([
-    ECS_1.ECS.Update(0)
-], FullSystem.prototype, "update", null);
 FullSystem = __decorate([
     ECS_1.ECS.System(PositionComponent, NameComponent)
 ], FullSystem);
 let NameSystem = class NameSystem {
     postUpdate() {
-        for (let entity of this.entities.values()) {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(NameComponent).name = "NAME_COMP";
         }
     }
 };
-__decorate([
-    ECS_1.ECS.Update(1)
-], NameSystem.prototype, "postUpdate", null);
 NameSystem = __decorate([
     ECS_1.ECS.System(NameComponent)
 ], NameSystem);
@@ -100,6 +94,7 @@ describe('System_Entity', function () {
     var fullSystem;
     this.timeout(0);
     beforeEach(() => {
+        ECS_1.ECS.systemUpdateMethods = ['update', 'postUpdate'];
         positionSystem = ECS_1.ECS.addSystem(new PositionSystem());
         nameSystem = ECS_1.ECS.addSystem(new NameSystem());
         fullSystem = ECS_1.ECS.addSystem(new FullSystem());
@@ -173,7 +168,7 @@ describe('System_Entity', function () {
         it('Calls ECS update method which calls update method of all systems', () => {
             let entity = ECS_1.ECS.addEntity(new FullEntity());
             chai.expect(entity.get(NameComponent).name).to.equal("FullEntity");
-            ECS_1.ECS.callSystemMethod(0);
+            ECS_1.ECS.callSystemMethod('update');
             chai.expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
             ECS_1.ECS.update();
             chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");

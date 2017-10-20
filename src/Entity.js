@@ -2,7 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ECS_1 = require("./ECS");
 const ENTITY_PROPERTIES = {
-    id: () => { return ECS_1.ECS.uuid(); }
+    id: () => { return ECS_1.ECS.uuid(); },
+    components: () => { return Object.create(null); },
+    bitmask: () => { return 0; }
 };
 const ENTITY_PROTOTYPE = {
     get: () => { return Entity.prototype.get; },
@@ -12,13 +14,7 @@ const ENTITY_PROTOTYPE = {
     remove: () => { return Entity.prototype.remove; },
     dispose: () => { return Entity.prototype.dispose; }
 };
-exports.ENTITY_PROPERTY_DECORATOR = {
-    componentMask: (obj) => {
-        Object.defineProperty(obj, "componentMask", {
-            get: function () { return ECS_1.ECS.getEntityComponentMask(this); }
-        });
-    }
-};
+exports.ENTITY_PROPERTY_DECORATOR = {};
 function injectEntity(entity) {
     for (let propKey in ENTITY_PROPERTIES) {
         if (entity[propKey] === undefined || entity[propKey] === null) {
@@ -47,15 +43,17 @@ exports.injectEntity = injectEntity;
 class Entity {
     constructor() {
         this.id = ENTITY_PROPERTIES.id();
+        this.components = ENTITY_PROPERTIES.components();
+        this.bitmask = ENTITY_PROPERTIES.bitmask();
     }
     getAll() {
-        return ECS_1.ECS.getComponents(this);
+        return this.components;
     }
     get(component) {
-        return ECS_1.ECS.getComponent(this, component);
+        return this.components[component.prototype.constructor.name];
     }
     has(component) {
-        return ECS_1.ECS.hasComponent(this, component);
+        return !!this.components[component.prototype.constructor.name];
     }
     add(component) {
         return ECS_1.ECS.addComponent(this, component);
@@ -65,9 +63,6 @@ class Entity {
     }
     dispose(destroy) {
         return ECS_1.ECS.removeEntity(this, destroy);
-    }
-    get componentMask() {
-        return ECS_1.ECS.getEntityComponentMask(this);
     }
 }
 exports.Entity = Entity;

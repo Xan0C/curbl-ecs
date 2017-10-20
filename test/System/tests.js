@@ -31,46 +31,37 @@ let System = class System {
         this.x = config.x;
         this.y = config.y;
     }
-    update(entities) {
-        for (let entity of entities.values()) {
+    update() {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(PositionComponent).x = 42;
             entity.get(PositionComponent).y = 42;
         }
     }
 };
-__decorate([
-    ECS_1.ECS.Update(0)
-], System.prototype, "update", null);
 System = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], System);
 let SystemTwo = class SystemTwo {
-    update(entities) {
-        for (let entity of entities.values()) {
+    update() {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(PositionComponent).x = 12;
             entity.get(PositionComponent).y = 12;
         }
     }
     init() { }
 };
-__decorate([
-    ECS_1.ECS.Update(0)
-], SystemTwo.prototype, "update", null);
 SystemTwo = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], SystemTwo);
 let Subsystem = class Subsystem {
-    update(entities) {
-        for (let entity of entities.values()) {
+    update() {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(PositionComponent).x = 1337;
             entity.get(PositionComponent).y = 1337;
         }
     }
     init() { }
 };
-__decorate([
-    ECS_1.ECS.Update(0)
-], Subsystem.prototype, "update", null);
 Subsystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], Subsystem);
@@ -90,8 +81,7 @@ describe('SystemDecorator', function () {
     });
     describe('#componentMask', () => {
         it('Checks that the componentMask properties descriptor got created for the system', () => {
-            chai.expect(system.componentMask).to.equal(ECS_1.ECS.getSystemComponentMask(system));
-            chai.expect(system.componentMask).to.not.equal(0);
+            chai.expect(system.bitmask).to.not.equal(0);
         });
     });
     describe('#has', () => {
@@ -100,6 +90,8 @@ describe('SystemDecorator', function () {
             entity.add(new PositionComponent({ x: 0, y: 0 }));
             chai.expect(system.has(entity)).to.equal(false);
             ECS_1.ECS.addEntity(entity);
+            console.log(system);
+            console.log(entity);
             chai.expect(system.has(entity)).to.equal(true);
         });
     });
@@ -127,22 +119,6 @@ describe('SystemDecorator', function () {
             chai.expect(system.has(entity)).to.equal(false);
             chai.expect(scdSystem.has(entity)).to.equal(true);
             scdSystem.dispose();
-        });
-    });
-    describe('#addSubsystem', () => {
-        it('Adds a Subsystem ', () => {
-            let scdSystem = new SystemTwo();
-            ECS_1.ECS.addSystem(scdSystem);
-            let entity = ECS_1.ECS.createEntity();
-            entity.add(new PositionComponent({ x: 0, y: 0 }));
-            ECS_1.ECS.addEntity(entity);
-            let subSystem = new Subsystem();
-            ECS_1.ECS.addSubsystem(system, subSystem);
-            chai.expect(ECS_1.ECS.hasSystemOf(System)).to.equal(true);
-            chai.expect(ECS_1.ECS.hasSystemOf(SystemTwo)).to.equal(true);
-            chai.expect(ECS_1.ECS.hasSystemOf(Subsystem)).to.equal(true);
-            ECS_1.ECS.update();
-            chai.expect(entity.get(PositionComponent).x).to.equal(12);
         });
     });
     describe('#dispose', () => {
