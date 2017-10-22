@@ -37,6 +37,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     private _onEntityAddedToSystem:Signal;
     private _onEntityRemovedFromSystem:Signal;
 
+    private ids:Array<string>;
     /**
      * Sorted Array of all Systems
      */
@@ -55,6 +56,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
         this.systems = Object.create(null);
+        this.ids = [];
     }
 
     /**
@@ -80,6 +82,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         if(!this.has(system)) {
             injectSystem(system,this.systemUpdateMethods);
             this.systems[system.constructor.name] = system;
+            this.ids.push(system.constructor.name);
             this.updateBitmask(system,componentMask);
             system.setUp();
             if(!silent){
@@ -121,6 +124,7 @@ export class EntitySystemManager implements IEntitySystemManager {
                 this._onSystemRemoved.dispatch(system);
             }
             system.tearDown();
+            spliceOne(this.ids,this.ids.indexOf(system.constructor.name));
             return delete this.systems[system.constructor.name];
         }
         return false;
@@ -150,7 +154,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     }
 
     getComponentMaskOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):number{
-        let system =this.get(constructor);
+        let system = this.get(constructor);
         if(system){
             return system.bitmask;
         }
@@ -174,10 +178,9 @@ export class EntitySystemManager implements IEntitySystemManager {
                 system.onEntityAdded.dispatch(entity);
             }
         }else{
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for(let i=0; i < len; i++){
-                let system = this.systems[keys[i]];
+            const ids = this.ids;
+            const systems = this.systems;
+            for(let i=0, system; system = systems[ids[i]]; i++){
                 if((entity.bitmask & system.bitmask) === system.bitmask){
                     system.entities.push(entity);
                     system.onEntityAdded.dispatch(entity);
@@ -200,9 +203,9 @@ export class EntitySystemManager implements IEntitySystemManager {
             spliceOne(system.entities,system.entities.indexOf(entity));
             system.onEntityRemoved.dispatch(entity);
         }else{
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for(let i=0; i < len; i++){
+            const ids = this.ids;
+            const systems = this.systems;
+            for(let i=0, system; system = systems[ids[i]]; i++){
                 spliceOne(system.entities,system.entities.indexOf(entity));
                 system.onEntityRemoved.dispatch(entity);
             }
@@ -221,10 +224,10 @@ export class EntitySystemManager implements IEntitySystemManager {
         if(system){
             this.addEntityToSystem(system,entity);
         }else {
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for(let i=0; i < len; i++){
-                this.addEntityToSystem(this.systems[keys[i]],entity);
+            const ids = this.ids;
+            const systems = this.systems;
+            for(let i=0, system; system = systems[ids[i]]; i++){
+                this.addEntityToSystem(system,entity);
             }
         }
     }
@@ -243,11 +246,9 @@ export class EntitySystemManager implements IEntitySystemManager {
      * Calls the Method for all Systems and Subsystems
      */
     callSystemMethod(id:string) {
-        const keys = Object.keys(this.systems);
-        const len = keys.length;
-        let system;
-        for(let i=0; i < len; i++){
-            system = this.systems[keys[i]];
+        const ids = this.ids;
+        const systems = this.systems;
+        for(let i=0, system; system = systems[ids[i]]; i++){
             system[id]();
         }
     }
@@ -265,10 +266,11 @@ export class EntitySystemManager implements IEntitySystemManager {
      * Injects the SystemMethods into all systems if the methods does not exist a noop method will be added
      */
     updateSystemMethods():void{
-        const keys = Object.keys(this.systems);
-        const len = keys.length;
-        for(let i=0; i < len; i++){
-            injectSystem(this.systems[i],this.systemUpdateMethods);
+        const ids = this.ids;
+        const systems = this.systems;
+        const methods = this.systemUpdateMethods;
+        for(let i=0, system; system = systems[ids[i]]; i++){
+            injectSystem(system,methods);
         }
     }
 

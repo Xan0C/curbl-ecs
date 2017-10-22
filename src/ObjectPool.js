@@ -11,7 +11,7 @@ class Pool {
     remove(...objects) {
         for (let object of objects) {
             if (this.has(object)) {
-                ArrayUtil_1.spliceOne(this.objects[object.constructor.name], this.objects[object.constructor.name].indexOf(object));
+                ArrayUtil_1.spliceOne(this.objects, this.objects.indexOf(object));
             }
         }
     }
@@ -36,7 +36,7 @@ class Pool {
 }
 class DynamicObjectPool {
     constructor() {
-        this.pool = [];
+        this.pool = Object.create(null);
     }
     push(...objects) {
         for (let object of objects) {
@@ -60,7 +60,7 @@ class DynamicObjectPool {
     }
     has(object) {
         if (this.pool[object.constructor.name]) {
-            return !this.pool[object.constructor.name].has(object);
+            return this.pool[object.constructor.name].has(object);
         }
         return false;
     }
@@ -77,10 +77,10 @@ class DynamicObjectPool {
         return undefined;
     }
     dispose() {
-        delete this.pool;
+        this.pool = Object.create(null);
     }
     clear() {
-        this.pool.length = 0;
+        this.pool = Object.create(null);
     }
 }
 exports.DynamicObjectPool = DynamicObjectPool;

@@ -13,7 +13,7 @@ class Pool<T> {
     remove(...objects:T[]):void {
         for(let object of objects){
             if(this.has(object)){
-                spliceOne(this.objects[object.constructor.name],this.objects[object.constructor.name].indexOf(object));
+                spliceOne(this.objects,this.objects.indexOf(object));
             }
         }
     }
@@ -45,10 +45,10 @@ class Pool<T> {
 
 export class DynamicObjectPool {
 
-    private pool:Array<Pool<any>>;
+    private pool:{[id:string]:Pool<any>};
 
     constructor(){
-        this.pool = [];
+        this.pool = Object.create(null);
     }
 
     push<T extends any>(...objects:T[]):void {
@@ -76,7 +76,7 @@ export class DynamicObjectPool {
 
     has<T extends any>(object:T):boolean {
         if(this.pool[object.constructor.name]){
-            return !this.pool[object.constructor.name].has(object);
+            return this.pool[object.constructor.name].has(object);
         }
         return false;
     }
@@ -96,10 +96,10 @@ export class DynamicObjectPool {
     }
 
     dispose():void{
-        delete this.pool;
+        this.pool = Object.create(null);
     }
 
     clear():void{
-        this.pool.length = 0;
+        this.pool = Object.create(null);
     }
 }

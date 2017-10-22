@@ -63,7 +63,6 @@ class EntityComponentManager {
         return entity;
     }
     /**
-     *
      * @param entity - Entity to remove
      * @param destroy - if true the Entity will be destroyed instead of pooled
      * @param silent - Dispatch onEntityRemoved Signal(Removing the Entity from the Systems)

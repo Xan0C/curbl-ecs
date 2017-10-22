@@ -12,6 +12,7 @@ class EntitySystemManager {
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
         this.systems = Object.create(null);
+        this.ids = [];
     }
     /**
      * Creates the System but wont add it to the ECS
@@ -35,6 +36,7 @@ class EntitySystemManager {
         if (!this.has(system)) {
             System_1.injectSystem(system, this.systemUpdateMethods);
             this.systems[system.constructor.name] = system;
+            this.ids.push(system.constructor.name);
             this.updateBitmask(system, componentMask);
             system.setUp();
             if (!silent) {
@@ -74,6 +76,7 @@ class EntitySystemManager {
                 this._onSystemRemoved.dispatch(system);
             }
             system.tearDown();
+            ArrayUtil_1.spliceOne(this.ids, this.ids.indexOf(system.constructor.name));
             return delete this.systems[system.constructor.name];
         }
         return false;
@@ -123,10 +126,9 @@ class EntitySystemManager {
             }
         }
         else {
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for (let i = 0; i < len; i++) {
-                let system = this.systems[keys[i]];
+            const ids = this.ids;
+            const systems = this.systems;
+            for (let i = 0, system; system = systems[ids[i]]; i++) {
                 if ((entity.bitmask & system.bitmask) === system.bitmask) {
                     system.entities.push(entity);
                     system.onEntityAdded.dispatch(entity);
@@ -149,9 +151,9 @@ class EntitySystemManager {
             system.onEntityRemoved.dispatch(entity);
         }
         else {
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for (let i = 0; i < len; i++) {
+            const ids = this.ids;
+            const systems = this.systems;
+            for (let i = 0, system; system = systems[ids[i]]; i++) {
                 ArrayUtil_1.spliceOne(system.entities, system.entities.indexOf(entity));
                 system.onEntityRemoved.dispatch(entity);
             }
@@ -170,10 +172,10 @@ class EntitySystemManager {
             this.addEntityToSystem(system, entity);
         }
         else {
-            const keys = Object.keys(this.systems);
-            const len = keys.length;
-            for (let i = 0; i < len; i++) {
-                this.addEntityToSystem(this.systems[keys[i]], entity);
+            const ids = this.ids;
+            const systems = this.systems;
+            for (let i = 0, system; system = systems[ids[i]]; i++) {
+                this.addEntityToSystem(system, entity);
             }
         }
     }
@@ -191,11 +193,9 @@ class EntitySystemManager {
      * Calls the Method for all Systems and Subsystems
      */
     callSystemMethod(id) {
-        const keys = Object.keys(this.systems);
-        const len = keys.length;
-        let system;
-        for (let i = 0; i < len; i++) {
-            system = this.systems[keys[i]];
+        const ids = this.ids;
+        const systems = this.systems;
+        for (let i = 0, system; system = systems[ids[i]]; i++) {
             system[id]();
         }
     }
@@ -211,10 +211,11 @@ class EntitySystemManager {
      * Injects the SystemMethods into all systems if the methods does not exist a noop method will be added
      */
     updateSystemMethods() {
-        const keys = Object.keys(this.systems);
-        const len = keys.length;
-        for (let i = 0; i < len; i++) {
-            System_1.injectSystem(this.systems[i], this.systemUpdateMethods);
+        const ids = this.ids;
+        const systems = this.systems;
+        const methods = this.systemUpdateMethods;
+        for (let i = 0, system; system = systems[ids[i]]; i++) {
+            System_1.injectSystem(system, methods);
         }
     }
     get onSystemAdded() {

@@ -104,8 +104,6 @@ describe('SystemDecorator', function() {
             entity.add(new PositionComponent({x:0,y:0}));
             chai.expect(system.has(entity)).to.equal(false);
             ECS.addEntity(entity);
-            console.log(system);
-            console.log(entity);
             chai.expect(system.has(entity)).to.equal(true);
         });
     });

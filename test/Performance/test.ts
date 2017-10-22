@@ -36,9 +36,10 @@ class System implements ISystem {
     }
 
     update():void{
-        for(let i=0,entity; entity = this.entities[i];i++){
-            entity.get(PositionComponent).x = 42;
-            entity.get(PositionComponent).y = 42;
+        const entities = this.entities;
+        for(let i=0,entity; entity = entities[i];i++){
+            entity.components.PositionComponent.x = 42;
+            entity.components.PositionComponent.y = 42;
         }
     }
 }
@@ -49,9 +50,10 @@ class SystemTwo implements ISystem {
 
 
     update():void{
-        for(let i=0,entity; entity = this.entities[i];i++){
-            entity.get(PositionComponent).x = 12;
-            entity.get(PositionComponent).y = 12;
+        const entities = this.entities;
+        for(let i=0,entity; entity = entities[i];i++){
+            entity.components.PositionComponent.x = 12;
+            entity.components.PositionComponent.y = 12;
         }
     }
 
@@ -63,9 +65,10 @@ class SystemThree implements ISystem {
     readonly entities:Array<IEntity>;
 
     update():void{
-        for(let i=0,entity; entity = this.entities[i];i++){
-            entity.get(PositionComponent).x = 1337;
-            entity.get(PositionComponent).y = 1337;
+        const entities = this.entities;
+        for(let i=0,entity; entity = entities[i];i++){
+            entity.components.PositionComponent.x = 1337;
+            entity.components.PositionComponent.y = 1337;
         }
     }
 
@@ -97,25 +100,21 @@ describe('SystemPerformance', function() {
                 entity.add(new PositionComponent({x:0,y:0}));
                 ECS.addEntity(entity);
             }
-            const NS_PER_SEC = 1e9;
-            const time = process.hrtime();
+            console.time('ECS#Update10k');
             ECS.update();
-            const diff = process.hrtime(time);
-            console.log('ECS#UpdateTime: '+((diff[0]*NS_PER_SEC + diff[1]))/1000000+" milliseconds");
+            console.timeEnd('ECS#Update10k');
         });
     });
 
     describe('#createEntities', () => {
         it('entities#not_pooled#10k', () => {
-            const NS_PER_SEC = 1e9;
-            const time = process.hrtime();
+            console.time('ECS#CreateEntitiesNotPooled10k');
             for(let i=0; i < 10000; i++){
                 let entity = ECS.createEntity();
                 entity.add(new PositionComponent({x:0,y:0}));
                 ECS.addEntity(entity);
             }
-            const diff = process.hrtime(time);
-            console.log('ECS#CreateNotPooled: '+((diff[0]*NS_PER_SEC + diff[1]))/1000000+" milliseconds");
+            console.timeEnd('ECS#CreateEntitiesNotPooled10k');
         });
 
         it('entities#pooled#10k', () => {
@@ -125,15 +124,13 @@ describe('SystemPerformance', function() {
                 ECS.addEntity(entity);
                 entity.dispose();
             }
-            const NS_PER_SEC = 1e9;
-            const time = process.hrtime();
+            console.time('ECS#CreateEntitiesPooled10k');
             for(let i=0; i < 10000; i++){
                 let entity = ECS.createEntity();
                 entity.add(new PositionComponent({x:0,y:0}));
                 ECS.addEntity(entity);
             }
-            const diff = process.hrtime(time);
-            console.log('ECS#CreatePooled: '+((diff[0]*NS_PER_SEC + diff[1]))/1000000+" milliseconds");
+            console.timeEnd('ECS#CreateEntitiesPooled10k');
         });
     });
 
