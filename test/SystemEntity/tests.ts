@@ -2,7 +2,7 @@ import * as chai from "chai";
 import {ECS} from "../../lib/ECS";
 import {IEntity} from "../../lib/Entity";
 import {ISystem} from "../../lib/System";
-import {IComponent} from "../../src/Component";
+import {IComponent} from "../../lib/Component";
 
 @ECS.Component()
 class NameComponent implements IComponent {

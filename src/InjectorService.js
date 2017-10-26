@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ECS_1 = require("./ECS");
 class InjectorService {
     constructor() {
-        InjectorService.systemQueue = new WeakMap();
+        this.systemQueue = Object.create(null);
         ECS_1.ECS.onSystemAdded.add('updateSystemQueue', this);
     }
     static get instance() {
@@ -12,10 +12,16 @@ class InjectorService {
         }
         return InjectorService._instance = new InjectorService();
     }
-    static updateSystemQueue(system) {
-        if (InjectorService.systemQueue.has(system.constructor.prototype)) {
-            const inject = InjectorService.systemQueue.get(system.constructor.prototype);
-            inject.target[inject.propKey] = system;
+    updateSystemQueue(system) {
+        console.log("Check if system exists: " + system);
+        console.log(this.systemQueue);
+        if (this.systemQueue[system.constructor.name]) {
+            console.log("Inject System from Queue: " + system);
+            const keys = Object.keys(this.systemQueue);
+            for (let i = 0, inject; inject = this.systemQueue[keys[i]]; i++) {
+                inject.target[inject.propKey] = system;
+            }
+            delete this.systemQueue[system.constructor.name];
         }
     }
     /**
@@ -27,13 +33,17 @@ class InjectorService {
      */
     System(system) {
         return function (target, propKey) {
-            const prop = ECS_1.ECS.getSystem(system);
-            if (prop) {
-                target[propKey] = prop;
-            }
-            else {
-                InjectorService.systemQueue.set(system, { target: target, propKey: propKey });
-            }
+            const constructor = target.constructor;
+            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            let InjectorWrapped = function (...args) {
+                let object = wrapper.apply(this, args);
+                Object.setPrototypeOf(object, Object.getPrototypeOf(this));
+                const prop = ECS_1.ECS.getSystem(system);
+                object[propKey] = prop;
+                return object;
+            };
+            InjectorWrapped.prototype = constructor.prototype;
+            target.constructor = InjectorWrapped.constructor;
         };
     }
     /**

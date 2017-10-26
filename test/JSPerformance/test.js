@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Created by Soeren on 19.10.2017.
  */
-const ArrayUtil_1 = require("../../src/util/ArrayUtil");
+const ArrayUtil_1 = require("../../lib/util/ArrayUtil");
 class Test {
     constructor() {
         this.inc = 0;

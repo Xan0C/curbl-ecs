@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
-import {IComponent} from "../../src/Component";
+import {IComponent} from "../../lib/Component";
 
 /**
  * Created by Soeren on 29.06.2017.

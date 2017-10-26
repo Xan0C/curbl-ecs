@@ -2,7 +2,7 @@ import * as chai from "chai";
 import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
 import {ISystem} from "../../lib/System";
-import {IComponent} from "../../src/Component";
+import {IComponent} from "../../lib/Component";
 
 @ECS.Component()
 export class PositionComponent implements IComponent {

@@ -1,7 +1,7 @@
 /**
  * Created by Soeren on 19.10.2017.
  */
-import {spliceOne} from "../../src/util/ArrayUtil";
+import {spliceOne} from "../../lib/util/ArrayUtil";
 
 class Test {
     next:Test;

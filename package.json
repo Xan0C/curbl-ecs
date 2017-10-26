@@ -1,5 +1,5 @@
 {
-  "name": "curbl",
+  "name": "curbl-ecs",
   "version": "1.0.0",
   "description": "Small Vanilla ES6 Entity Component System",
   "main": "./lib/index.js",
