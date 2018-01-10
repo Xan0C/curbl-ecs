@@ -11,11 +11,11 @@ export interface IEntity {
     readonly id?:string;
     components?:{[id:string]:IComponent};
     bitmask?:number;
-    get?<T extends IComponent>(comp:{new(...args):T}):T;
+    get?<T extends IComponent>(comp:{new(...args):T}|string):T;
     getAll?():{[id:string]:IComponent};
-    has?<T extends IComponent>(comp:{new(...args):T}):boolean;
+    has?<T extends IComponent>(comp:{new(...args):T}|string):boolean;
     add?(component:IComponent):void;
-    remove?<T extends IComponent>(component:{new(...args):T}):boolean;
+    remove?<T extends IComponent>(component:{new(...args):T}|string):boolean;
     dispose?(destroy?:boolean):boolean;
 }
 
@@ -78,11 +78,17 @@ export class Entity implements IEntity{
         return this.components;
     }
 
-    get<T extends IComponent>(component:{ new(...args):T }):T {
+    get<T extends IComponent>(component:{ new(...args):T }|string):T {
+        if(typeof component === 'string') {
+            return this.components[component] as T;
+        }
         return this.components[component.prototype.constructor.name] as T;
     }
 
-    has<T extends IComponent>(component:{ new(...args):T }):boolean {
+    has<T extends IComponent>(component:{ new(...args):T }|string):boolean {
+        if(typeof component === 'string'){
+            return !!this.components[component];
+        }
         return !!this.components[component.prototype.constructor.name];
     }
 
@@ -90,7 +96,7 @@ export class Entity implements IEntity{
         return ECS.addComponent(this,component);
     }
 
-    remove<T extends IComponent>(component:{new(...args):T}):boolean{
+    remove<T extends IComponent>(component:{new(...args):T}|string):boolean{
         return ECS.removeComponent(this,component);
     }
 

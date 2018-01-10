@@ -31,7 +31,7 @@ export class ComponentBitmaskMap {
             this.add(component);
         }
         if(typeof component === "string"){
-            return this.bitmaskMap.get(component);
+            return this.bitmaskMap.get(component)||0;
         }
         return this.bitmaskMap.get(component.prototype.constructor.name)||0;
     }
@@ -73,6 +73,11 @@ export function injectComponent(component:IComponent){
 }
 
 export interface IComponent {
+    /**
+     * Id for this Component usually the class name
+     * used internally
+     */
+    id?:string;
     init?(...args):void;
     remove?():void;
 }

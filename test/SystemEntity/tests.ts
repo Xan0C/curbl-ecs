@@ -4,7 +4,7 @@ import {IEntity} from "../../lib/Entity";
 import {ISystem} from "../../lib/System";
 import {IComponent} from "../../lib/Component";
 
-@ECS.Component()
+@ECS.Component('NameComponent')
 class NameComponent implements IComponent {
     private _name:string;
 
@@ -29,6 +29,24 @@ class NameComponent implements IComponent {
 
     public set name(value:string) {
         this._name = value;
+    }
+}
+
+@ECS.Component('NameComponent')
+class ExtendedNameComponent extends NameComponent implements IComponent {
+    public nameTwo:string;
+
+    constructor(config:{name:string,nameTwo:string}={name:"",nameTwo:""}){
+        super(config);
+        this.init(config);
+    }
+
+    init(config:{name:string,nameTwo:string}={name:"",nameTwo:""}):void {
+        this.name = config.name;
+        this.nameTwo = config.nameTwo;
+    }
+
+    remove():void {
     }
 }
 
@@ -68,6 +86,12 @@ class PositionEntity implements IEntity {
 )
 class FullEntity {
 }
+
+@ECS.Entity(
+    {component:ExtendedNameComponent, config:{name:'Normal',nameTwo:'Extended'}},
+    {component: PositionComponent, config:{x:42,y:12}}
+)
+class ExtendedEntity {}
 
 @ECS.System(PositionComponent)
 class PositionSystem implements ISystem {
@@ -221,4 +245,17 @@ describe('System_Entity', function () {
             chai.expect(component.name).to.equal('TEST');
         });
     });
+
+    describe('#extendedComponent',()=>{
+        it('Add entity with an ExtendedNameComponent and an entity with NameComponent, both should be handled by the same system',()=>{
+            let fEntity:IEntity = ECS.addEntity(new FullEntity());
+            let eEntity:IEntity = ECS.addEntity(new ExtendedEntity());
+            chai.expect(eEntity.get<ExtendedNameComponent>('NameComponent').name).to.equal('Normal');
+            chai.expect(eEntity.get<ExtendedNameComponent>('NameComponent').nameTwo).to.equal('Extended');
+            chai.expect(fEntity.get<ExtendedNameComponent>('NameComponent').nameTwo).to.be.undefined;
+            chai.expect(fEntity.get<NameComponent>(NameComponent).name).to.be.equal('FullEntity');
+            chai.expect(nameSystem.has(fEntity)).to.be.true;
+            chai.expect(nameSystem.has(eEntity)).to.be.true;
+        });
+    })
 });

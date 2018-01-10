@@ -108,7 +108,7 @@ export class ECS {
         return ECS.instance.ecm.hasEntity(entity);
     }
 
-    static removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}):boolean{
+    static removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string):boolean{
         return ECS.instance.ecm.removeComponent(entity,component);
     }
 
@@ -159,12 +159,13 @@ export class ECS {
     private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
         let comps = Object.create(null);
         for(let dec of components){
-            comps[dec.component.prototype.constructor.name] = new dec.component(dec.config);
+            let component = new dec.component(dec.config);
+            comps[component.id] = component;
         }
         return comps;
     }
 
-    static Component():(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
+    static Component(id?:string):(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
         return function(constructor:{new(...args):IComponent}){
             var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             let DecoratorSystem:any = function(...args){
@@ -176,6 +177,7 @@ export class ECS {
                 }else{
                     component.init(...args);
                 }
+                component.id = id||constructor.prototype.constructor.name;
                 return component;
             };
             DecoratorSystem.prototype = constructor.prototype;

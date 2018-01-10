@@ -43,13 +43,4 @@ export class InjectorService {
             return DecoratorInjector;
         }
     }
-
-    private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
-        let comps = Object.create(null);
-        for(let dec of components){
-            comps[dec.component.prototype.constructor.name] = new dec.component(dec.config);
-        }
-        return comps;
-    }
-
 }

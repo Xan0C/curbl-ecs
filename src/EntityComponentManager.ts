@@ -17,7 +17,7 @@ export interface IEntityComponentManager {
     removeEntity(entity:IEntity,destroy?:boolean,silent?:boolean):boolean;
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
-    removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy?:boolean,silent?:boolean):boolean;
+    removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy?:boolean,silent?:boolean):boolean;
 }
 
 /**
@@ -75,7 +75,7 @@ export class EntityComponentManager implements IEntityComponentManager {
 
     private updateComponentBitmask(entity:IEntity):void{
         for(let key in entity.components){
-            entity.bitmask = entity.bitmask|this.componentBitmask.get(entity.components[key].constructor.name);
+            entity.bitmask = entity.bitmask|this.componentBitmask.get(entity.components[key].id);
         }
     }
 
@@ -107,7 +107,7 @@ export class EntityComponentManager implements IEntityComponentManager {
     removeEntity(entity:IEntity,destroy?:boolean,silent:boolean=false):boolean{
         if(this._entities[entity.id]){
             for(let key in entity.components){
-                this.removeComponent(entity,entity.components[key].constructor as any,destroy,true);
+                this.removeComponent(entity,entity.components[key].id,destroy,true);
             }
             if(!destroy){
                 this._pool.push(entity);
@@ -138,8 +138,8 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
      */
     addComponent(entity:IEntity,component:IComponent,silent:boolean=false):void{
-        entity.components[component.constructor.name] = component;
-        entity.bitmask = entity.bitmask | this.componentBitmask.get(component.constructor.name);
+        entity.components[component.id] = component;
+        entity.bitmask = entity.bitmask | this.componentBitmask.get(component.id);
         if(!silent && this.hasEntity(entity)) {
             this._onComponentAdded.dispatch(entity, component);
         }
@@ -153,19 +153,24 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param silent - If true the onComponentRemoved signal is not dispatched and no system will be updated
      * @returns {boolean}
      */
-    removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T},destroy:boolean=false,silent:boolean=false):boolean{
-        let comp = entity.components[component.prototype.constructor.name];
+    removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy:boolean=false,silent:boolean=false):boolean{
+        let comp:IComponent;
+        if(typeof component === 'string') {
+            comp = entity.components[component];
+        }else{
+            comp = entity.components[component.prototype.constructor.name];
+        }
         if(comp){
             if(!destroy){
                 this._pool.push(comp);
             }
-            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(component.prototype.constructor.name);
+            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(comp.id);
             if(!silent && this.hasEntity(entity)) {
                 this._onComponentRemoved.dispatch(entity, comp);
             }
             comp.remove();
             //TODO: Delete is slow
-            return delete entity.components[component.prototype.constructor.name];
+            return delete entity.components[comp.id];
         }
         return false;
     }

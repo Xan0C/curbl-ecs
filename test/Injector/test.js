@@ -41,12 +41,29 @@ let System = class System {
 System = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], System);
+let SystemDeux = class SystemDeux {
+    constructor(config) {
+        this.x = config.x;
+        this.y = config.y;
+    }
+    update() {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
+            entity.get(PositionComponent).x = 42;
+            entity.get(PositionComponent).y = 42;
+        }
+    }
+};
+SystemDeux = __decorate([
+    ECS_1.ECS.System(PositionComponent)
+], SystemDeux);
 let Injected = class Injected {
     constructor() {
     }
 };
 Injected = __decorate([
-    ECS_1.ECS.Injector.System({ system: System })
+    ECS_1.ECS.Injector.System({
+        system: System
+    })
 ], Injected);
 describe('SystemDecorator', function () {
     var system;

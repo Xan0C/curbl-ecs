@@ -117,5 +117,5 @@ describe('EntityDecorator', function() {
             entity.dispose(true);
             chai.expect(ECS.hasEntity(entity)).to.equal(false);
         });
-    })
+    });
 });

@@ -28,8 +28,23 @@ let NameComponent = class NameComponent {
     }
 };
 NameComponent = __decorate([
-    ECS_1.ECS.Component()
+    ECS_1.ECS.Component('NameComponent')
 ], NameComponent);
+let ExtendedNameComponent = class ExtendedNameComponent extends NameComponent {
+    constructor(config = { name: "", nameTwo: "" }) {
+        super(config);
+        this.init(config);
+    }
+    init(config = { name: "", nameTwo: "" }) {
+        this.name = config.name;
+        this.nameTwo = config.nameTwo;
+    }
+    remove() {
+    }
+};
+ExtendedNameComponent = __decorate([
+    ECS_1.ECS.Component('NameComponent')
+], ExtendedNameComponent);
 let PositionComponent = class PositionComponent {
     constructor(config = { x: 0, y: 0 }) {
         this.init(config);
@@ -59,6 +74,11 @@ let FullEntity = class FullEntity {
 FullEntity = __decorate([
     ECS_1.ECS.Entity({ component: NameComponent, config: { name: "FullEntity" } }, { component: PositionComponent, config: { x: 42, y: 12 } })
 ], FullEntity);
+let ExtendedEntity = class ExtendedEntity {
+};
+ExtendedEntity = __decorate([
+    ECS_1.ECS.Entity({ component: ExtendedNameComponent, config: { name: 'Normal', nameTwo: 'Extended' } }, { component: PositionComponent, config: { x: 42, y: 12 } })
+], ExtendedEntity);
 let PositionSystem = class PositionSystem {
     constructor() {
     }
@@ -193,6 +213,18 @@ describe('System_Entity', function () {
             ECS_1.ECS.unbind(component);
             component.name = 'TEST';
             chai.expect(component.name).to.equal('TEST');
+        });
+    });
+    describe('#extendedComponent', () => {
+        it('Add entity with an ExtendedNameComponent and an entity with NameComponent, both should be handled by the same system', () => {
+            let fEntity = ECS_1.ECS.addEntity(new FullEntity());
+            let eEntity = ECS_1.ECS.addEntity(new ExtendedEntity());
+            chai.expect(eEntity.get('NameComponent').name).to.equal('Normal');
+            chai.expect(eEntity.get('NameComponent').nameTwo).to.equal('Extended');
+            chai.expect(fEntity.get('NameComponent').nameTwo).to.be.undefined;
+            chai.expect(fEntity.get(NameComponent).name).to.be.equal('FullEntity');
+            chai.expect(nameSystem.has(fEntity)).to.be.true;
+            chai.expect(nameSystem.has(eEntity)).to.be.true;
         });
     });
 });
