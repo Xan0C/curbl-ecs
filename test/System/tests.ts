@@ -74,6 +74,14 @@ class Subsystem implements ISystem {
     init():void{}
 }
 
+@ECS.System()
+class EmptySystem implements ISystem {
+    entities:Array<IEntity>;
+
+    update():void{
+    }
+}
+
 describe('SystemDecorator', function() {
     var system:ISystem;
     this.timeout(0);
@@ -141,6 +149,16 @@ describe('SystemDecorator', function() {
             chai.expect(ECS.hasSystem(system)).to.equal(true);
             system.dispose();
             chai.expect(ECS.hasSystem(system)).to.equal(false);
+        });
+    });
+
+    describe('#EmptySystem',()=>{
+        it('Add a System without a component mask and checks that no entity is added to the System',()=>{
+           const system = ECS.addSystem(new EmptySystem());
+           const entity = ECS.createEntity();
+           entity.add(new PositionComponent({x:0,y:0}));
+           ECS.addEntity(entity);
+           chai.expect(system.entities.indexOf(entity)).to.equal(-1);
         });
     })
 });

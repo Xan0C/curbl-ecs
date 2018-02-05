@@ -173,7 +173,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     addEntity(entity:IEntity,system?:ISystem,silent:boolean=false):void{
         if(system){
-            if( (entity.bitmask & system.bitmask) === system.bitmask){
+            if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
                 system.entities.push(entity);
                 system.onEntityAdded.dispatch(entity);
             }

@@ -65,6 +65,13 @@ let Subsystem = class Subsystem {
 Subsystem = __decorate([
     ECS_1.ECS.System(PositionComponent)
 ], Subsystem);
+let EmptySystem = class EmptySystem {
+    update() {
+    }
+};
+EmptySystem = __decorate([
+    ECS_1.ECS.System()
+], EmptySystem);
 describe('SystemDecorator', function () {
     var system;
     this.timeout(0);
@@ -124,6 +131,15 @@ describe('SystemDecorator', function () {
             chai.expect(ECS_1.ECS.hasSystem(system)).to.equal(true);
             system.dispose();
             chai.expect(ECS_1.ECS.hasSystem(system)).to.equal(false);
+        });
+    });
+    describe('#EmptySystem', () => {
+        it('Add a System without a component mask and checks that no entity is added to the System', () => {
+            const system = ECS_1.ECS.addSystem(new EmptySystem());
+            const entity = ECS_1.ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
+            ECS_1.ECS.addEntity(entity);
+            chai.expect(system.entities.indexOf(entity)).to.equal(-1);
         });
     });
 });
