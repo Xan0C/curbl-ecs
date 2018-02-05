@@ -24,7 +24,7 @@ export class PropertyDescriptorBinder {
      * @returns {{onPropertySet: Signal; onPropertyGet: Signal}}
      */
     private createPropertyBinding(object:any,propertyKey:string):{onPropertySet:Signal,onPropertyGet:Signal}{
-        let propertyDescriptor = PropertyDescriptorBinder.getPropertyDescriptor(object,propertyKey);
+        const propertyDescriptor = PropertyDescriptorBinder.getPropertyDescriptor(object,propertyKey);
         if(propertyDescriptor && propertyDescriptor.get && propertyDescriptor.set) {
             let onPropertyGet = new Signal();
             let onPropertySet = new Signal();
@@ -42,7 +42,7 @@ export class PropertyDescriptorBinder {
                 get: this.getter(propertyDescriptor,propertyKey),
                 set: this.setter(propertyDescriptor,propertyKey)
             });
-            let signals = Object.create(null);
+            const signals = Object.create(null);
             signals.onPropertyGet = onPropertyGet;
             signals.onPropertySet = onPropertySet;
             return signals;
@@ -77,7 +77,7 @@ export class PropertyDescriptorBinder {
      * @param {string} propertyKey
      */
     private restorePropertyDescriptor(object:any,propertyKey:string):void{
-        let propertyDescriptor = this.propertySignals.get(object).get(propertyKey).propertyDescriptor;
+        const propertyDescriptor = this.propertySignals.get(object).get(propertyKey).propertyDescriptor;
         Object.defineProperty(object,propertyKey,{
             configurable:propertyDescriptor.configurable,
             enumerable:propertyDescriptor.enumerable,
@@ -117,9 +117,9 @@ export class PropertyDescriptorBinder {
      * @returns {() => any}
      */
     private getter(descriptor:PropertyDescriptor,propertyKey:string):()=>any{
-        let self = this;
+        const self = this;
         return function(){
-            let val = descriptor.get.apply(this);
+            const val = descriptor.get.apply(this);
             if(self.propertySignals.has(this)) {
                 let propBind = self.propertySignals.get(this).get(propertyKey);
                 if (propBind) {
@@ -137,11 +137,11 @@ export class PropertyDescriptorBinder {
      * @returns {(value: any) => void}
      */
     private setter(descriptor:PropertyDescriptor,propertyKey:string):(value:any)=>void{
-        let self = this;
+        const self = this;
         return function(...args){
             descriptor.set.apply(this,args);
             if(self.propertySignals.has(this)) {
-                let propBind = self.propertySignals.get(this).get(propertyKey);
+                const propBind = self.propertySignals.get(this).get(propertyKey);
                 if (propBind) {
                     propBind.onPropertySet.dispatch(this, propBind.propertyKey);
                 }

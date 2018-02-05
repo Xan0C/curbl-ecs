@@ -1,4 +1,3 @@
-import {spliceOne} from "./util/ArrayUtil";
 class Pool<T> {
     private objects:Array<T>;
 
@@ -11,9 +10,9 @@ class Pool<T> {
     }
 
     remove(...objects:T[]):void {
-        for(let object of objects){
+        for(let i=0, object; object = objects[i]; i++){
             if(this.has(object)){
-                spliceOne(this.objects,this.objects.indexOf(object));
+                this.objects.splice(this.objects.indexOf(object),1);
             }
         }
     }
@@ -52,7 +51,7 @@ export class DynamicObjectPool {
     }
 
     push<T extends any>(...objects:T[]):void {
-        for(let object of objects){
+        for(let i=0, object; object = objects[i]; i++){
             if(!this.pool[object.constructor.name]){
                 this.pool[object.constructor.name] = new Pool<T>();
             }

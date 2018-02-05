@@ -22,16 +22,15 @@ export class InjectorService {
 
     /**
      * Injects an existing system into the property
-     * If the system does not exist, the property will be added as soon as the system is added to the ECS
      * @param {{new(config?: {[p: string]: any}) => T}} system
      * @returns {(target: Object, propKey: (number | string)) => void}
      * @constructor
      */
     public System<T extends ISystem>(systems:{[id:string]:{new(...args):T}}):(constructor:{ new(...args):any }) => any{
         return function(constructor:{new(...args):any}){
-            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            let DecoratorInjector:any = function(...args){
-                let object = wrapper.apply(this,args);
+            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            const DecoratorInjector:any = function(...args){
+                const object = wrapper.apply(this,args);
                 Object.setPrototypeOf(object,Object.getPrototypeOf(this));
                 const keys = Object.keys(systems);
                 for(let i=0,system; system = systems[keys[i]];i++){

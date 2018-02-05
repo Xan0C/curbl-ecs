@@ -1,4 +1,4 @@
-import {Entity, EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
+import {EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
 import {EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
 import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
@@ -157,9 +157,10 @@ export class ECS {
     }
 
     private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
-        let comps = Object.create(null);
+        const comps = Object.create(null);
+        let component;
         for(let dec of components){
-            let component = new dec.component(dec.config);
+            component = new dec.component(dec.config);
             comps[component.id] = component;
         }
         return comps;
@@ -167,8 +168,8 @@ export class ECS {
 
     static Component(id?:string):(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
         return function(constructor:{new(...args):IComponent}){
-            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            let DecoratorSystem:any = function(...args){
+            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            const DecoratorSystem:any = function(...args){
                 let component = ECS.instance.ecm.pool.pop(constructor);
                 if(!component) {
                     component = wrapper.apply(this, args);
@@ -185,13 +186,14 @@ export class ECS {
         }
     }
 
-    static System(...components:{new(config?:{[x:string]:any}):any}[]):(constructor:{ new(config?:{[x:string]:any}):ISystem }) => any{
+    static System(...components:{new(config?:{[x:string]:any}):IComponent}[]):(constructor:{ new(config?:{[x:string]:any}):ISystem }) => any{
         return function(constructor:{new(...args):ISystem}){
-            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            let DecoratorSystem:any = function(...args){
-                let system = wrapper.apply(this,args);
+            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            const DecoratorSystem:any = function(...args){
+                const system = wrapper.apply(this,args);
                 Object.setPrototypeOf(system,Object.getPrototypeOf(this));
                 injectSystem(system,ECS.instance.scm.systemUpdateMethods);
+                system.id = system.id||constructor.prototype.constructor.name;
                 ECS.instance.scm.updateBitmask(system,components);
                 return system;
             };
@@ -202,8 +204,8 @@ export class ECS {
 
     static Entity(...components:EntityDecoratorComponent[]):((constructor:{ new(config?:{[x:string]:any}):IEntity }) => any)&((target:Object, propKey:number | string) => void)  {
         return function(constructor:{new(...args):IEntity}){
-            var wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            let DecoratorEntity:any = function(...args){
+            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            const DecoratorEntity:any = function(...args){
                 let entity = ECS.instance.ecm.pool.pop(constructor);
                 if(!entity){
                     entity = wrapper.apply(this,args);

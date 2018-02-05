@@ -2,7 +2,6 @@ import {injectSystem, ISystem} from "./System";
 import {IEntity} from "./Entity";
 import {ComponentBitmaskMap} from "./Component";
 import {Signal} from "./Signal";
-import {spliceOne} from "./util/ArrayUtil";
 
 /**
  * Created by Soeren on 28.06.2017.
@@ -81,8 +80,8 @@ export class EntitySystemManager implements IEntitySystemManager {
     add<T extends ISystem>(system:T,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):T{
         if(!this.has(system)) {
             injectSystem(system,this.systemUpdateMethods);
-            this.systems[system.constructor.name] = system;
-            this.ids.push(system.constructor.name);
+            this.systems[system.id] = system;
+            this.ids.push(system.id);
             this.updateBitmask(system,componentMask);
             system.setUp();
             if(!silent){
@@ -100,7 +99,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @returns {boolean}
      */
     has(system:ISystem):boolean{
-        return !!this.systems[system.constructor.name];
+        return !!this.systems[system.id];
     }
 
     /**
@@ -124,8 +123,8 @@ export class EntitySystemManager implements IEntitySystemManager {
                 this._onSystemRemoved.dispatch(system);
             }
             system.tearDown();
-            spliceOne(this.ids,this.ids.indexOf(system.constructor.name));
-            return delete this.systems[system.constructor.name];
+            this.ids.splice(this.ids.indexOf(system.id),1);
+            return delete this.systems[system.id];
         }
         return false;
     }
@@ -199,14 +198,21 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param silent
      */
     removeEntity(entity:IEntity,system?:ISystem,silent:boolean=false):void{
-        if(system){
-            spliceOne(system.entities,system.entities.indexOf(entity));
+        if(system) {
+            const idx = system.entities.indexOf(entity);
+            if (idx != -1) {
+                system.entities.splice(idx, 1);
+            }
             system.onEntityRemoved.dispatch(entity);
         }else{
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system; system = systems[ids[i]]; i++){
-                spliceOne(system.entities,system.entities.indexOf(entity));
+            let idx = -1;
+            for(let i=0, system:ISystem; system = systems[ids[i]]; i++){
+                idx = system.entities.indexOf(entity);
+                if(idx != -1) {
+                    system.entities.splice(idx,1);
+                }
                 system.onEntityRemoved.dispatch(entity);
             }
         }

@@ -5,6 +5,7 @@ import {Signal} from "./Signal";
  * Created by Soeren on 28.06.2017.
  */
 export interface ISystem {
+    id?:string;
     bitmask?:number;
     readonly entities?:Array<IEntity>;
     readonly onEntityAdded?:Signal;
@@ -72,6 +73,7 @@ export function injectSystem(system:ISystem,updateMethods:Array<string>){
 
 export class System implements ISystem {
 
+    readonly id:string;
     readonly bitmask:number;
     readonly entities:Array<IEntity>;
     readonly onEntityAdded:Signal;
