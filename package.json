@@ -1,7 +1,7 @@
 {
   "name": "curbl-ecs",
   "version": "1.0.0",
-  "description": "Small Vanilla ES6 Entity Component System",
+  "description": "Small Entity Component System",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "typings": "./lib/index.d.ts",
@@ -25,10 +25,10 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.45",
     "benchmark": "^2.1.4",
-    "chai": "^4.0.2",
-    "mocha": "^3.4.2",
-    "ts-loader": "^2.1.0",
-    "typescript": "^2.2.2",
-    "webpack": "^2.6.1"
+    "chai": "^4.1.2",
+    "mocha": "^3.5.3",
+    "ts-loader": "^2.3.7",
+    "typescript": "^2.7.1",
+    "webpack": "^2.7.0"
   }
 }
