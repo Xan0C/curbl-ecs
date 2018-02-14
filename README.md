@@ -9,6 +9,7 @@ Curbl-ecs is a simple Entity Component System in plain ES2015(Typescript).
 ## Example
 
 * Creating a Component
+
 ```javascript
 
 @ECS.Component()
@@ -31,9 +32,11 @@ class PositionComponent implements IComponent {
 
 }
 ```
+
 * Creating an Entity with injected component
 
 ```javascript
+
 @ECS.Entity(
     {component:PositionComponent,config:{x:12,y:12}}
 )
@@ -50,6 +53,7 @@ entity.add(new PositionComponent());
 ```
 
 * Get Component from Entity
+
 ```javascript
 entity.get(PositionComponent).x = 42;
 entity.get<PositionComponent>("PositionComponent").x = 42;
@@ -58,6 +62,7 @@ entity.get<PositionComponent>("PositionComponent").x = 42;
 * Creating a System and injecting other Systems as properties
 
 ```javascript
+
 //All Entities with a PositionComponent will be added to the System
 @ECS.System(PositionComponent) 
 @ECS.Injector.System<InputSystem>({
