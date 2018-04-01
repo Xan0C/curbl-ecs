@@ -27,8 +27,8 @@
     "benchmark": "^2.1.4",
     "chai": "^4.1.2",
     "mocha": "^3.5.3",
-    "ts-loader": "^2.3.7",
+    "ts-loader": "^4.1.0",
     "typescript": "^2.7.1",
-    "webpack": "^2.7.0"
+    "webpack": "^4.4.1"
   }
 }

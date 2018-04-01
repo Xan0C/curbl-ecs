@@ -8,7 +8,6 @@
     "declaration": false
   },
   "include": [
-    "**/*.ts",
-    "../dist/**/*.d.ts"
+    "**/*.ts"
   ]
 }
