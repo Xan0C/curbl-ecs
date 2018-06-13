@@ -228,7 +228,7 @@ describe('System_Entity', function () {
             let entity:IEntity = ECS.addEntity(new FullEntity());
             let component = entity.get(NameComponent);
             //Kinda stupid test :D
-            ECS.bind(component,'name').onPropertySet.add('changeNameToPROPS',component);
+            ECS.bind(component,'name').on('set',component.changeNameToPROPS,component);
             component.name = 'TEST';
             chai.expect(component.name).to.equal('PROPS');
         });
@@ -239,7 +239,7 @@ describe('System_Entity', function () {
             let entity:IEntity = ECS.addEntity(new FullEntity());
             let component = entity.get(NameComponent);
             //Kinda stupid test :D
-            ECS.bind(component,'name').onPropertySet.add('changeNameToPROPS',component);
+            ECS.bind(component,'name').on('set',component.changeNameToPROPS,component);
             ECS.unbind(component);
             component.name = 'TEST';
             chai.expect(component.name).to.equal('TEST');

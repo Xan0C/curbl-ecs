@@ -1,6 +1,7 @@
 import {IEntity} from "./Entity";
 import {ECS} from "./ECS";
-import {Signal} from "./Signal";
+import * as EventEmitter from "eventemitter3";
+
 /**
  * Created by Soeren on 28.06.2017.
  */
@@ -8,8 +9,7 @@ export interface ISystem {
     id?:string;
     bitmask?:number;
     readonly entities?:Array<IEntity>;
-    readonly onEntityAdded?:Signal;
-    readonly onEntityRemoved?:Signal;
+    readonly events?:EventEmitter;
     setUp?():void;
     tearDown?():void;
     has?(entity:IEntity):boolean;
@@ -28,8 +28,7 @@ export const SYSTEM_PROTOTYPE = {
 export const SYSTEM_PROPERTIES = {
     bitmask:()=>{return 0},
     entities:()=>{return [];},
-    onEntityAdded:()=>{return new Signal();},
-    onEntityRemoved:()=>{return new Signal();}
+    events:()=>{return new EventEmitter();}
 };
 
 export const SYSTEM_PROPERTY_DECORATOR = {
@@ -76,14 +75,12 @@ export class System implements ISystem {
     readonly id:string;
     readonly bitmask:number;
     readonly entities:Array<IEntity>;
-    readonly onEntityAdded:Signal;
-    readonly onEntityRemoved:Signal;
+    readonly events:EventEmitter;
 
     constructor(){
         this.bitmask = SYSTEM_PROPERTIES.bitmask();
         this.entities = SYSTEM_PROPERTIES.entities();
-        this.onEntityAdded = SYSTEM_PROPERTIES.onEntityAdded();
-        this.onEntityRemoved = SYSTEM_PROPERTIES.onEntityRemoved();
+        this.events = SYSTEM_PROPERTIES.events();
     }
 
     has(entity:IEntity):boolean {

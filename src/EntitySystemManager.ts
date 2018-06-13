@@ -1,16 +1,13 @@
 import {injectSystem, ISystem} from "./System";
 import {IEntity} from "./Entity";
 import {ComponentBitmaskMap} from "./Component";
-import {Signal} from "./Signal";
+import * as EventEmitter from "eventemitter3";
 
 /**
  * Created by Soeren on 28.06.2017.
  */
 export interface IEntitySystemManager {
-    readonly onSystemAdded:Signal;
-    readonly onSystemRemoved:Signal;
-    readonly onEntityAddedToSystem:Signal;
-    readonly onEntityRemovedFromSystem:Signal;
+    readonly events:EventEmitter;
     systemUpdateMethods:Array<string>;
     updateSystemMethods():void;
     updateBitmask(system:ISystem, componentMask?:Array<{new(config?:{[x:string]:any}):any}>):ISystem;
@@ -29,12 +26,21 @@ export interface IEntitySystemManager {
     updateEntity(entity:IEntity,system?:ISystem):void;
 }
 
+export enum ESM_EVENTS {
+    SYSTEM_ADDED = "SYSTEM_ADDED",
+    SYSTEM_REMOVED = "SYSTEM_REMOVED",
+    ENTITY_ADDED_TO_SYSTEM = "ENTITY_ADDED_TO_SYSTEM",
+    ENTITY_REMOVED_FROM_SYSTEM = "ENTITY_REMOVED_FROM_SYSTEM"
+}
+
+export enum SYSTEM_EVENTS {
+    ENTITY_ADDED = "ENTITY_ADDED",
+    ENTITY_REMOVED = "ENTITY_REMOVED"
+}
+
 export class EntitySystemManager implements IEntitySystemManager {
     private componentBitmask:ComponentBitmaskMap;
-    private _onSystemAdded:Signal;
-    private _onSystemRemoved:Signal;
-    private _onEntityAddedToSystem:Signal;
-    private _onEntityRemovedFromSystem:Signal;
+    private _events:EventEmitter;
 
     private ids:Array<string>;
     /**
@@ -48,10 +54,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     private _systemUpdateMethods:Array<string>;
 
     constructor(componentBitmaskMap:ComponentBitmaskMap){
-        this._onSystemAdded = new Signal();
-        this._onSystemRemoved = new Signal();
-        this._onEntityAddedToSystem = new Signal();
-        this._onEntityRemovedFromSystem = new Signal();
+        this._events = new EventEmitter();
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
         this.systems = Object.create(null);
@@ -85,7 +88,7 @@ export class EntitySystemManager implements IEntitySystemManager {
             this.updateBitmask(system,componentMask);
             system.setUp();
             if(!silent){
-                this._onSystemAdded.dispatch(system);
+                this._events.emit(ESM_EVENTS.SYSTEM_ADDED,system);
             }
         }else{
             console.warn('System '+system+' already exists! And can only exists ones');
@@ -120,7 +123,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     remove(system:ISystem,silent:boolean=false):boolean{
         if(this.has(system)) {
             if(!silent){
-                this._onSystemRemoved.dispatch(system);
+                this._events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
             }
             system.tearDown();
             this.ids.splice(this.ids.indexOf(system.id),1);
@@ -174,20 +177,20 @@ export class EntitySystemManager implements IEntitySystemManager {
         if(system){
             if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
                 system.entities.push(entity);
-                system.onEntityAdded.dispatch(entity);
+                system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED,entity);
             }
         }else{
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system; system = systems[ids[i]]; i++){
+            for(let i=0, system:ISystem; system = systems[ids[i]]; i++){
                 if((entity.bitmask & system.bitmask) === system.bitmask){
                     system.entities.push(entity);
-                    system.onEntityAdded.dispatch(entity);
+                    system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED,entity);
                 }
             }
         }
         if(!silent && (!system || this.has(system)) ){
-            this._onEntityAddedToSystem.dispatch(entity,system);
+            this._events.emit(ESM_EVENTS.ENTITY_ADDED_TO_SYSTEM,entity,system);
         }
     }
 
@@ -203,7 +206,7 @@ export class EntitySystemManager implements IEntitySystemManager {
             if (idx != -1) {
                 system.entities.splice(idx, 1);
             }
-            system.onEntityRemoved.dispatch(entity);
+            system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
         }else{
             const ids = this.ids;
             const systems = this.systems;
@@ -213,11 +216,11 @@ export class EntitySystemManager implements IEntitySystemManager {
                 if(idx != -1) {
                     system.entities.splice(idx,1);
                 }
-                system.onEntityRemoved.dispatch(entity);
+                system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
             }
         }
         if(!silent && (!system || this.has(system)) ){
-            this._onEntityRemovedFromSystem.dispatch(entity,system);
+            this._events.emit(ESM_EVENTS.ENTITY_REMOVED_FROM_SYSTEM,entity,system);
         }
     }
 
@@ -280,20 +283,8 @@ export class EntitySystemManager implements IEntitySystemManager {
         }
     }
 
-    public get onSystemAdded():Signal {
-        return this._onSystemAdded;
-    }
-
-    public get onSystemRemoved():Signal {
-        return this._onSystemRemoved;
-    }
-
-    public get onEntityAddedToSystem():Signal {
-        return this._onEntityAddedToSystem;
-    }
-
-    public get onEntityRemovedFromSystem():Signal {
-        return this._onEntityRemovedFromSystem;
+    public get events():EventEmitter {
+        return this._events;
     }
 
     public get systemUpdateMethods():Array<string> {

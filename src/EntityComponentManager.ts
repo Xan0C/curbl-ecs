@@ -1,15 +1,12 @@
 import {ComponentBitmaskMap, IComponent} from "./Component";
 import {DynamicObjectPool} from "./ObjectPool";
-import {Entity, IEntity, injectEntity} from "./Entity";
+import {Entity, IEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
-import {Signal} from "./Signal";
+import * as EventEmitter from "eventemitter3";
 
 export interface IEntityComponentManager {
     readonly pool:DynamicObjectPool;
-    readonly onEntityAdded:Signal;
-    readonly onEntityRemoved:Signal;
-    readonly onComponentAdded:Signal;
-    readonly onComponentRemoved:Signal;
+    readonly events:EventEmitter;
     readonly entities:{[id:string]:IEntity};
     uuid:()=>string;
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
@@ -18,6 +15,13 @@ export interface IEntityComponentManager {
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy?:boolean,silent?:boolean):boolean;
+}
+
+export enum ECM_EVENTS {
+    ENTITY_ADDED = "ENTITY_ADDED",
+    ENTITY_REMOVED = "ENTITY_REMOVED",
+    COMPONENT_ADDED = "COMPONENT_ADDED",
+    COMPONENT_REMOVED = "COMPONENT_REMOVED"
 }
 
 /**
@@ -31,10 +35,7 @@ export class EntityComponentManager implements IEntityComponentManager {
      * Stores removed components that are reused
      */
     private _pool:DynamicObjectPool;
-    private _onEntityAdded:Signal;
-    private _onEntityRemoved:Signal;
-    private _onComponentAdded:Signal;
-    private _onComponentRemoved:Signal;
+    private _events:EventEmitter;
     private _uuid:()=>string;
     private componentBitmask:ComponentBitmaskMap;
 
@@ -45,10 +46,7 @@ export class EntityComponentManager implements IEntityComponentManager {
 
     constructor(componentBitmaskMap:ComponentBitmaskMap,uuid:()=>string=UUIDGenerator.uuid){
         this._pool = new DynamicObjectPool();
-        this._onEntityAdded = new Signal();
-        this._onEntityRemoved = new Signal();
-        this._onComponentAdded = new Signal();
-        this._onComponentRemoved = new Signal();
+        this._events = new EventEmitter();
         this._uuid = uuid;
         this.componentBitmask = componentBitmaskMap;
         this._entities = Object.create(null);
@@ -93,7 +91,7 @@ export class EntityComponentManager implements IEntityComponentManager {
             this.updateComponentBitmask(entity);
         }
         if(!silent) {
-            this._onEntityAdded.dispatch(entity);
+            this._events.emit(ECM_EVENTS.ENTITY_ADDED,entity);
         }
         return entity;
     }
@@ -115,7 +113,7 @@ export class EntityComponentManager implements IEntityComponentManager {
             entity.bitmask = 0;
             entity.components = Object.create(null);
             if(!silent && this.hasEntity(entity)) {
-                this._onEntityRemoved.dispatch(entity);
+                this._events.emit(ECM_EVENTS.ENTITY_REMOVED,entity);
             }
             return delete this._entities[entity.id];
         }
@@ -141,7 +139,7 @@ export class EntityComponentManager implements IEntityComponentManager {
         entity.components[component.id] = component;
         entity.bitmask = entity.bitmask | this.componentBitmask.get(component.id);
         if(!silent && this.hasEntity(entity)) {
-            this._onComponentAdded.dispatch(entity, component);
+            this._events.emit(ECM_EVENTS.COMPONENT_ADDED,entity,component);
         }
     }
 
@@ -166,7 +164,7 @@ export class EntityComponentManager implements IEntityComponentManager {
             }
             entity.bitmask = entity.bitmask ^ this.componentBitmask.get(comp.id);
             if(!silent && this.hasEntity(entity)) {
-                this._onComponentRemoved.dispatch(entity, comp);
+                this._events.emit(ECM_EVENTS.COMPONENT_REMOVED,entity,comp);
             }
             comp.remove();
             //TODO: Delete is slow
@@ -191,19 +189,7 @@ export class EntityComponentManager implements IEntityComponentManager {
         this._uuid = value;
     }
 
-    public get onEntityAdded():Signal {
-        return this._onEntityAdded;
-    }
-
-    public get onEntityRemoved():Signal {
-        return this._onEntityRemoved;
-    }
-
-    public get onComponentAdded():Signal {
-        return this._onComponentAdded;
-    }
-
-    public get onComponentRemoved():Signal {
-        return this._onComponentRemoved;
+    public get events():EventEmitter {
+        return this._events;
     }
 }

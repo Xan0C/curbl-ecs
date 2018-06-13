@@ -1,4 +1,9 @@
-import {Signal} from "./Signal";
+import * as EventEmitter from "eventemitter3";
+
+export enum PDB_EVENTS {
+    GET = "get",
+    SET = "set"
+}
 
 /**
  * Quick and Dirty PropertyBindings wrapping/creating a PropertyDescriptor that
@@ -7,8 +12,7 @@ import {Signal} from "./Signal";
 export class PropertyDescriptorBinder {
 
     private propertySignals:WeakMap<Object,Map<string,{
-        onPropertySet:Signal,
-        onPropertyGet:Signal,
+        events:EventEmitter;
         propertyKey:string,
         propertyDescriptor:PropertyDescriptor;
     }>>;
@@ -23,16 +27,14 @@ export class PropertyDescriptorBinder {
      * @param {string} propertyKey
      * @returns {{onPropertySet: Signal; onPropertyGet: Signal}}
      */
-    private createPropertyBinding(object:any,propertyKey:string):{onPropertySet:Signal,onPropertyGet:Signal}{
+    private createPropertyBinding(object:any,propertyKey:string):EventEmitter{
         const propertyDescriptor = PropertyDescriptorBinder.getPropertyDescriptor(object,propertyKey);
         if(propertyDescriptor && propertyDescriptor.get && propertyDescriptor.set) {
-            let onPropertyGet = new Signal();
-            let onPropertySet = new Signal();
+            let events = new EventEmitter();
 
             this.propertySignals.set(object,new Map());
             this.propertySignals.get(object).set(propertyKey, {
-                onPropertySet:onPropertySet,
-                onPropertyGet:onPropertyGet,
+                events:events,
                 propertyKey:propertyKey,
                 propertyDescriptor:propertyDescriptor
             });
@@ -42,10 +44,7 @@ export class PropertyDescriptorBinder {
                 get: this.getter(propertyDescriptor,propertyKey),
                 set: this.setter(propertyDescriptor,propertyKey)
             });
-            const signals = Object.create(null);
-            signals.onPropertyGet = onPropertyGet;
-            signals.onPropertySet = onPropertySet;
-            return signals;
+            return events;
         }else{
             throw new Error('Property '+propertyKey+' is not a valid property Accessor');
         }
@@ -57,18 +56,16 @@ export class PropertyDescriptorBinder {
      * @param {string} propertyKey - name of the property
      * @returns {{onPropertySet: Signal; onPropertyGet: Signal}} - Signals that are dispatched on PropertyChange
      */
-    public bind(object:any,propertyKey:string):{onPropertySet:Signal,onPropertyGet:Signal}{
-        let signals:{onPropertySet:Signal,onPropertyGet:Signal};
+    public bind(object:any,propertyKey:string):EventEmitter{
+        let events:EventEmitter = null;
 
         if(this.propertySignals.has(object) && this.propertySignals.get(object).has(propertyKey)){
-            signals = Object.create(null);
-            signals.onPropertySet = this.propertySignals.get(object).get(propertyKey).onPropertySet;
-            signals.onPropertyGet = this.propertySignals.get(object).get(propertyKey).onPropertyGet;
+            events = this.propertySignals.get(object).get(propertyKey).events;
         }else{
-            signals = this.createPropertyBinding(object,propertyKey);
+            events = this.createPropertyBinding(object,propertyKey);
         }
 
-        return signals;
+        return events;
     }
 
     /**
@@ -123,7 +120,7 @@ export class PropertyDescriptorBinder {
             if(self.propertySignals.has(this)) {
                 let propBind = self.propertySignals.get(this).get(propertyKey);
                 if (propBind) {
-                    propBind.onPropertyGet.dispatch(this, propBind.propertyKey, val);
+                    propBind.events.emit(PDB_EVENTS.GET,this, propBind.propertyKey, val);
                 }
             }
             return val;
@@ -143,7 +140,7 @@ export class PropertyDescriptorBinder {
             if(self.propertySignals.has(this)) {
                 const propBind = self.propertySignals.get(this).get(propertyKey);
                 if (propBind) {
-                    propBind.onPropertySet.dispatch(this, propBind.propertyKey);
+                    propBind.events.emit(PDB_EVENTS.SET,this,propBind.propertyKey);
                 }
             }
         }

@@ -1,11 +1,11 @@
 import {EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
-import {EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
+import {ECM_EVENTS, EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
 import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
-import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
-import {Signal} from "./Signal";
+import {EntitySystemManager, ESM_EVENTS, IEntitySystemManager} from "./EntitySystemManager";
 import {PropertyDescriptorBinder} from "./PropertyDescriptorBinder";
 import {InjectorService} from "./InjectorService";
+import * as EventEmitter from "eventemitter3";
 
 /**
  * Created by Soeren on 29.06.2017.
@@ -26,12 +26,12 @@ export class ECS {
     }
 
     private registerEvents(){
-        this.ecm.onEntityAdded.add("onEntityAdded",this);
-        this.ecm.onEntityRemoved.add("onEntityRemoved",this);
-        this.ecm.onComponentAdded.add("onComponentAdded",this);
-        this.ecm.onComponentRemoved.add("onComponentRemoved",this);
+        this.ecm.events.on(ECM_EVENTS.ENTITY_ADDED,this.onEntityAdded);
+        this.ecm.events.on(ECM_EVENTS.ENTITY_REMOVED,this.onEntityRemoved);
+        this.ecm.events.on(ECM_EVENTS.COMPONENT_ADDED,this.onComponentAdded);
+        this.ecm.events.on(ECM_EVENTS.COMPONENT_REMOVED,this.onComponentRemoved);
 
-        this.scm.onSystemAdded.add("onSystemAdded",this);
+        this.scm.events.on(ESM_EVENTS.SYSTEM_ADDED,this.onSystemAdded);
     }
 
     private onEntityAdded(entity:IEntity){
@@ -69,13 +69,13 @@ export class ECS {
 
     /**
      * Binds to signals to the PropertyAccessor
-     * onPropertySet called each time the property is changed and dispatches the object and propertyKey
-     * onPropertyGet called each time the property is accessed and dispatched the object,propertyKey and value
+     * returns an EventEmitter which listens for "get" and "set" events,
+     * which are called each time "get" or "set" is called
      * @param object
      * @param propertyKey
-     * @returns {{onPropertySet: Signal, onPropertyGet: Signal}}
+     * @returns EventEmitter
      */
-    static bind(object:any,propertyKey:string):{onPropertyGet:Signal,onPropertySet:Signal}{
+    static bind(object:any,propertyKey:string):EventEmitter{
         return ECS.instance.propertyDescriptorBinder.bind(object,propertyKey);
     }
 
@@ -226,38 +226,6 @@ export class ECS {
 
     static set uuid(value:()=>string){
         ECS.instance.ecm.uuid = value;
-    }
-
-    static get onEntityAdded():Signal{
-        return ECS.instance.ecm.onEntityAdded;
-    }
-
-    static get onEntityRemoved():Signal{
-        return ECS.instance.ecm.onEntityRemoved;
-    }
-
-    static get onComponentAdded():Signal{
-        return ECS.instance.ecm.onComponentAdded;
-    }
-
-    static get onComponentRemoved():Signal{
-        return ECS.instance.ecm.onComponentRemoved;
-    }
-
-    static get onSystemAdded():Signal{
-        return ECS.instance.scm.onSystemAdded;
-    }
-
-    static get onSystemRemoved():Signal{
-        return ECS.instance.scm.onSystemRemoved;
-    }
-
-    static get onEntityAddedToSystem():Signal{
-        return ECS.instance.scm.onEntityAddedToSystem;
-    }
-
-    static get onEntityRemovedFromSystem():Signal{
-        return ECS.instance.scm.onEntityRemovedFromSystem;
     }
 
     static get systemUpdateMethods():Array<string>{
