@@ -15,7 +15,7 @@ export interface IEntitySystemManager {
     has(system:ISystem):boolean;
     remove(system:ISystem,silent?:boolean):boolean;
     callSystemMethod(funcId:string);
-    update():void;
+    update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any):void;
     hasOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):boolean;
     removeOf<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T},silent?:boolean):boolean;
     get<T extends ISystem>(constructor:{new(config?:{[x:string]:any}):T}):T;
@@ -254,20 +254,20 @@ export class EntitySystemManager implements IEntitySystemManager {
     /**
      * Calls the Method for all Systems and Subsystems
      */
-    callSystemMethod(id:string) {
+    callSystemMethod(id:string,a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any) {
         const ids = this.ids;
         const systems = this.systems;
         for(let i=0, system; system = systems[ids[i]]; i++){
-            system[id]();
+            system[id](a1,a2,a3,a4,a5,a6,a7,a8,a9);
         }
     }
 
     /**
      * Calls all system update methods for all system and child systems
      */
-    update():void {
+    update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any):void {
         for(let i = 0, method; method = this._systemUpdateMethods[i]; i++) {
-            this.callSystemMethod(method);
+            this.callSystemMethod(method,a1,a2,a3,a4,a5,a6,a7,a8,a9);
         }
     }
 

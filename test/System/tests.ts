@@ -3,6 +3,7 @@ import {IEntity} from "../../lib/Entity";
 import {ECS} from "../../lib/ECS";
 import {ISystem} from "../../lib/System";
 import {IComponent} from "../../lib/Component";
+import {describe} from "mocha";
 /**
  * Created by Soeren on 29.06.2017.
  */
@@ -79,6 +80,16 @@ class EmptySystem implements ISystem {
     entities:Array<IEntity>;
 
     update():void{
+    }
+}
+
+@ECS.System()
+class ArgumentSystem implements ISystem {
+    entities:Array<IEntity>;
+    name:string;
+
+    update(name:string):void {
+        this.name = name;
     }
 }
 
@@ -159,6 +170,14 @@ describe('SystemDecorator', function() {
            entity.add(new PositionComponent({x:0,y:0}));
            ECS.addEntity(entity);
            chai.expect(system.entities.indexOf(entity)).to.equal(-1);
+        });
+    });
+
+    describe('#ArgumentsUpdate', ()=>{
+        it('Adds parameter arguments to the systems/ecs update function', ()=>{
+           const system = ECS.addSystem(new ArgumentSystem());
+           ECS.update("ArgumentSystemTest");
+           chai.expect(system.name).to.equal("ArgumentSystemTest");
         });
     })
 });

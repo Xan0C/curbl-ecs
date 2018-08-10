@@ -148,8 +148,8 @@ export class ECS {
         return ECS.instance.scm.get(constructor);
     }
 
-    static update():void{
-        ECS.instance.scm.update();
+    static update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any):void{
+        ECS.instance.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
     }
 
     static callSystemMethod(funcId:string):void{

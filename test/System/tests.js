@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const ECS_1 = require("../../lib/ECS");
+const mocha_1 = require("mocha");
 /**
  * Created by Soeren on 29.06.2017.
  */
@@ -72,7 +73,15 @@ let EmptySystem = class EmptySystem {
 EmptySystem = __decorate([
     ECS_1.ECS.System()
 ], EmptySystem);
-describe('SystemDecorator', function () {
+let ArgumentSystem = class ArgumentSystem {
+    update(name) {
+        this.name = name;
+    }
+};
+ArgumentSystem = __decorate([
+    ECS_1.ECS.System()
+], ArgumentSystem);
+mocha_1.describe('SystemDecorator', function () {
     var system;
     this.timeout(0);
     beforeEach(() => {
@@ -81,17 +90,17 @@ describe('SystemDecorator', function () {
     afterEach(() => {
         system.dispose();
     });
-    describe('#entities', () => {
+    mocha_1.describe('#entities', () => {
         it('Checks that a entities property descriptor got created', () => {
             chai.expect(system.entities).to.not.equal(undefined);
         });
     });
-    describe('#componentMask', () => {
+    mocha_1.describe('#componentMask', () => {
         it('Checks that the componentMask properties descriptor got created for the system', () => {
             chai.expect(system.bitmask).to.not.equal(0);
         });
     });
-    describe('#has', () => {
+    mocha_1.describe('#has', () => {
         it('Checks if the Entity is in the system', () => {
             let entity = ECS_1.ECS.createEntity();
             entity.add(new PositionComponent({ x: 0, y: 0 }));
@@ -100,7 +109,7 @@ describe('SystemDecorator', function () {
             chai.expect(system.has(entity)).to.equal(true);
         });
     });
-    describe('#remove', () => {
+    mocha_1.describe('#remove', () => {
         it('Removes an Entity from ECS and from all systems', () => {
             let entity = ECS_1.ECS.createEntity();
             entity.add(new PositionComponent({ x: 0, y: 0 }));
@@ -126,20 +135,27 @@ describe('SystemDecorator', function () {
             scdSystem.dispose();
         });
     });
-    describe('#dispose', () => {
+    mocha_1.describe('#dispose', () => {
         it('Disposed the System and removes it from the ECS', () => {
             chai.expect(ECS_1.ECS.hasSystem(system)).to.equal(true);
             system.dispose();
             chai.expect(ECS_1.ECS.hasSystem(system)).to.equal(false);
         });
     });
-    describe('#EmptySystem', () => {
+    mocha_1.describe('#EmptySystem', () => {
         it('Add a System without a component mask and checks that no entity is added to the System', () => {
             const system = ECS_1.ECS.addSystem(new EmptySystem());
             const entity = ECS_1.ECS.createEntity();
             entity.add(new PositionComponent({ x: 0, y: 0 }));
             ECS_1.ECS.addEntity(entity);
             chai.expect(system.entities.indexOf(entity)).to.equal(-1);
+        });
+    });
+    mocha_1.describe('#ArgumentsUpdate', () => {
+        it('Adds parameter arguments to the systems/ecs update function', () => {
+            const system = ECS_1.ECS.addSystem(new ArgumentSystem());
+            ECS_1.ECS.update("ArgumentSystemTest");
+            chai.expect(system.name).to.equal("ArgumentSystemTest");
         });
     });
 });
