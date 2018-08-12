@@ -89,7 +89,12 @@ export class System implements ISystem {
 
     remove(entity:IEntity, fromECS:boolean=true, destroy?:boolean):void {
         if(fromECS) {
-            ECS.removeEntity(entity,destroy);
+            if(destroy) {
+                ECS.destroyEntity(entity,true);
+            }
+            else {
+                ECS.removeEntity(entity);
+            }
         }
         ECS.removeEntityFromSystem(entity, this);
     }

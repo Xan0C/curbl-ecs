@@ -28,6 +28,7 @@ export class ECS {
     private registerEvents(){
         this.ecm.events.on(ECM_EVENTS.ENTITY_ADDED,this.onEntityAdded);
         this.ecm.events.on(ECM_EVENTS.ENTITY_REMOVED,this.onEntityRemoved);
+        this.ecm.events.on(ECM_EVENTS.ENTITY_DESTROYED,this.onEntityDestroyed);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_ADDED,this.onComponentAdded);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_REMOVED,this.onComponentRemoved);
 
@@ -39,7 +40,11 @@ export class ECS {
     }
 
     private onEntityRemoved(entity:IEntity){
-        ECS.instance.scm.updateEntity(entity);
+        ECS.instance.scm.removeEntity(entity);
+    }
+
+    private onEntityDestroyed(entity:IEntity){
+        ECS.instance.scm.removeEntity(entity);
     }
 
     private onComponentAdded(entity:IEntity,component:IComponent){
@@ -92,16 +97,40 @@ export class ECS {
 
     static noop(){}
 
+    /**
+     * create an entity
+     * @param entity {optional} - use existing entity
+     * @param components {optional} - components to add to the entity if provided this will override the current components of the entity if any
+     */
     static createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity{
         return ECS.instance.ecm.createEntity(entity,components);
     }
 
+    /**
+     * adds the Entity with the provided components(or existing ones) to the ECS
+     * @param entity - Entity to add to the ECS
+     * @param components - Components for the entity, if provided this will override the current components of the entity if any
+     */
     static addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent}):T{
         return ECS.instance.ecm.addEntity(entity,components);
     }
 
-    static removeEntity(entity:IEntity,destroy?:boolean):boolean{
-        return ECS.instance.ecm.removeEntity(entity,destroy);
+    /**
+     * removes the entity from the ECS, it will keep all of its components
+     * @param entity - Entity to remove
+     * @returns {IEntity}
+     */
+    static removeEntity(entity:IEntity):IEntity {
+        return ECS.instance.ecm.removeEntity(entity);
+    }
+
+    /**
+     * destroy an entity removes it from the ecs and removes all components
+     * @param entity - entity to destroy
+     * @param pool - wether or not to add the entity to the ObjectPool(default: true)
+     */
+    static destroyEntity(entity:IEntity,pool?:boolean):boolean {
+        return ECS.instance.ecm.destroyEntity(entity,pool);
     }
 
     static hasEntity(entity:IEntity):boolean{

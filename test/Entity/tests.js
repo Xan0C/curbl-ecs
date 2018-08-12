@@ -55,10 +55,10 @@ describe('EntityDecorator', function () {
         entity = ECS_1.ECS.addEntity(new Entity({ x: 42, y: 12 }));
     });
     afterEach(() => {
-        entity.dispose(true);
+        entity.destroy(false);
     });
     describe('#id', () => {
-        it('Checks that a id got injected into the entity', () => {
+        it('Checks that the entity constructor is properly called', () => {
             chai.expect(entity["x"]).to.equal(42, 'Expected entity.x to equal 42');
             chai.expect(entity["y"]).to.equal(12, 'Expected entity.y to equal 12');
         });
@@ -95,10 +95,19 @@ describe('EntityDecorator', function () {
         });
     });
     describe('#dispose', () => {
-        it('Disposed the Entity and removes it from the ECS', () => {
+        it('Disposed the Entity and removes it from the ECS but keeps the Entities Components', () => {
             chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(true);
-            entity.dispose(true);
+            entity = entity.dispose();
             chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(false);
+            chai.expect(entity.has(NameComponent)).to.equal(true);
+        });
+    });
+    describe('#destroy', () => {
+        it('Destroy the Entity and removes it from the ECS also removes all components', () => {
+            chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(true);
+            entity.destroy(true);
+            chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(false);
+            chai.expect(entity.has(NameComponent)).to.equal(false);
         });
     });
 });

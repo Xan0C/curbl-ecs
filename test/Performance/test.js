@@ -91,7 +91,7 @@ describe('SystemPerformance', function () {
             console.timeEnd('ECS#Update10k');
         });
     });
-    describe('#createEntities', () => {
+    describe('#createEntities - ignore seems buggy', () => {
         it('entities#not_pooled#10k', () => {
             console.time('ECS#CreateEntitiesNotPooled10k');
             for (let i = 0; i < 10000; i++) {
@@ -106,7 +106,7 @@ describe('SystemPerformance', function () {
                 let entity = ECS_1.ECS.createEntity();
                 entity.add(new PositionComponent({ x: 0, y: 0 }));
                 ECS_1.ECS.addEntity(entity);
-                entity.dispose();
+                entity.destroy();
             }
             console.time('ECS#CreateEntitiesPooled10k');
             for (let i = 0; i < 10000; i++) {

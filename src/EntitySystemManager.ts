@@ -219,13 +219,13 @@ export class EntitySystemManager implements IEntitySystemManager {
                 system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
             }
         }
-        if(!silent && (!system || this.has(system)) ){
+        if(!silent){
             this._events.emit(ESM_EVENTS.ENTITY_REMOVED_FROM_SYSTEM,entity,system);
         }
     }
 
     /**
-     * Updates the Entity adds it to the right systems and removes if from systems it does not fit anymore
+     * Updates the Entity adds it to the right systems and removes it from systems if it does not fit anymore
      * @param entity
      * @param system - optional if only update for two Entity(ether add or remove from the system)
      */

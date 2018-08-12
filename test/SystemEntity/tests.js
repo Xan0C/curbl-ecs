@@ -227,4 +227,29 @@ describe('System_Entity', function () {
             chai.expect(nameSystem.has(eEntity)).to.be.true;
         });
     });
+    describe('#ReAddRemovedEntity', () => {
+        it('Add an entity which was previously removed from the ECS, but still has all components', () => {
+            let fEntity = ECS_1.ECS.addEntity(new FullEntity());
+            /*
+            {component:NameComponent, config:{name:"FullEntity"}},
+            {component:PositionComponent, config:{x:42, y:12}}
+             */
+            chai.expect(fEntity.has(NameComponent)).to.be.true;
+            chai.expect(fEntity.has(PositionComponent)).to.be.true;
+            chai.expect(positionSystem.has(fEntity)).to.be.true;
+            chai.expect(nameSystem.has(fEntity)).to.be.true;
+            fEntity = ECS_1.ECS.removeEntity(fEntity);
+            chai.expect(fEntity.has(NameComponent)).to.be.true;
+            chai.expect(fEntity.has(PositionComponent)).to.be.true;
+            chai.expect(positionSystem.has(fEntity)).to.be.false;
+            chai.expect(nameSystem.has(fEntity)).to.be.false;
+            fEntity.get(NameComponent).name = "TestName";
+            ECS_1.ECS.addEntity(fEntity);
+            chai.expect(fEntity.has(NameComponent)).to.be.true;
+            chai.expect(fEntity.get(NameComponent).name).to.equal("TestName");
+            chai.expect(fEntity.has(PositionComponent)).to.be.true;
+            chai.expect(positionSystem.has(fEntity)).to.be.true;
+            chai.expect(nameSystem.has(fEntity)).to.be.true;
+        });
+    });
 });

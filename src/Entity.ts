@@ -16,7 +16,8 @@ export interface IEntity {
     has?<T extends IComponent>(comp:{new(...args):T}|string):boolean;
     add?(component:IComponent):void;
     remove?<T extends IComponent>(component:{new(...args):T}|string):boolean;
-    dispose?(destroy?:boolean):boolean;
+    dispose?():IEntity;
+    destroy?(pool?:boolean):boolean;
 }
 
 const ENTITY_PROPERTIES = {
@@ -31,7 +32,8 @@ const ENTITY_PROTOTYPE = {
     has:()=>{return Entity.prototype.has;},
     add:()=>{return Entity.prototype.add;},
     remove:()=>{return Entity.prototype.remove;},
-    dispose:()=>{return Entity.prototype.dispose;}
+    dispose:()=>{return Entity.prototype.dispose;},
+    destroy:()=>{return Entity.prototype.destroy;}
 };
 
 export const ENTITY_PROPERTY_DECORATOR = {
@@ -100,7 +102,11 @@ export class Entity implements IEntity{
         return ECS.removeComponent(this,component);
     }
 
-    dispose(destroy?:boolean):boolean{
-        return ECS.removeEntity(this,destroy)
+    dispose():IEntity{
+        return ECS.removeEntity(this)
+    }
+
+    destroy(pool?:boolean):boolean {
+        return ECS.destroyEntity(this,pool);
     }
 }

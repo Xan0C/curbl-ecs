@@ -1,8 +1,8 @@
 import {ComponentBitmaskMap, IComponent} from "./Component";
-import {DynamicObjectPool} from "./ObjectPool";
 import {Entity, IEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
 import * as EventEmitter from "eventemitter3";
+import {DynamicObjectPool} from "./ObjectPool";
 
 export interface IEntityComponentManager {
     readonly pool:DynamicObjectPool;
@@ -11,7 +11,8 @@ export interface IEntityComponentManager {
     uuid:()=>string;
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
     addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent?:boolean):T;
-    removeEntity(entity:IEntity,destroy?:boolean,silent?:boolean):boolean;
+    destroyEntity(entity:IEntity,pool?:boolean,silent?:boolean):boolean;
+    removeEntity(entity:IEntity,silent?:boolean):IEntity;
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy?:boolean,silent?:boolean):boolean;
@@ -20,6 +21,7 @@ export interface IEntityComponentManager {
 export enum ECM_EVENTS {
     ENTITY_ADDED = "ENTITY_ADDED",
     ENTITY_REMOVED = "ENTITY_REMOVED",
+    ENTITY_DESTROYED = "ENTITY_DESTROYED",
     COMPONENT_ADDED = "COMPONENT_ADDED",
     COMPONENT_REMOVED = "COMPONENT_REMOVED"
 }
@@ -32,8 +34,10 @@ export enum ECM_EVENTS {
  */
 export class EntityComponentManager implements IEntityComponentManager {
     /**
-     * Stores removed components that are reused
+     * Stores removed components and entities that are reused
+     * so we do not run out of ids for our entities
      */
+
     private _pool:DynamicObjectPool;
     private _events:EventEmitter;
     private _uuid:()=>string;
@@ -59,9 +63,9 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param components
      */
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity{
-        if(!entity){
+        if(!entity) {
             entity = this.pool.pop(Entity);
-            if(!entity){
+            if (!entity) {
                 entity = new Entity();
             }
         }
@@ -97,27 +101,44 @@ export class EntityComponentManager implements IEntityComponentManager {
     }
 
     /**
-     * @param entity - Entity to remove
-     * @param destroy - if true the Entity will be destroyed instead of pooled
-     * @param silent - Dispatch onEntityRemoved Signal(Removing the Entity from the Systems)
-     * @returns {boolean}
+     * destroys the entity removes it from the manager and deletes all of its components
+     * @param entity - entity to destroy
+     * @param pool - if false the Entity will not be added to the ObjectPool(default: true)
+     * @param silent - Dispatch onEntityDestroyed Signal(Removing the Entity from the Systems)
+     * @returns {boolean} - true if entity was destroyed from the ecs
      */
-    removeEntity(entity:IEntity,destroy?:boolean,silent:boolean=false):boolean{
+    destroyEntity(entity:IEntity,pool:boolean=true,silent:boolean=false):boolean {
         if(this._entities[entity.id]){
             for(let key in entity.components){
-                this.removeComponent(entity,entity.components[key].id,destroy,true);
-            }
-            if(!destroy){
-                this._pool.push(entity);
+                this.removeComponent(entity,entity.components[key].id,!pool,true);
             }
             entity.bitmask = 0;
             entity.components = Object.create(null);
+            if(pool){
+                this._pool.push(entity);
+            }
             if(!silent && this.hasEntity(entity)) {
-                this._events.emit(ECM_EVENTS.ENTITY_REMOVED,entity);
+                this._events.emit(ECM_EVENTS.ENTITY_DESTROYED,entity);
             }
             return delete this._entities[entity.id];
         }
         return false;
+    }
+
+    /**
+     * @param entity - Entity to remove
+     * @param silent - Dispatch onEntityRemoved Signal(Removing the Entity from the Systems)
+     * @returns {boolean} - true if entity got removed from the ecs
+     */
+    removeEntity(entity:IEntity,silent:boolean=false):IEntity{
+        if(this._entities[entity.id]){
+            if(!silent && this.hasEntity(entity)) {
+                this._events.emit(ECM_EVENTS.ENTITY_REMOVED,entity);
+            }
+            delete this._entities[entity.id];
+            return entity;
+        }
+        return entity;
     }
 
     /**
@@ -159,21 +180,20 @@ export class EntityComponentManager implements IEntityComponentManager {
             comp = entity.components[component.prototype.constructor.name];
         }
         if(comp){
+            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(comp.id);
             if(!destroy){
                 this._pool.push(comp);
             }
-            entity.bitmask = entity.bitmask ^ this.componentBitmask.get(comp.id);
             if(!silent && this.hasEntity(entity)) {
                 this._events.emit(ECM_EVENTS.COMPONENT_REMOVED,entity,comp);
             }
             comp.remove();
-            //TODO: Delete is slow
             return delete entity.components[comp.id];
         }
         return false;
     }
 
-    public get pool():DynamicObjectPool {
+    get pool(): DynamicObjectPool {
         return this._pool;
     }
 
