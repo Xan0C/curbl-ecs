@@ -125,12 +125,27 @@ export class ECS {
     }
 
     /**
+     * removes all entities from the ecs
+     */
+    static removeAllEntities():IEntity[] {
+        return ECS.instance.ecm.removeAllEntities();
+    }
+
+    /**
      * destroy an entity removes it from the ecs and removes all components
      * @param entity - entity to destroy
      * @param pool - wether or not to add the entity to the ObjectPool(default: true)
      */
     static destroyEntity(entity:IEntity,pool?:boolean):boolean {
         return ECS.instance.ecm.destroyEntity(entity,pool);
+    }
+
+    /**
+     * remove all components and entities from the ecs
+     * @param pool - if components and entities should be pooled instead of destroyed{default: true}
+     */
+    static destroyAllEntities(pool?:boolean):void {
+        return ECS.instance.ecm.destroyAllEntities(pool);
     }
 
     static hasEntity(entity:IEntity):boolean{

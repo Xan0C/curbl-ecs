@@ -118,6 +118,20 @@ describe('EntityDecorator', function() {
             chai.expect(ECS.hasEntity(entity)).to.equal(false);
             chai.expect(entity.has(NameComponent)).to.equal(true);
         });
+
+        it('Removes all entities from the ecs, but the entities keep all components', ()=>{
+            const sEntity:IEntity = new Entity({x:12,y:69});
+            ECS.addEntity(sEntity);
+            chai.expect(entity.has(NameComponent)).to.equal(true);
+            chai.expect(sEntity.has(NameComponent)).to.equal(true);
+            chai.expect(ECS.hasEntity(entity)).to.equal(true);
+            chai.expect(ECS.hasEntity(sEntity)).to.equal(true);
+            ECS.removeAllEntities();
+            chai.expect(entity.has(NameComponent)).to.equal(true);
+            chai.expect(sEntity.has(NameComponent)).to.equal(true);
+            chai.expect(ECS.hasEntity(entity)).to.equal(false);
+            chai.expect(ECS.hasEntity(sEntity)).to.equal(false);
+        });
     });
 
     describe('#destroy',()=>{
@@ -126,6 +140,20 @@ describe('EntityDecorator', function() {
             entity.destroy(true);
             chai.expect(ECS.hasEntity(entity)).to.equal(false);
             chai.expect(entity.has(NameComponent)).to.equal(false);
+        });
+
+        it('Destroy all entities removing all of them from the ecs and removing all components', ()=>{
+            const sEntity:IEntity = new Entity({x:12,y:69});
+            ECS.addEntity(sEntity);
+            chai.expect(entity.has(NameComponent)).to.equal(true);
+            chai.expect(sEntity.has(NameComponent)).to.equal(true);
+            chai.expect(ECS.hasEntity(entity)).to.equal(true);
+            chai.expect(ECS.hasEntity(sEntity)).to.equal(true);
+            ECS.destroyAllEntities();
+            chai.expect(entity.has(NameComponent)).to.equal(false);
+            chai.expect(sEntity.has(NameComponent)).to.equal(false);
+            chai.expect(ECS.hasEntity(entity)).to.equal(false);
+            chai.expect(ECS.hasEntity(sEntity)).to.equal(false);
         });
     });
 });

@@ -12,7 +12,9 @@ export interface IEntityComponentManager {
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
     addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent?:boolean):T;
     destroyEntity(entity:IEntity,pool?:boolean,silent?:boolean):boolean;
+    destroyAllEntities(pool?:boolean):void;
     removeEntity(entity:IEntity,silent?:boolean):IEntity;
+    removeAllEntities():IEntity[];
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy?:boolean,silent?:boolean):boolean;
@@ -126,6 +128,17 @@ export class EntityComponentManager implements IEntityComponentManager {
     }
 
     /**
+     * destroy all entities removing all of its components and remove them from the ecs
+     * @param pool - if all components and entities should be pooled
+     */
+    destroyAllEntities(pool?:boolean):void {
+        const keys:string[] = Object.keys(this._entities);
+        for(let i=0, entity:IEntity; entity = this._entities[keys[i]]; i++){
+            this.destroyEntity(entity,pool);
+        }
+    }
+
+    /**
      * @param entity - Entity to remove
      * @param silent - Dispatch onEntityRemoved Signal(Removing the Entity from the Systems)
      * @returns {boolean} - true if entity got removed from the ecs
@@ -139,6 +152,18 @@ export class EntityComponentManager implements IEntityComponentManager {
             return entity;
         }
         return entity;
+    }
+
+    /**
+     * removes all Entities from the ecs
+     */
+    removeAllEntities():IEntity[] {
+        const entities = [];
+        const keys:string[] = Object.keys(this._entities);
+        for(let i=0, entity:IEntity; entity = this._entities[keys[i]]; i++){
+            entities.push(this.removeEntity(entity));
+        }
+        return entities;
     }
 
     /**
