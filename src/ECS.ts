@@ -116,6 +116,15 @@ export class ECS {
     }
 
     /**
+     * Return a list of entities with the specified components
+     * since we need to check all entities this can be quite slow
+     * @param components - list of components the entity needs to have
+     */
+    static getEntities(...components: Array<{ new(config?: { [p: string]: any }): any }>): IEntity[] {
+        return ECS.instance.ecm.getEntities(...components);
+    }
+
+    /**
      * removes the entity from the ECS, it will keep all of its components
      * @param entity - Entity to remove
      * @returns {IEntity}

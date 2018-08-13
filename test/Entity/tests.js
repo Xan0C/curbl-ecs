@@ -136,4 +136,19 @@ describe('EntityDecorator', function () {
             chai.expect(ECS_1.ECS.hasEntity(sEntity)).to.equal(false);
         });
     });
+    describe('#getEntities', () => {
+        it('get entities with the specified components', () => {
+            chai.expect(ECS_1.ECS.hasEntity(entity)).to.equal(true);
+            entity.add(new PositionComponent());
+            const sEntity = new Entity({ x: 21, y: 12 });
+            ECS_1.ECS.addEntity(sEntity);
+            const nameAndPosEntities = ECS_1.ECS.getEntities(PositionComponent, NameComponent);
+            chai.expect(nameAndPosEntities.length).to.equal(1);
+            chai.expect(nameAndPosEntities[0]).to.equal(entity);
+            const nameEntities = ECS_1.ECS.getEntities(NameComponent);
+            chai.expect(nameEntities.length).to.equal(2);
+            chai.expect(nameEntities[0]).to.equal(entity);
+            chai.expect(nameEntities[1]).to.equal(sEntity);
+        });
+    });
 });

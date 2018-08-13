@@ -11,6 +11,7 @@ export interface IEntityComponentManager {
     uuid:()=>string;
     createEntity(entity?:IEntity,components?:{[x:string]:IComponent}):IEntity;
     addEntity<T extends IEntity>(entity:T,components?:{[x:string]:IComponent},silent?:boolean):T;
+    getEntities(...components:Array<{new(config?:{[x:string]:any}):any}>):IEntity[];
     destroyEntity(entity:IEntity,pool?:boolean,silent?:boolean):boolean;
     destroyAllEntities(pool?:boolean):void;
     removeEntity(entity:IEntity,silent?:boolean):IEntity;
@@ -100,6 +101,26 @@ export class EntityComponentManager implements IEntityComponentManager {
             this._events.emit(ECM_EVENTS.ENTITY_ADDED,entity);
         }
         return entity;
+    }
+
+    /**
+     * Return a list of entities with the specified components
+     * since we need to check all entities this can be quite slow
+     * @param components - list of components the entity needs to have
+     */
+    getEntities(...components: Array<{ new(config?: { [p: string]: any }): any }>): IEntity[] {
+        let bitmask = 0;
+        for(let i = 0, component; component = components[i]; i++){
+            bitmask = bitmask | this.componentBitmask.get(component);
+        }
+        const keys = Object.keys(this._entities);
+        const entities:IEntity[] = [];
+        for(let i=0, entity:IEntity; entity = this._entities[keys[i]]; i++){
+            if((entity.bitmask & bitmask) === bitmask){
+                entities.push(entity);
+            }
+        }
+        return entities;
     }
 
     /**

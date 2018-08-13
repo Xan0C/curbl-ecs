@@ -62,7 +62,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     }
 
     /**
-     * Creates the System but wont add it to the ECS
+     * update the system bitmask
      * @param system
      * @param componentMask
      */

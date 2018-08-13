@@ -156,4 +156,21 @@ describe('EntityDecorator', function() {
             chai.expect(ECS.hasEntity(sEntity)).to.equal(false);
         });
     });
+
+    describe('#getEntities',()=> {
+        it('get entities with the specified components', () => {
+            chai.expect(ECS.hasEntity(entity)).to.equal(true);
+            entity.add(new PositionComponent());
+            const sEntity = new Entity({x:21,y:12});
+            ECS.addEntity(sEntity);
+            const nameAndPosEntities:IEntity[] = ECS.getEntities(PositionComponent,NameComponent);
+            chai.expect(nameAndPosEntities.length).to.equal(1);
+            chai.expect(nameAndPosEntities[0]).to.equal(entity);
+
+            const nameEntities:IEntity[] = ECS.getEntities(NameComponent);
+            chai.expect(nameEntities.length).to.equal(2);
+            chai.expect(nameEntities[0]).to.equal(entity);
+            chai.expect(nameEntities[1]).to.equal(sEntity);
+        });
+    });
 });
