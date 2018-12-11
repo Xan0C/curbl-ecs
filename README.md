@@ -1,10 +1,9 @@
 # CURBL-ECS
 
-Curbl-ecs is a simple Entity Component System in plain ES2015(Typescript).
+curbl-ecs is a Entity Component System written in Typescript.
  - Its using Decorators to simply add Component,Entities and Systems.
  - Components are pooled and are automatical reused if the Component class is marked with a Component Decorator.
- - Its easy to add multiple System functions, to integrate with existing frameworks
- - Event handling with Signals
+ - eventemitter3 for event handling
 
 ## Example
 
@@ -59,17 +58,12 @@ entity.get(PositionComponent).x = 42;
 entity.get<PositionComponent>("PositionComponent").x = 42;
 ```
 
-* Creating a System and injecting other Systems as properties
+* Creating a System that will receive all entities with a PositionComponent
 
 ```javascript
 
-//All Entities with a PositionComponent will be added to the System
 @ECS.System(PositionComponent) 
-@ECS.Injector.System<InputSystem>({
-    input:InputSystem
-})
 export class MySystem extends System implements ISystem {
-     private input:InputSystem;
      
      setUp():void{
           //Called when the System is created/added to the ECS 
@@ -81,7 +75,7 @@ export class MySystem extends System implements ISystem {
      
      update():void{
          for(let i=0,entity:IEntity; entity = this.entities[i]; i++){
-             //Do stuff with the entities or whatever
+             //Do stuff with the entities
          }
      }
 }
