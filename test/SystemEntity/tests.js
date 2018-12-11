@@ -194,27 +194,6 @@ describe('System_Entity', function () {
             chai.expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
         });
     });
-    describe('#bind', () => {
-        it('Bind the NameComponents name', () => {
-            let entity = ECS_1.ECS.addEntity(new FullEntity());
-            let component = entity.get(NameComponent);
-            //Kinda stupid test :D
-            ECS_1.ECS.bind(component, 'name').on('set', component.changeNameToPROPS, component);
-            component.name = 'TEST';
-            chai.expect(component.name).to.equal('PROPS');
-        });
-    });
-    describe('#unbind', () => {
-        it('Bind the NameComponents name and unbind it', () => {
-            let entity = ECS_1.ECS.addEntity(new FullEntity());
-            let component = entity.get(NameComponent);
-            //Kinda stupid test :D
-            ECS_1.ECS.bind(component, 'name').on('set', component.changeNameToPROPS, component);
-            ECS_1.ECS.unbind(component);
-            component.name = 'TEST';
-            chai.expect(component.name).to.equal('TEST');
-        });
-    });
     describe('#extendedComponent', () => {
         it('Add entity with an ExtendedNameComponent and an entity with NameComponent, both should be handled by the same system', () => {
             let fEntity = ECS_1.ECS.addEntity(new FullEntity());

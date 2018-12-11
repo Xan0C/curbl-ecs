@@ -5,6 +5,5 @@ export * from "./EntityComponentManager";
 export * from "./EntitySystemManager";
 export * from "./InjectorService";
 export * from "./ObjectPool";
-export * from "./PropertyDescriptorBinder";
 export * from "./System";
 export * from "./UUIDGenerator";

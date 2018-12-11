@@ -58,12 +58,17 @@ entity.get(PositionComponent).x = 42;
 entity.get<PositionComponent>("PositionComponent").x = 42;
 ```
 
-* Creating a System that will receive all entities with a PositionComponent
+* Creating a System and injecting other Systems as properties
 
 ```javascript
 
+//All Entities with a PositionComponent will be added to the System
 @ECS.System(PositionComponent) 
+@ECS.Injector.System<InputSystem>({
+    input:InputSystem
+})
 export class MySystem extends System implements ISystem {
+     private input:InputSystem;
      
      setUp():void{
           //Called when the System is created/added to the ECS 

@@ -3,9 +3,7 @@ import {ECM_EVENTS, EntityComponentManager, IEntityComponentManager} from "./Ent
 import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
 import {EntitySystemManager, ESM_EVENTS, IEntitySystemManager} from "./EntitySystemManager";
-import {PropertyDescriptorBinder} from "./PropertyDescriptorBinder";
 import {InjectorService} from "./InjectorService";
-import * as EventEmitter from "eventemitter3";
 
 /**
  * Created by Soeren on 29.06.2017.
@@ -14,14 +12,12 @@ export class ECS {
     private static _instance:ECS;
     private ecm:IEntityComponentManager;
     private scm:IEntitySystemManager;
-    private propertyDescriptorBinder:PropertyDescriptorBinder;
     private componentBitmaskMap:ComponentBitmaskMap;
 
     private constructor(){
         this.componentBitmaskMap = new ComponentBitmaskMap();
         this.ecm = new EntityComponentManager(this.componentBitmaskMap);
         this.scm = new EntitySystemManager(this.componentBitmaskMap);
-        this.propertyDescriptorBinder = new PropertyDescriptorBinder();
         this.registerEvents();
     }
 
@@ -70,29 +66,6 @@ export class ECS {
 
     public static get Injector():InjectorService{
         return InjectorService.instance;
-    }
-
-    /**
-     * Binds to signals to the PropertyAccessor
-     * returns an EventEmitter which listens for "get" and "set" events,
-     * which are called each time "get" or "set" is called
-     * @param object
-     * @param propertyKey
-     * @returns EventEmitter
-     */
-    static bind(object:any,propertyKey:string):EventEmitter{
-        return ECS.instance.propertyDescriptorBinder.bind(object,propertyKey);
-    }
-
-    /**
-     * Unbind the Binding to the property
-     * @param object
-     * @param propertyKey
-     * @param restore - default:true restores the previous acessor when the property was binded
-     * @returns {boolean}
-     */
-    static unbind(object:any,propertyKey?:string,restore?:boolean):boolean{
-        return ECS.instance.propertyDescriptorBinder.unbind(object,propertyKey,restore);
     }
 
     static noop(){}

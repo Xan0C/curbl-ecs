@@ -223,29 +223,6 @@ describe('System_Entity', function () {
         });
     });
 
-    describe('#bind', () => {
-        it('Bind the NameComponents name', () => {
-            let entity:IEntity = ECS.addEntity(new FullEntity());
-            let component = entity.get(NameComponent);
-            //Kinda stupid test :D
-            ECS.bind(component,'name').on('set',component.changeNameToPROPS,component);
-            component.name = 'TEST';
-            chai.expect(component.name).to.equal('PROPS');
-        });
-    });
-
-    describe('#unbind', () => {
-        it('Bind the NameComponents name and unbind it', () => {
-            let entity:IEntity = ECS.addEntity(new FullEntity());
-            let component = entity.get(NameComponent);
-            //Kinda stupid test :D
-            ECS.bind(component,'name').on('set',component.changeNameToPROPS,component);
-            ECS.unbind(component);
-            component.name = 'TEST';
-            chai.expect(component.name).to.equal('TEST');
-        });
-    });
-
     describe('#extendedComponent',()=>{
         it('Add entity with an ExtendedNameComponent and an entity with NameComponent, both should be handled by the same system',()=>{
             let fEntity:IEntity = ECS.addEntity(new FullEntity());

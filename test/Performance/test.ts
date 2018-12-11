@@ -76,62 +76,46 @@ class SystemThree implements ISystem {
 }
 
 describe('SystemPerformance', function() {
-    var systemOne:ISystem;
-    var systemTwo:ISystem;
-    var systemThree:ISystem;
+    let systemOne:ISystem;
+    let systemTwo:ISystem;
+    let systemThree:ISystem;
     this.timeout(0);
 
     beforeEach(() => {
         systemOne = ECS.addSystem(new System({x:0,y:0}));
         systemTwo = ECS.addSystem(new SystemTwo());
         systemThree = ECS.addSystem(new SystemThree());
+
+        for(let i=0; i < 10000; i++){
+            let entity = ECS.createEntity();
+            entity.add(new PositionComponent({x:0,y:0}));
+            ECS.addEntity(entity);
+        }
     });
 
     afterEach(() => {
         systemOne.dispose();
         systemTwo.dispose();
         systemThree.dispose();
+        ECS.removeAllEntities();
     });
 
     describe('#update', () => {
-        it('Checks time of update for a lot of entities 10k', () => {
-            for(let i=0; i < 10000; i++){
-                let entity = ECS.createEntity();
-                entity.add(new PositionComponent({x:0,y:0}));
-                ECS.addEntity(entity);
-            }
-            console.time('ECS#Update10k');
+        it('Checks time of update for 10000 entities and 3 systems', () => {
+            console.time('ECS#Update');
             ECS.update();
-            console.timeEnd('ECS#Update10k');
+            console.timeEnd('ECS#Update');
+        });
+
+        it('Checks time to add 10000 entities (adding is quite heavy)', () => {
+            ECS.removeAllEntities();
+            console.time('ECS#AddEntities');
+            for(let i=0; i < 10000; i++){
+                let entity = ECS.createEntity();
+                entity.add(new PositionComponent({x:0,y:0}));
+                ECS.addEntity(entity);
+            }
+            console.timeEnd('ECS#AddEntities');
         });
     });
-
-    describe('#createEntities - ignore seems buggy', () => {
-        it('entities#not_pooled#10k', () => {
-            console.time('ECS#CreateEntitiesNotPooled10k');
-            for(let i=0; i < 10000; i++){
-                let entity = ECS.createEntity();
-                entity.add(new PositionComponent({x:0,y:0}));
-                ECS.addEntity(entity);
-            }
-            console.timeEnd('ECS#CreateEntitiesNotPooled10k');
-        });
-
-        it('entities#pooled#10k', () => {
-            for(let i=0; i < 10000; i++){
-                let entity = ECS.createEntity();
-                entity.add(new PositionComponent({x:0,y:0}));
-                ECS.addEntity(entity);
-                entity.destroy();
-            }
-            console.time('ECS#CreateEntitiesPooled10k');
-            for(let i=0; i < 10000; i++){
-                let entity = ECS.createEntity();
-                entity.add(new PositionComponent({x:0,y:0}));
-                ECS.addEntity(entity);
-            }
-            console.timeEnd('ECS#CreateEntitiesPooled10k');
-        });
-    });
-
 });

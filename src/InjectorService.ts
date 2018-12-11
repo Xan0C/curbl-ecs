@@ -19,7 +19,7 @@ export class InjectorService {
 
 
     /**
-     * Injects an existing system into the property
+     * Injects an existing system into the class
      * @param {{new(config?: {[p: string]: any}) => T}} system
      * @returns {(target: Object, propKey: (number | string)) => void}
      * @constructor
