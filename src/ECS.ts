@@ -47,11 +47,11 @@ export class ECS {
         ECS.instance.scm.removeEntity(entity);
     }
 
-    private onComponentAdded(entity:IEntity,component:IComponent){
+    private onComponentAdded(entity:IEntity){
         ECS.instance.scm.updateEntity(entity);
     }
 
-    private onComponentRemoved(entity:IEntity,component:IComponent){
+    private onComponentRemoved(entity:IEntity){
         ECS.instance.scm.updateEntity(entity);
     }
 

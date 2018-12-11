@@ -3,8 +3,6 @@
  */
 import {ISystem} from "./System";
 import {ECS} from "./ECS";
-import {EntityDecoratorComponent} from "./Entity";
-import {IComponent} from "./Component";
 
 export class InjectorService {
 
