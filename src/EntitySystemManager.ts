@@ -2,6 +2,7 @@ import {injectSystem, ISystem} from "./System";
 import {IEntity} from "./Entity";
 import {ComponentBitmaskMap} from "./Component";
 import * as EventEmitter from "eventemitter3";
+import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
 
 /**
  * Created by Soeren on 28.06.2017.
@@ -26,18 +27,6 @@ export interface IEntitySystemManager {
     updateEntity(entity:IEntity,system?:ISystem):void;
 }
 
-export enum ESM_EVENTS {
-    SYSTEM_ADDED = "SYSTEM_ADDED",
-    SYSTEM_REMOVED = "SYSTEM_REMOVED",
-    ENTITY_ADDED_TO_SYSTEM = "ENTITY_ADDED_TO_SYSTEM",
-    ENTITY_REMOVED_FROM_SYSTEM = "ENTITY_REMOVED_FROM_SYSTEM"
-}
-
-export enum SYSTEM_EVENTS {
-    ENTITY_ADDED = "ENTITY_ADDED",
-    ENTITY_REMOVED = "ENTITY_REMOVED"
-}
-
 export class EntitySystemManager implements IEntitySystemManager {
     private componentBitmask:ComponentBitmaskMap;
     private _events:EventEmitter;
@@ -53,8 +42,8 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     private _systemUpdateMethods:Array<string>;
 
-    constructor(componentBitmaskMap:ComponentBitmaskMap){
-        this._events = new EventEmitter();
+    constructor(componentBitmaskMap:ComponentBitmaskMap, events: EventEmitter){
+        this._events = events;
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
         this.systems = Object.create(null);
@@ -227,7 +216,7 @@ export class EntitySystemManager implements IEntitySystemManager {
     /**
      * Updates the Entity adds it to the right systems and removes it from systems if it does not fit anymore
      * @param entity
-     * @param system - optional if only update for two Entity(ether add or remove from the system)
+     * @param system - optional only update for for the given system(ether add or remove the entity from the system)
      */
     updateEntity(entity:IEntity,system?:ISystem):void{
         if(system){

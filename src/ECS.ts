@@ -1,23 +1,24 @@
 import {EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
-import {ECM_EVENTS, EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
+import {EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
 import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
 import {injectSystem, ISystem} from "./System";
-import {EntitySystemManager, ESM_EVENTS, IEntitySystemManager} from "./EntitySystemManager";
+import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
 import {InjectorService} from "./InjectorService";
+import * as EventEmitter from "eventemitter3";
+import {ECM_EVENTS, ESM_EVENTS} from "./Events";
 
-/**
- * Created by Soeren on 29.06.2017.
- */
 export class ECS {
     private static _instance:ECS;
+    private events:EventEmitter;
     private ecm:IEntityComponentManager;
     private scm:IEntitySystemManager;
     private componentBitmaskMap:ComponentBitmaskMap;
 
     private constructor(){
         this.componentBitmaskMap = new ComponentBitmaskMap();
-        this.ecm = new EntityComponentManager(this.componentBitmaskMap);
-        this.scm = new EntitySystemManager(this.componentBitmaskMap);
+        this.events = new EventEmitter();
+        this.ecm = new EntityComponentManager(this.componentBitmaskMap, this.events);
+        this.scm = new EntitySystemManager(this.componentBitmaskMap, this.events);
         this.registerEvents();
     }
 
@@ -27,7 +28,6 @@ export class ECS {
         this.ecm.events.on(ECM_EVENTS.ENTITY_DESTROYED,this.onEntityDestroyed);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_ADDED,this.onComponentAdded);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_REMOVED,this.onComponentRemoved);
-
         this.scm.events.on(ESM_EVENTS.SYSTEM_ADDED,this.onSystemAdded);
     }
 
@@ -115,6 +115,7 @@ export class ECS {
 
     /**
      * destroy an entity removes it from the ecs and removes all components
+     * usually you want to use removeEntity and let the garbage collector do its job
      * @param entity - entity to destroy
      * @param pool - wether or not to add the entity to the ObjectPool(default: true)
      */
@@ -124,6 +125,7 @@ export class ECS {
 
     /**
      * remove all components and entities from the ecs
+     * usually you want to use removeAllEntities and let the garbage collector do its job
      * @param pool - if components and entities should be pooled instead of destroyed{default: true}
      */
     static destroyAllEntities(pool?:boolean):void {
@@ -178,8 +180,12 @@ export class ECS {
         ECS.instance.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
     }
 
-    static callSystemMethod(funcId:string):void{
-        ECS.instance.scm.callSystemMethod(funcId);
+    /**
+     * Calls a specific method for all systems (e.g. update)
+     * @param functionName - name of the function to be called
+     */
+    static callSystemMethod(functionName:string):void{
+        ECS.instance.scm.callSystemMethod(functionName);
     }
 
     private static createComponentsFromDecorator(components:EntityDecoratorComponent[]):{[x:string]:IComponent}{
@@ -260,5 +266,9 @@ export class ECS {
 
     static set systemUpdateMethods(methods:Array<string>){
         ECS.instance.scm.systemUpdateMethods = methods;
+    }
+
+    static get events():EventEmitter {
+        return ECS.instance.events;
     }
 }

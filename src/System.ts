@@ -77,7 +77,7 @@ export class System implements ISystem {
     readonly entities:Array<IEntity>;
     readonly events:EventEmitter;
 
-    constructor(){
+    constructor() {
         this.bitmask = SYSTEM_PROPERTIES.bitmask();
         this.entities = SYSTEM_PROPERTIES.entities();
         this.events = SYSTEM_PROPERTIES.events();

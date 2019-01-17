@@ -91,7 +91,7 @@ describe('SystemPerformance', function () {
             ECS_1.ECS.update();
             console.timeEnd('ECS#Update');
         });
-        it('Checks time to add 10000 entities', () => {
+        it('Checks time to add 10000 entities (adding is quite heavy)', () => {
             ECS_1.ECS.removeAllEntities();
             console.time('ECS#AddEntities');
             for (let i = 0; i < 10000; i++) {

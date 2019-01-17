@@ -3,6 +3,7 @@ import {Entity, IEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
 import * as EventEmitter from "eventemitter3";
 import {DynamicObjectPool} from "./ObjectPool";
+import {ECM_EVENTS} from "./Events";
 
 export interface IEntityComponentManager {
     readonly pool:DynamicObjectPool;
@@ -19,14 +20,6 @@ export interface IEntityComponentManager {
     addComponent(entity:IEntity,component:IComponent,silent?:boolean):void;
     hasEntity(entity:IEntity):boolean;
     removeComponent<T extends IComponent>(entity:IEntity,component:{new(...args):T}|string,destroy?:boolean,silent?:boolean):boolean;
-}
-
-export enum ECM_EVENTS {
-    ENTITY_ADDED = "ENTITY_ADDED",
-    ENTITY_REMOVED = "ENTITY_REMOVED",
-    ENTITY_DESTROYED = "ENTITY_DESTROYED",
-    COMPONENT_ADDED = "COMPONENT_ADDED",
-    COMPONENT_REMOVED = "COMPONENT_REMOVED"
 }
 
 /**
@@ -51,9 +44,9 @@ export class EntityComponentManager implements IEntityComponentManager {
      */
     private _entities:{[id:string]:IEntity};
 
-    constructor(componentBitmaskMap:ComponentBitmaskMap,uuid:()=>string=UUIDGenerator.uuid){
+    constructor(componentBitmaskMap:ComponentBitmaskMap, events:EventEmitter, uuid:()=>string=UUIDGenerator.uuid){
         this._pool = new DynamicObjectPool();
-        this._events = new EventEmitter();
+        this._events = events;
         this._uuid = uuid;
         this.componentBitmask = componentBitmaskMap;
         this._entities = Object.create(null);
