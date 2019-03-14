@@ -6,3 +6,4 @@ index.html
 .idea/
 webpack.config.js
 /dist
+coverage

@@ -29,7 +29,7 @@ export class InjectorService {
             const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             const DecoratorInjector:any = function(...args){
                 const object = wrapper.apply(this,args);
-                Object.setPrototypeOf(object,Object.getPrototypeOf(this));
+                ECS.setPrototypeOf(object,Object.getPrototypeOf(this));
                 const keys = Object.keys(systems);
                 for(let i=0,system; system = systems[keys[i]];i++){
                     object[keys[i]] = ECS.getSystem(system);

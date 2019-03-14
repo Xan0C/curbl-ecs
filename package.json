@@ -6,8 +6,10 @@
   "types": "./lib/index.d.ts",
   "typings": "./lib/index.d.ts",
   "scripts": {
-    "pretest": "tsc -p ./test",
-    "test": "mocha --recursive"
+    "build": "tsc",
+    "webpack": "webpack",
+    "test": "karma start",
+    "prepublishOnly": "build && test"
   },
   "keywords": [
     "ts",
@@ -25,10 +27,16 @@
     "@types/eventemitter3": "^2.0.2",
     "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
+    "karma": "^4.0.1",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-typescript": "^4.0.0",
     "mocha": "^5.2.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.2.2",
-    "webpack": "^4.28.4"
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.3"
   },
   "dependencies": {
     "eventemitter3": "^3.1.0"

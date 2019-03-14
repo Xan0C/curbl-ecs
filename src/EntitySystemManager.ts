@@ -71,10 +71,10 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     add<T extends ISystem>(system:T,componentMask:Array<{new(config?:{[x:string]:any}):any}>=[],silent:boolean=false):T{
         if(!this.has(system)) {
-            injectSystem(system,this.systemUpdateMethods);
+            injectSystem(system, this.systemUpdateMethods);
             this.systems[system.id] = system;
             this.ids.push(system.id);
-            this.updateBitmask(system,componentMask);
+            this.updateBitmask(system, componentMask);
             system.setUp();
             if(!silent){
                 this._events.emit(ESM_EVENTS.SYSTEM_ADDED,system);

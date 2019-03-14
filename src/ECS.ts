@@ -64,7 +64,16 @@ export class ECS {
         return ECS._instance = new ECS();
     }
 
-    public static get Injector():InjectorService{
+    static setPrototypeOf<T>(obj: T, proto): T {
+        //@ts-ignore
+        const fn = Object.setPrototypeOf || function(obj, proto) {
+            obj.__proto__ = proto;
+            return obj;
+        };
+        return fn(obj, proto);
+    }
+
+    static get Injector():InjectorService{
         return InjectorService.instance;
     }
 
@@ -126,10 +135,9 @@ export class ECS {
     /**
      * remove all components and entities from the ecs
      * usually you want to use removeAllEntities and let the garbage collector do its job
-     * @param pool - if components and entities should be pooled instead of destroyed{default: true}
      */
-    static destroyAllEntities(pool?:boolean):void {
-        return ECS.instance.ecm.destroyAllEntities(pool);
+    static destroyAllEntities():void {
+        return ECS.instance.ecm.destroyAllEntities();
     }
 
     static hasEntity(entity:IEntity):boolean{
@@ -200,30 +208,23 @@ export class ECS {
 
     static Component(id?:string):(constructor:{ new(config?:{[x:string]:any}):IComponent }) => any{
         return function(constructor:{new(...args):IComponent}){
-            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            const DecoratorSystem:any = function(...args){
-                let component = ECS.instance.ecm.pool.pop(constructor);
-                if(!component) {
-                    component = wrapper.apply(this, args);
-                    Object.setPrototypeOf(component, Object.getPrototypeOf(this));
-                    injectComponent(component);
-                }else{
-                    component.init(...args);
-                }
+            const DecoratorComponent:any = function(...args){
+                const component = new constructor(...args);
+                ECS.setPrototypeOf(component, Object.getPrototypeOf(this));
+                injectComponent(component);
                 component.id = id||constructor.prototype.constructor.name;
                 return component;
             };
-            DecoratorSystem.prototype = constructor.prototype;
-            return DecoratorSystem;
+            DecoratorComponent.prototype = constructor.prototype;
+            return DecoratorComponent;
         }
     }
 
     static System(...components:{new(config?:{[x:string]:any}):IComponent}[]):(constructor:{ new(config?:{[x:string]:any}):ISystem }) => any{
         return function(constructor:{new(...args):ISystem}){
-            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            const DecoratorSystem:any = function(...args){
-                const system = wrapper.apply(this,args);
-                Object.setPrototypeOf(system,Object.getPrototypeOf(this));
+            const DecoratorSystem:any = function(...args) {
+                const system = new constructor(...args);
+                ECS.setPrototypeOf(system,Object.getPrototypeOf(this));
                 injectSystem(system,ECS.instance.scm.systemUpdateMethods);
                 system.id = system.id||constructor.prototype.constructor.name;
                 ECS.instance.scm.updateBitmask(system,components);
@@ -236,14 +237,10 @@ export class ECS {
 
     static Entity(...components:EntityDecoratorComponent[]):((constructor:{ new(config?:{[x:string]:any}):IEntity }) => any)&((target:Object, propKey:number | string) => void)  {
         return function(constructor:{new(...args):IEntity}){
-            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
             const DecoratorEntity:any = function(...args){
-                let entity = ECS.instance.ecm.pool.pop(constructor);
-                if(!entity){
-                    entity = wrapper.apply(this,args);
-                    Object.setPrototypeOf(entity,Object.getPrototypeOf(this));
-                    injectEntity(entity);
-                }
+                const entity = new constructor(...args);
+                ECS.setPrototypeOf(entity,Object.getPrototypeOf(this));
+                injectEntity(entity);
                 ECS.instance.ecm.createEntity(entity,ECS.createComponentsFromDecorator(components));
                 return entity;
             };

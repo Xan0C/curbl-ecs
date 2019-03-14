@@ -1,43 +1,38 @@
-/**
- * Created by Soeren on 26.10.2017.
- */
-import * as chai from "chai";
-import {ECS} from "../../lib/ECS";
-import {ISystem} from "../../lib/System";
-import {IEntity} from "../../lib/Entity";
+import {expect} from "chai";
+import {ECS, IEntity, ISystem} from "../../src";
 
 @ECS.Component()
-export class PositionComponent  {
+export class PositionComponent {
 
     public x;
     public y;
 
-    constructor(config:{x:number,y:number}){
+    constructor(config: { x: number, y: number }) {
         this.init(config);
     }
 
-    init(config:{x:number,y:number}):void {
+    init(config: { x: number, y: number }): void {
         this.x = config.x;
         this.y = config.y;
     }
 
-    remove():void {
+    remove(): void {
     }
 }
 
 @ECS.System(PositionComponent)
 class System implements ISystem {
-    entities:Array<IEntity>;
+    entities: Array<IEntity>;
     public x;
     public y;
 
-    constructor(config:{x:number,y:number}){
+    constructor(config: { x: number, y: number }) {
         this.x = config.x;
         this.y = config.y;
     }
 
-    update():void{
-        for(let i=0,entity; entity = this.entities[i];i++){
+    update(): void {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(PositionComponent).x = 42;
             entity.get(PositionComponent).y = 42;
         }
@@ -45,18 +40,18 @@ class System implements ISystem {
 }
 
 @ECS.System(PositionComponent)
-class SystemDeux implements ISystem {
-    entities:Array<IEntity>;
+class SystemTwo implements ISystem {
+    entities: Array<IEntity>;
     public x;
     public y;
 
-    constructor(config:{x:number,y:number}){
+    constructor(config: { x: number, y: number }) {
         this.x = config.x;
         this.y = config.y;
     }
 
-    update():void{
-        for(let i=0,entity; entity = this.entities[i];i++){
+    update(): void {
+        for (let i = 0, entity; entity = this.entities[i]; i++) {
             entity.get(PositionComponent).x = 42;
             entity.get(PositionComponent).y = 42;
         }
@@ -64,25 +59,23 @@ class SystemDeux implements ISystem {
 }
 
 @ECS.Injector.System({
-    system:System
+    system: System
 })
 class Injected {
 
-    public system:ISystem;
+    public system: ISystem;
 
-    constructor(){
+    constructor() {
 
     }
-
-
 }
 
-describe('SystemDecorator', function() {
-    var system:ISystem;
+describe('SystemDecorator', function () {
+    var system: ISystem;
     this.timeout(0);
 
     beforeEach(() => {
-        system = ECS.addSystem(new System({x:42,y:12}));
+        system = ECS.addSystem(new System({x: 42, y: 12}));
     });
 
     afterEach(() => {
@@ -92,7 +85,7 @@ describe('SystemDecorator', function() {
     describe('#inject', () => {
         it('#System#Checks that the system got injected as a property', () => {
             let injected = new Injected();
-            chai.expect(injected.system).to.equal(ECS.getSystem(System));
+            expect(injected.system).to.equal(ECS.getSystem(System));
         });
     });
 });

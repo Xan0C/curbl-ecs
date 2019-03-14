@@ -4,25 +4,25 @@
 import {ECS} from "./ECS";
 
 export class ComponentBitmaskMap {
-    private bitmaskMap:Map<string,number>;
+    private bitmaskMap:{[key:string]:number};
 
     constructor(){
-        this.bitmaskMap = new Map<string,number>();
+        this.bitmaskMap = Object.create(null);
     }
 
     has<T extends IComponent>(component:{new(config?:{[x:string]:any}):T}|string):boolean{
         if(typeof component === "string"){
-            return this.bitmaskMap.has(component);
+            return !!this.bitmaskMap[component];
         }else {
-            return this.bitmaskMap.has(component.prototype.constructor.name);
+            return !!this.bitmaskMap[component.prototype.constructor.name];
         }
     }
 
     add<T extends IComponent>(component:{new(config?:{[x:string]:any}):T}|string){
         if(typeof component === "string"){
-            this.bitmaskMap.set(component,1 << this.bitmaskMap.size);
+            this.bitmaskMap[component] = 1 << this.size;
         }else {
-            this.bitmaskMap.set(component.prototype.constructor.name, 1 << this.bitmaskMap.size);
+            this.bitmaskMap[component.prototype.constructor.name] = 1 << this.size;
         }
     }
 
@@ -31,9 +31,13 @@ export class ComponentBitmaskMap {
             this.add(component);
         }
         if(typeof component === "string"){
-            return this.bitmaskMap.get(component)||0;
+            return this.bitmaskMap[component]||0;
         }
-        return this.bitmaskMap.get(component.prototype.constructor.name)||0;
+        return this.bitmaskMap[component.prototype.constructor.name]||0;
+    }
+
+    get size(): number {
+        return Object.keys(this.bitmaskMap).length;
     }
 }
 
