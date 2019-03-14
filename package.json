@@ -8,8 +8,7 @@
   "scripts": {
     "build": "tsc",
     "webpack": "webpack",
-    "test": "karma start",
-    "prepublishOnly": "build && test"
+    "test": "karma start"
   },
   "keywords": [
     "ts",
