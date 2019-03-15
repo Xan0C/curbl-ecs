@@ -6,3 +6,4 @@ export * from "./EntitySystemManager";
 export * from "./InjectorService";
 export * from "./System";
 export * from "./UUIDGenerator";
+export * from "./Events"
