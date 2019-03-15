@@ -1,6 +1,6 @@
 {
   "name": "curbl-ecs",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Small Entity Component System",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -10,8 +10,8 @@
     "test": "karma start"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/Xan0C/curbl-ecs"
+    "type": "git",
+    "url": "https://github.com/Xan0C/curbl-ecs"
   },
   "keywords": [
     "ts",
