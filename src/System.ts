@@ -2,9 +2,6 @@ import {IEntity} from "./Entity";
 import {ECS} from "./ECS";
 import * as EventEmitter from "eventemitter3";
 
-/**
- * Created by Soeren on 28.06.2017.
- */
 export interface ISystem {
     id?:string;
     bitmask?:number;

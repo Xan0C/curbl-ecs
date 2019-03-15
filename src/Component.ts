@@ -1,6 +1,3 @@
-/**
- * Created by Soeren on 27.06.2017.
- */
 import {ECS} from "./ECS";
 
 export class ComponentBitmaskMap {

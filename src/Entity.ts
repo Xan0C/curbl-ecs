@@ -1,10 +1,6 @@
 import {IComponent} from "./Component";
 import {ECS} from "./ECS";
 
-/**
- * Created by Soeren on 28.06.2017.
- */
-
 export declare type EntityDecoratorComponent = {component:{new(config?:{[x:string]:any}):any}, config?:{[x:string]:any}};
 
 export interface IEntity {

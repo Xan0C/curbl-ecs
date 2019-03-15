@@ -1,6 +1,3 @@
-/**
- * Created by Soeren on 18.10.2017.
- */
 import {ISystem} from "./System";
 import {ECS} from "./ECS";
 
@@ -16,7 +13,6 @@ export class InjectorService {
         }
         return InjectorService._instance = new InjectorService();
     }
-
 
     /**
      * Injects an existing system into the class

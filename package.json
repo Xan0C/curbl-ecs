@@ -7,8 +7,11 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "webpack": "webpack",
     "test": "karma start"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/Xan0C/curbl-ecs"
   },
   "keywords": [
     "ts",
@@ -31,11 +34,8 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-mocha": "^1.3.0",
     "karma-typescript": "^4.0.0",
-    "mocha": "^5.2.0",
-    "ts-loader": "^5.3.3",
-    "typescript": "^3.2.2",
-    "webpack": "^4.28.4",
-    "webpack-cli": "^3.2.3"
+    "mocha": "^6.0.2",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "eventemitter3": "^3.1.0"
