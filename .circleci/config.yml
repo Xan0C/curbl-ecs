@@ -18,9 +18,6 @@ jobs:
 
       - run: npm install
       - run:
-          name: Build the package
-          command: npm run build
-      - run:
           name: Run tests
           command: npm test
 
@@ -33,8 +30,34 @@ jobs:
           root: ~/repo
           paths: .
 
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/rep
+      - run:
+          name: Build the package
+          command: npm run build
+      - run:
+          name: Publish package
+          command: npm publish
+
 workflows:
   version: 2
-  only_test:
+  test-deploy:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
