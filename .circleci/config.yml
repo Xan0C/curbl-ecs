@@ -5,9 +5,15 @@ defaults: &defaults
   docker:
     - image: circleci/node:8.9.1-browsers
 
+only-version-tags: &only-version-tags
+  filters:
+    tags:
+      only: /^v.*/
+    branches:
+      ignore: /.*/
+
 jobs:
-  test:
-    <<: *defaults
+  build_and_test:
     steps:
       - checkout
 
@@ -17,6 +23,9 @@ jobs:
             - v1-dependencies-
 
       - run: npm install
+      - run:
+          name: Build the package
+          command: npm run build
       - run:
           name: Run tests
           command: npm test
@@ -31,7 +40,6 @@ jobs:
           paths: .
 
   deploy:
-    <<: *defaults
     steps:
       - attach_workspace:
           at: ~/repo
@@ -39,25 +47,18 @@ jobs:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/rep
       - run:
-          name: Build the package
-          command: npm run build
-      - run:
           name: Publish package
           command: npm publish
 
 workflows:
   version: 2
-  test-deploy:
+  build-and-test:
     jobs:
-      - test:
-          filters:
-            tags:
-              only: /^v.*/
+      - build_and_test
+  deploy-build:
+    jobs:
+      - build_and_test: *only-version-tags
       - deploy:
+          <<: *only-version-tags
           requires:
-            - test
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            - build_and_test
