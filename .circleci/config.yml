@@ -64,5 +64,5 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-            requires:
-              - build_and_test
+          requires:
+            - build_and_test
