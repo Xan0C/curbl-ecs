@@ -1,8 +1,7 @@
 # CURBL-ECS
 
 curbl-ecs is a Entity Component System written in Typescript.
- - Its using Decorators to simply add Component,Entities and Systems.
- - Components are pooled and are automatical reused if the Component class is marked with a Component Decorator.
+ - Its using Decorators to simply add Component, Entities and Systems.
  - eventemitter3 for event handling
 
 ## Example
@@ -13,20 +12,20 @@ curbl-ecs is a Entity Component System written in Typescript.
 
 @ECS.Component()
 class PositionComponent implements IComponent {
-    public x;
-    public y;
+    public x: number;
+    public y: number;
 
-    constructor(config:{x:number,y:number}={x:0,y:0}){
+    constructor(config: {x: number, y: number} = { x:0, y:0 }) {
         this.x = config.x;
         this.y = config.y;
     }
 
-    init(config:{x:number,y:number}={x:0,y:0}):void {
+    init(config: {x: number, y: number} = { x: 0, y: 0 }): void {
         this.x = config.x;
         this.y = config.y;
     }
 
-    remove():void {
+    remove(): void {
     }
 
 }
@@ -37,10 +36,10 @@ class PositionComponent implements IComponent {
 ```javascript
 
 @ECS.Entity(
-    {component:PositionComponent,config:{x:12,y:12}}
+    { component:PositionComponent, config: { x:12, y:12 }}
 )
 class Entity implements IEntity {
-   readonly id:string;
+   readonly id: string;
 }
 ```
 
@@ -55,7 +54,7 @@ entity.add(new PositionComponent());
 
 ```javascript
 entity.get(PositionComponent).x = 42;
-entity.get<PositionComponent>("PositionComponent").x = 42;
+entity.get("PositionComponent").x = 42;
 ```
 
 * Creating a System and injecting other Systems as properties
@@ -64,22 +63,19 @@ entity.get<PositionComponent>("PositionComponent").x = 42;
 
 //All Entities with a PositionComponent will be added to the System
 @ECS.System(PositionComponent) 
-@ECS.Injector.System<InputSystem>({
-    input:InputSystem
-})
 export class MySystem extends System implements ISystem {
-     private input:InputSystem;
+     private input: InputSystem;
      
-     setUp():void{
+     setUp(): void{
           //Called when the System is created/added to the ECS 
      }
      
-     tearDown():void{
+     tearDown(): void{
          //Called when the System is removed from the ECS
      }
      
-     update():void{
-         for(let i=0,entity:IEntity; entity = this.entities[i]; i++){
+     update(): void{
+         for(let i = 0, entity: IEntity; entity = this.entities[i]; i++){
              //Do stuff with the entities
          }
      }
