@@ -1,6 +1,11 @@
 import {IComponent} from "./Component";
 import {ECS} from "./ECS";
 
+export interface EntityDecoratorComponent {
+    component: { new(config?: {[x: string]: any}): any };
+    config?: { [x: string]: any };
+}
+
 export interface IEntity {
     readonly id?: string;
     components?: {[id: string]: IComponent};
