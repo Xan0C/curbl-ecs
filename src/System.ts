@@ -10,7 +10,7 @@ export interface ISystem {
     setUp?(): void;
     tearDown?(): void;
     has?(entity: IEntity): boolean;
-    remove?(entity: IEntity,fromECS?: boolean,destroy?: boolean): void;
+    remove?(entity: IEntity, fromECS?: boolean): void;
     dispose?(): void;
 }
 
@@ -37,14 +37,9 @@ export class System implements ISystem {
         return this.entities.indexOf(entity) !== -1;
     }
 
-    remove(entity: IEntity, fromECS: boolean=true, destroy?: boolean): void {
+    remove(entity: IEntity, fromECS: boolean=true): void {
         if(fromECS) {
-            if(destroy) {
-                ECS.destroyEntity(entity,true);
-            }
-            else {
-                ECS.removeEntity(entity);
-            }
+            ECS.removeEntity(entity);
         }
         ECS.removeEntityFromSystem(entity, this);
     }

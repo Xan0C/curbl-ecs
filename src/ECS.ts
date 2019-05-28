@@ -25,7 +25,6 @@ export class ECS {
     private registerEvents(){
         this.ecm.events.on(ECM_EVENTS.ENTITY_ADDED,this.onEntityAdded);
         this.ecm.events.on(ECM_EVENTS.ENTITY_REMOVED,this.onEntityRemoved);
-        this.ecm.events.on(ECM_EVENTS.ENTITY_DESTROYED,this.onEntityDestroyed);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_ADDED,this.onComponentAdded);
         this.ecm.events.on(ECM_EVENTS.COMPONENT_REMOVED,this.onComponentRemoved);
         this.scm.events.on(ESM_EVENTS.SYSTEM_ADDED,this.onSystemAdded);
@@ -36,10 +35,6 @@ export class ECS {
     }
 
     private onEntityRemoved(entity: IEntity){
-        ECS.instance.scm.removeEntity(entity);
-    }
-
-    private onEntityDestroyed(entity: IEntity){
         ECS.instance.scm.removeEntity(entity);
     }
 
@@ -120,24 +115,6 @@ export class ECS {
      */
     static removeAllEntities(): IEntity[] {
         return ECS.instance.ecm.removeAllEntities();
-    }
-
-    /**
-     * destroy an entity removes it from the ecs and removes all components
-     * usually you want to use removeEntity and let the garbage collector do its job
-     * @param entity - entity to destroy
-     * @param pool - wether or not to add the entity to the ObjectPool(default: true)
-     */
-    static destroyEntity(entity: IEntity,pool?: boolean): boolean {
-        return ECS.instance.ecm.destroyEntity(entity,pool);
-    }
-
-    /**
-     * remove all components and entities from the ecs
-     * usually you want to use removeAllEntities and let the garbage collector do its job
-     */
-    static destroyAllEntities(): void {
-        return ECS.instance.ecm.destroyAllEntities();
     }
 
     static hasEntity(entity: IEntity): boolean{

@@ -4,9 +4,6 @@ import {ComponentBitmaskMap} from "./Component";
 import * as EventEmitter from "eventemitter3";
 import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
 
-/**
- * Created by Soeren on 28.06.2017.
- */
 export interface IEntitySystemManager {
     readonly events: EventEmitter;
     systemUpdateMethods: string[];
@@ -32,14 +29,8 @@ export class EntitySystemManager implements IEntitySystemManager {
     private _events: EventEmitter;
 
     private ids: string[];
-    /**
-     * Sorted Array of all Systems
-     */
     private systems: {[id: string]: ISystem};
 
-    /**
-     * Methods that are called for each system in each iteration
-     */
     private _systemUpdateMethods: string[];
 
     constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter){
@@ -64,12 +55,12 @@ export class EntitySystemManager implements IEntitySystemManager {
 
     /**
      * Add the system to the ECS so its methods will be called by the update methods
-     * Before the existing entities get added into the system the init method is called
+     * Before the existing entities get added into the system the setUp method is called
      * @param system
-     * @param componentMask
-     * @param silent
+     * @param componentMask - componentBitmask for the System
+     * @param silent - if true the ECS wont be notified that a System got added to the ECS
      */
-    add<T extends ISystem>(system: T,componentMask: {new(config?: {[x: string]: any}): any}[]=[],silent: boolean=false): T{
+    add<T extends ISystem>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent: boolean=false): T {
         if(!this.has(system)) {
             injectSystem(system, this.systemUpdateMethods);
             this.systems[system.id] = system;
@@ -160,9 +151,8 @@ export class EntitySystemManager implements IEntitySystemManager {
      * Adds the entity to the system, or adds it to all Systems
      * @param entity
      * @param system - optional system to add the entity to
-     * @param silent
      */
-    addEntity(entity: IEntity,system?: ISystem,silent: boolean=false): void{
+    addEntity(entity: IEntity,system?: ISystem): void{
         if(system){
             if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
                 system.entities.push(entity);
@@ -178,18 +168,14 @@ export class EntitySystemManager implements IEntitySystemManager {
                 }
             }
         }
-        if(!silent && (!system || this.has(system)) ){
-            this._events.emit(ESM_EVENTS.ENTITY_ADDED_TO_SYSTEM,entity,system);
-        }
     }
 
     /**
      * Removes an entity from the system or all systems
      * @param entity
      * @param system
-     * @param silent
      */
-    removeEntity(entity: IEntity,system?: ISystem,silent: boolean=false): void{
+    removeEntity(entity: IEntity,system?: ISystem): void{
         if(system) {
             const idx = system.entities.indexOf(entity);
             if (idx != -1) {
@@ -207,9 +193,6 @@ export class EntitySystemManager implements IEntitySystemManager {
                 }
                 system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
             }
-        }
-        if(!silent){
-            this._events.emit(ESM_EVENTS.ENTITY_REMOVED_FROM_SYSTEM,entity,system);
         }
     }
 

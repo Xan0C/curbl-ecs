@@ -1,9 +1,6 @@
 import {expect} from "chai";
 import {ECS, IComponent, IEntity} from "../../src";
 
-/**
- * Created by Soeren on 29.06.2017.
- */
 @ECS.Component()
 class NameComponent implements IComponent {
     public name: string;
@@ -25,12 +22,12 @@ class PositionComponent implements IComponent {
     public x;
     public y;
 
-    constructor(config: { x: number, y: number } = {x: 0, y: 0}) {
+    constructor(config: { x: number; y: number } = {x: 0, y: 0}) {
         this.x = config.x;
         this.y = config.y;
     }
 
-    init(config: { x: number, y: number } = {x: 0, y: 0}): void {
+    init(config: { x: number; y: number } = {x: 0, y: 0}): void {
         this.x = config.x;
         this.y = config.y;
     }
@@ -49,14 +46,14 @@ class Entity implements IEntity {
     public x;
     public y;
 
-    constructor(config: { x: number, y: number }) {
+    constructor(config: { x: number; y: number }) {
         this.x = config.x;
         this.y = config.y;
     }
 }
 
 describe('EntityDecorator', function () {
-    var entity: IEntity;
+    let entity: IEntity;
     this.timeout(0);
 
     beforeEach(() => {
@@ -64,7 +61,7 @@ describe('EntityDecorator', function () {
     });
 
     afterEach(() => {
-        entity.destroy(false);
+        entity.dispose();
     });
 
     describe('#id', () => {
@@ -127,29 +124,6 @@ describe('EntityDecorator', function () {
             ECS.removeAllEntities();
             expect(entity.has(NameComponent)).to.equal(true);
             expect(sEntity.has(NameComponent)).to.equal(true);
-            expect(ECS.hasEntity(entity)).to.equal(false);
-            expect(ECS.hasEntity(sEntity)).to.equal(false);
-        });
-    });
-
-    describe('#destroy', () => {
-        it('Destroy the Entity and removes it from the ECS also removes all components', () => {
-            expect(ECS.hasEntity(entity)).to.equal(true);
-            entity.destroy(true);
-            expect(ECS.hasEntity(entity)).to.equal(false);
-            expect(entity.has(NameComponent)).to.equal(false);
-        });
-
-        it('Destroy all entities removing all of them from the ecs and removing all components', () => {
-            const sEntity: IEntity = new Entity({x: 12, y: 69});
-            ECS.addEntity(sEntity);
-            expect(entity.has(NameComponent)).to.equal(true);
-            expect(sEntity.has(NameComponent)).to.equal(true);
-            expect(ECS.hasEntity(entity)).to.equal(true);
-            expect(ECS.hasEntity(sEntity)).to.equal(true);
-            ECS.destroyAllEntities();
-            expect(entity.has(NameComponent)).to.equal(false);
-            expect(sEntity.has(NameComponent)).to.equal(false);
             expect(ECS.hasEntity(entity)).to.equal(false);
             expect(ECS.hasEntity(sEntity)).to.equal(false);
         });

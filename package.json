@@ -9,7 +9,8 @@
     "build": "tsc",
     "test": "karma start",
     "eslint:check": "eslint ./src/**/*.ts",
-    "eslint:fix": "eslint ./src/**/*.ts --fix"
+    "eslint:fix": "eslint ./src/**/*.ts --fix",
+    "eslint:tests": "eslint ./test/**/*.ts --fix"
   },
   "repository": {
     "type": "git",

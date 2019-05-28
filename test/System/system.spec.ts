@@ -7,11 +7,11 @@ export class PositionComponent implements IComponent {
     public x;
     public y;
 
-    constructor(config: { x: number, y: number }) {
+    constructor(config: { x: number; y: number }) {
         this.init(config);
     }
 
-    init(config: { x: number, y: number }): void {
+    init(config: { x: number; y: number }): void {
         this.x = config.x;
         this.y = config.y;
     }
@@ -22,11 +22,11 @@ export class PositionComponent implements IComponent {
 
 @ECS.System(PositionComponent)
 class System implements ISystem {
-    entities: Array<IEntity>;
+    entities: IEntity[];
     public x;
     public y;
 
-    constructor(config: { x: number, y: number }) {
+    constructor(config: { x: number; y: number }) {
         this.x = config.x;
         this.y = config.y;
     }
@@ -41,8 +41,7 @@ class System implements ISystem {
 
 @ECS.System(PositionComponent)
 class SystemTwo implements ISystem {
-    entities: Array<IEntity>;
-    public mockValue: string;
+    entities: IEntity[];
 
     update(): void {
         for (let i = 0, entity; entity = this.entities[i]; i++) {
@@ -50,29 +49,11 @@ class SystemTwo implements ISystem {
             entity.get(PositionComponent).y = 12;
         }
     }
-
-    init(): void {
-    }
-}
-
-@ECS.System(PositionComponent)
-class Subsystem implements ISystem {
-    entities: Array<IEntity>;
-
-    update(): void {
-        for (let i = 0, entity; entity = this.entities[i]; i++) {
-            entity.get(PositionComponent).x = 1337;
-            entity.get(PositionComponent).y = 1337;
-        }
-    }
-
-    init(): void {
-    }
 }
 
 @ECS.System()
 class EmptySystem implements ISystem {
-    entities: Array<IEntity>;
+    entities: IEntity[];
 
     update(): void {
     }
@@ -80,11 +61,25 @@ class EmptySystem implements ISystem {
 
 @ECS.System()
 class ArgumentSystem implements ISystem {
-    entities: Array<IEntity>;
+    entities: IEntity[];
     name: string;
 
     update(name: string): void {
         this.name = name;
+    }
+}
+
+@ECS.System()
+class SetupAndTearDownSystem implements ISystem {
+    public setUpCalled: boolean;
+    public tearDownCalled: boolean;
+
+    setUp(): void {
+        this.setUpCalled = true;
+    }
+
+    tearDown(): void {
+        this.tearDownCalled = true;
     }
 }
 
@@ -98,6 +93,23 @@ describe('SystemDecorator', function () {
 
     afterEach(() => {
         system.dispose();
+    });
+
+    describe('#setUp', () => {
+        it('Checks that the setUp method gets invoked after the System is added to the ECS', () => {
+            const system = new SetupAndTearDownSystem();
+            ECS.addSystem(system);
+            expect(system.setUpCalled).to.equal(true);
+        });
+    });
+
+    describe('#tearDown', () => {
+        it('Checks that the tearDown method gets invoked after the System is removed from the ECS', () => {
+            const system = new SetupAndTearDownSystem();
+            ECS.addSystem(system);
+            ECS.removeSystem(system);
+            expect(system.tearDownCalled).to.equal(true);
+        });
     });
 
     describe('#entities', () => {
