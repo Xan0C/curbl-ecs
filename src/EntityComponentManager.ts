@@ -44,7 +44,8 @@ export class EntityComponentManager implements IEntityComponentManager {
         if(!entity) {
             entity = new Entity();
         }
-        entity.components = components||Object.create(null);
+        injectEntity(entity);
+        entity.components = components || Object.create(null);
         entity.bitmask = 0;
         this.updateComponentBitmask(entity);
         return entity;
@@ -67,9 +68,7 @@ export class EntityComponentManager implements IEntityComponentManager {
         this._entities[entity.id] = entity;
         entity.components = components || entity.components || Object.create(null);
         entity.bitmask = entity.bitmask || 0;
-        if(components) {
-            this.updateComponentBitmask(entity);
-        }
+        this.updateComponentBitmask(entity);
         if(!silent) {
             this._events.emit(ECM_EVENTS.ENTITY_ADDED,entity);
         }

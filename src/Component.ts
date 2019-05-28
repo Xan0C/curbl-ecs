@@ -33,6 +33,14 @@ export class ComponentBitmaskMap {
         return this.bitmaskMap[component.prototype.constructor.name]||0;
     }
 
+    getCompound(components: {new(config?: {[x: string]: any}): any}[] | string[] =[]): number {
+        let bitmask = 0;
+        for(let i=0, component; component = components[i]; i++) {
+            bitmask = bitmask | this.get(component);
+        }
+        return bitmask;
+    }
+
     get size(): number {
         return Object.keys(this.bitmaskMap).length;
     }
@@ -42,7 +50,6 @@ const COMPONENT_PROPERTIES = {
 };
 
 const COMPONENT_PROTOTYPE = {
-    init:()=>{return ECS.noop;},
     remove:()=>{return ECS.noop;}
 };
 
@@ -79,6 +86,5 @@ export interface IComponent {
      * used internally
      */
     id?: string;
-    init?(...args): void;
     remove?(): void;
 }

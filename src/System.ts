@@ -15,20 +15,15 @@ export interface ISystem {
 }
 
 export const SYSTEM_PROPERTIES = {
-    bitmask:()=>{return 0},
     entities:()=>{return [];},
     events:()=>{return new EventEmitter();}
 };
 
 export class System implements ISystem {
-
-    readonly id: string;
-    readonly bitmask: number;
     readonly entities: IEntity[];
     readonly events: EventEmitter;
 
     constructor() {
-        this.bitmask = SYSTEM_PROPERTIES.bitmask();
         this.entities = SYSTEM_PROPERTIES.entities();
         this.events = SYSTEM_PROPERTIES.events();
     }

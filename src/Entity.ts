@@ -1,5 +1,5 @@
-import {IComponent} from "./Component";
-import {ECS} from "./ECS";
+import { IComponent } from './Component';
+import { ECS } from './ECS';
 
 export interface EntityDecoratorComponent {
     component: { new(config?: {[x: string]: any}): any };
@@ -20,7 +20,7 @@ export interface IEntity {
 
 const ENTITY_PROPERTIES = {
     id:()=>{return ECS.uuid();},
-    components:()=>{return Object.create(null);},
+    components:function () {return this.components || Object.create(null);},
     bitmask:()=>{return 0;}
 };
 

@@ -81,7 +81,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param system
      * @returns {boolean}
      */
-    has(system: ISystem): boolean{
+    has(system: ISystem): boolean {
         return !!this.systems[system.id];
     }
 
@@ -118,8 +118,8 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    removeOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T},silent?: boolean): boolean{
-        return this.remove(this.get(constructor),silent);
+    removeOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}, silent?: boolean): boolean{
+        return this.remove(this.get(constructor), silent);
     }
 
     /**
@@ -189,9 +189,9 @@ export class EntitySystemManager implements IEntitySystemManager {
             for(let i=0, system: ISystem; system = systems[ids[i]]; i++){
                 idx = system.entities.indexOf(entity);
                 if(idx != -1) {
-                    system.entities.splice(idx,1);
+                    system.entities.splice(idx, 1);
                 }
-                system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
+                system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED, entity);
             }
         }
     }

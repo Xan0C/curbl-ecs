@@ -1,11 +1,11 @@
-import {EntityDecoratorComponent, IEntity, injectEntity} from "./Entity";
-import {EntityComponentManager, IEntityComponentManager} from "./EntityComponentManager";
-import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
-import {injectSystem, ISystem} from "./System";
-import {EntitySystemManager, IEntitySystemManager} from "./EntitySystemManager";
-import {InjectorService} from "./InjectorService";
-import * as EventEmitter from "eventemitter3";
-import {ECM_EVENTS, ESM_EVENTS} from "./Events";
+import { EntityDecoratorComponent, IEntity } from './Entity';
+import { EntityComponentManager, IEntityComponentManager } from './EntityComponentManager';
+import { ComponentBitmaskMap, IComponent } from './Component';
+import { ISystem } from './System';
+import { EntitySystemManager, IEntitySystemManager } from './EntitySystemManager';
+import { InjectorService } from './InjectorService';
+import * as EventEmitter from 'eventemitter3';
+import { ECM_EVENTS, ESM_EVENTS } from './Events';
 
 export class ECS {
     private static _instance: ECS;
@@ -183,46 +183,52 @@ export class ECS {
         return comps;
     }
 
-    static Component(id?: string): (constructor: { new(config?: {[x: string]: any}): IComponent }) => any{
-        return function(constructor: {new(...args): IComponent}){
-            const DecoratorComponent: any = function(...args){
-                const component = new constructor(...args);
-                ECS.setPrototypeOf(component, Object.getPrototypeOf(this));
-                injectComponent(component);
-                component.id = id||constructor.prototype.constructor.name;
-                return component;
-            };
-            DecoratorComponent.prototype = constructor.prototype;
-            return DecoratorComponent;
+    static Component(id?: string): (constructor: { new(config?: {[x: string]: any}): IComponent }) => any {
+        const getter = id ? function() {
+            return this._id || (this._id = id);
+        } : function() {
+            return this._id || (this._id = this.constructor.name);
+        };
+
+        return function(constructor: { new(...args): IComponent }) {
+            Object.defineProperty(constructor.prototype, "id", {
+                get: getter
+            });
+            return constructor;
         }
     }
 
     static System(...components: {new(config?: {[x: string]: any}): IComponent}[]): (constructor: { new(config?: {[x: string]: any}): ISystem }) => any{
         return function(constructor: {new(...args): ISystem}){
-            const DecoratorSystem: any = function(...args) {
-                const system = new constructor(...args);
-                ECS.setPrototypeOf(system,Object.getPrototypeOf(this));
-                injectSystem(system,ECS.instance.scm.systemUpdateMethods);
-                system.id = system.id||constructor.prototype.constructor.name;
-                ECS.instance.scm.updateBitmask(system,components);
-                return system;
-            };
-            DecoratorSystem.prototype = constructor.prototype;
-            return DecoratorSystem;
+            Object.defineProperty(constructor.prototype, "id", {
+                get: function() {
+                    return this._id || (this._id = this.constructor.name);
+                }
+            });
+            const bitmask = ECS.instance.componentBitmaskMap.getCompound(components);
+            Object.defineProperty(constructor.prototype, "bitmask", {
+                get: function() {
+                    return this._bitmask || (this._bitmask = bitmask);
+                },
+                set: function(bitmask: number) {
+                    this._bitmask = bitmask;
+                }
+            });
+            return constructor;
         }
     }
 
     static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(config?: {[x: string]: any}): IEntity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
         return function(constructor: {new(...args): IEntity}){
-            const DecoratorEntity: any = function(...args){
-                const entity = new constructor(...args);
-                ECS.setPrototypeOf(entity,Object.getPrototypeOf(this));
-                injectEntity(entity);
-                ECS.instance.ecm.createEntity(entity,ECS.createComponentsFromDecorator(components));
-                return entity;
-            };
-            DecoratorEntity.prototype = constructor.prototype;
-            return DecoratorEntity;
+            Object.defineProperty(constructor.prototype, "components", {
+                get: function() {
+                    return this._components || (this._components = ECS.createComponentsFromDecorator(components));
+                },
+                set: function(components) {
+                    this._components = components;
+                }
+            });
+            return constructor;
         }
     }
 
