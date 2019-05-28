@@ -3,11 +3,11 @@ import {ECS} from "./ECS";
 
 export class InjectorService {
 
-    private static _instance:InjectorService;
+    private static _instance: InjectorService;
 
     private constructor(){}
 
-    public static get instance():InjectorService{
+    public static get instance(): InjectorService{
         if(InjectorService._instance){
             return InjectorService._instance;
         }
@@ -20,10 +20,10 @@ export class InjectorService {
      * @returns {(target: Object, propKey: (number | string)) => void}
      * @constructor
      */
-    public System<T extends ISystem>(systems:{[id:string]:{new(...args):T}}):(constructor:{ new(...args):any }) => any{
-        return function(constructor:{new(...args):any}){
+    public System<T extends ISystem>(systems: {[id: string]: {new(...args): T}}): (constructor: { new(...args): any }) => any{
+        return function(constructor: {new(...args): any}){
             const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
-            const DecoratorInjector:any = function(...args){
+            const DecoratorInjector: any = function(...args){
                 const object = wrapper.apply(this,args);
                 ECS.setPrototypeOf(object,Object.getPrototypeOf(this));
                 const keys = Object.keys(systems);

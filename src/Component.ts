@@ -1,13 +1,13 @@
 import {ECS} from "./ECS";
 
 export class ComponentBitmaskMap {
-    private bitmaskMap:{[key:string]:number};
+    private bitmaskMap: {[key: string]: number};
 
     constructor(){
         this.bitmaskMap = Object.create(null);
     }
 
-    has<T extends IComponent>(component:{new(config?:{[x:string]:any}):T}|string):boolean{
+    has<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string): boolean{
         if(typeof component === "string"){
             return !!this.bitmaskMap[component];
         }else {
@@ -15,7 +15,7 @@ export class ComponentBitmaskMap {
         }
     }
 
-    add<T extends IComponent>(component:{new(config?:{[x:string]:any}):T}|string){
+    add<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string){
         if(typeof component === "string"){
             this.bitmaskMap[component] = 1 << this.size;
         }else {
@@ -23,7 +23,7 @@ export class ComponentBitmaskMap {
         }
     }
 
-    get<T extends IComponent>(component:{new(config?:{[x:string]:any}):T}|string):number{
+    get<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string): number{
         if(!this.has(component)){
             this.add(component);
         }
@@ -49,7 +49,7 @@ const COMPONENT_PROTOTYPE = {
 export const COMPONENT_PROPERTY_DECORATOR = {
 };
 
-export function injectComponent(component:IComponent){
+export function injectComponent(component: IComponent){
     for(let propKey in COMPONENT_PROPERTIES){
         if(component[propKey] === undefined || component[propKey] === null){
             component[propKey] = COMPONENT_PROPERTIES[propKey]();
@@ -78,7 +78,7 @@ export interface IComponent {
      * Id for this Component usually the class name
      * used internally
      */
-    id?:string;
-    init?(...args):void;
-    remove?():void;
+    id?: string;
+    init?(...args): void;
+    remove?(): void;
 }

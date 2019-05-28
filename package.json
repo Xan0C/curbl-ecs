@@ -7,7 +7,9 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "karma start"
+    "test": "karma start",
+    "eslint:check": "eslint ./src/**/*.ts",
+    "eslint:fix": "eslint ./src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -28,7 +30,10 @@
     "@types/chai": "^4.1.7",
     "@types/eventemitter3": "^2.0.2",
     "@types/mocha": "^5.2.6",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
     "chai": "^4.2.0",
+    "eslint": "^5.16.0",
     "karma": "^4.1.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
