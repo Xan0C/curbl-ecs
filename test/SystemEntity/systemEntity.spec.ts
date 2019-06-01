@@ -81,7 +81,7 @@ class FullEntity {
 }
 
 @ECS.Entity(
-    {component:ExtendedNameComponent, config:{name:'Normal',nameTwo:'Extended'}},
+    {component: ExtendedNameComponent, config:{name:'Normal',nameTwo:'Extended'}},
     {component: PositionComponent, config:{x:42,y:12}}
 )
 class ExtendedEntity {}

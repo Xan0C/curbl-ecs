@@ -155,17 +155,14 @@ export class EntitySystemManager implements IEntitySystemManager {
     addEntity(entity: IEntity,system?: ISystem): void{
         if(system){
             if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
-                system.entities.push(entity);
-                system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED,entity);
+                system.entityMap[entity.id] = system.entities.push(entity) - 1;
+                system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED, entity);
             }
         }else{
             const ids = this.ids;
             const systems = this.systems;
             for(let i=0, system: ISystem; system = systems[ids[i]]; i++){
-                if((entity.bitmask & system.bitmask) === system.bitmask){
-                    system.entities.push(entity);
-                    system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED,entity);
-                }
+                this.addEntity(entity, system);
             }
         }
     }
@@ -177,21 +174,16 @@ export class EntitySystemManager implements IEntitySystemManager {
      */
     removeEntity(entity: IEntity,system?: ISystem): void{
         if(system) {
-            const idx = system.entities.indexOf(entity);
-            if (idx != -1) {
+            const idx = system.entityMap[entity.id];
+            if (idx >= 0) {
                 system.entities.splice(idx, 1);
             }
-            system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED,entity);
+            system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED, entity);
         }else{
             const ids = this.ids;
             const systems = this.systems;
-            let idx = -1;
             for(let i=0, system: ISystem; system = systems[ids[i]]; i++){
-                idx = system.entities.indexOf(entity);
-                if(idx != -1) {
-                    system.entities.splice(idx, 1);
-                }
-                system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED, entity);
+                this.removeEntity(entity, system);
             }
         }
     }
@@ -208,8 +200,15 @@ export class EntitySystemManager implements IEntitySystemManager {
             const ids = this.ids;
             const systems = this.systems;
             for(let i=0, system; system = systems[ids[i]]; i++){
-                this.addEntityToSystem(system,entity);
+                this.addEntityToSystem(system, entity);
             }
+        }
+    }
+
+    private updateSystemEntity(entity: IEntity, system: ISystem): void {
+        if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
+            const idx = system.entityMap[entity.id];
+            system.entities[idx] = entity;
         }
     }
 
@@ -217,6 +216,8 @@ export class EntitySystemManager implements IEntitySystemManager {
         if ((entity.bitmask & system.bitmask) === system.bitmask) {
             if(!system.has(entity)) {
                 this.addEntity(entity, system);
+            } else {
+                this.updateSystemEntity(entity, system);
             }
         } else if (system.has(entity)) {
             this.removeEntity(entity, system);

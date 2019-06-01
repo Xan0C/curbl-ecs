@@ -1,62 +1,27 @@
-import { EntityDecoratorComponent, IEntity } from './Entity';
-import { EntityComponentManager, IEntityComponentManager } from './EntityComponentManager';
-import { ComponentBitmaskMap, IComponent } from './Component';
-import { ISystem } from './System';
-import { EntitySystemManager, IEntitySystemManager } from './EntitySystemManager';
-import { InjectorService } from './InjectorService';
+import {EntityDecoratorComponent, IEntity} from './Entity';
+import {IComponent} from './Component';
+import {ISystem} from './System';
+import {InjectorService} from './InjectorService';
 import * as EventEmitter from 'eventemitter3';
-import { ECM_EVENTS, ESM_EVENTS } from './Events';
+import {EntityComponentWorker} from "./EntityComponentWorker";
+import {EntityComponentSystem} from "./EntityComponentSystem";
+import {ECSBase} from "./ECSBase";
 
 export class ECS {
-    private static _instance: ECS;
-    private events: EventEmitter;
-    private ecm: IEntityComponentManager;
-    private scm: IEntitySystemManager;
-    private componentBitmaskMap: ComponentBitmaskMap;
+    private static _instance: ECSBase;
 
-    private constructor(){
-        this.componentBitmaskMap = new ComponentBitmaskMap();
-        this.events = new EventEmitter();
-        this.ecm = new EntityComponentManager(this.componentBitmaskMap, this.events);
-        this.scm = new EntitySystemManager(this.componentBitmaskMap, this.events);
-        this.registerEvents();
-    }
+    private constructor(){}
 
-    private registerEvents(){
-        this.ecm.events.on(ECM_EVENTS.ENTITY_ADDED,this.onEntityAdded);
-        this.ecm.events.on(ECM_EVENTS.ENTITY_REMOVED,this.onEntityRemoved);
-        this.ecm.events.on(ECM_EVENTS.COMPONENT_ADDED,this.onComponentAdded);
-        this.ecm.events.on(ECM_EVENTS.COMPONENT_REMOVED,this.onComponentRemoved);
-        this.scm.events.on(ESM_EVENTS.SYSTEM_ADDED,this.onSystemAdded);
-    }
-
-    private onEntityAdded(entity: IEntity){
-        ECS.instance.scm.updateEntity(entity);
-    }
-
-    private onEntityRemoved(entity: IEntity){
-        ECS.instance.scm.removeEntity(entity);
-    }
-
-    private onComponentAdded(entity: IEntity){
-        ECS.instance.scm.updateEntity(entity);
-    }
-
-    private onComponentRemoved(entity: IEntity){
-        ECS.instance.scm.updateEntity(entity);
-    }
-
-    private onSystemAdded(system: ISystem){
-        for(let id in ECS.instance.ecm.entities){
-            ECS.instance.scm.updateEntity(ECS.instance.ecm.entities[id],system);
-        }
-    }
-
-    private static get instance(): ECS{
+    private static get instance(): ECSBase{
         if(ECS._instance){
             return ECS._instance;
         }
-        return ECS._instance = new ECS();
+        //@ts-ignore
+        if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+            return ECS._instance = new EntityComponentWorker();
+        } else {
+            return ECS._instance = new EntityComponentSystem();
+        }
     }
 
     static setPrototypeOf<T>(obj: T, proto): T {
@@ -161,8 +126,8 @@ export class ECS {
         return ECS.instance.scm.get(constructor);
     }
 
-    static update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void{
-        ECS.instance.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
+    static update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void {
+        ECS.instance.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
     }
 
     /**
@@ -171,6 +136,14 @@ export class ECS {
      */
     static callSystemMethod(functionName: string): void{
         ECS.instance.scm.callSystemMethod(functionName);
+    }
+
+    static addWorker(worker: Worker): void {
+        ECS.instance.addWorker(worker);
+    }
+
+    static init(cb: () => void): void {
+        ECS.instance.init(cb);
     }
 
     private static createComponentsFromDecorator(components: EntityDecoratorComponent[]): {[x: string]: IComponent}{
@@ -183,32 +156,36 @@ export class ECS {
         return comps;
     }
 
-    static Component(id?: string): (constructor: { new(config?: {[x: string]: any}): IComponent }) => any {
+    static Component(id?: string): (constructor: { new(...args): IComponent }) => any {
         const getter = id ? function() {
             return this._id || (this._id = id);
         } : function() {
             return this._id || (this._id = this.constructor.name);
         };
 
+        const setter = function(id: string) {
+            this._id = id;
+        };
+
         return function(constructor: { new(...args): IComponent }) {
             Object.defineProperty(constructor.prototype, "id", {
-                get: getter
+                get: getter,
+                set: setter
             });
             return constructor;
         }
     }
 
-    static System(...components: {new(config?: {[x: string]: any}): IComponent}[]): (constructor: { new(config?: {[x: string]: any}): ISystem }) => any{
+    static System(...components: {new(...args): IComponent}[]): (constructor: { new(...args): ISystem }) => any{
         return function(constructor: {new(...args): ISystem}){
             Object.defineProperty(constructor.prototype, "id", {
                 get: function() {
                     return this._id || (this._id = this.constructor.name);
                 }
             });
-            const bitmask = ECS.instance.componentBitmaskMap.getCompound(components);
             Object.defineProperty(constructor.prototype, "bitmask", {
                 get: function() {
-                    return this._bitmask || (this._bitmask = bitmask);
+                    return this._bitmask || (this._bitmask = ECS.instance.componentBitmaskMap.getCompound(components));
                 },
                 set: function(bitmask: number) {
                     this._bitmask = bitmask;
@@ -218,7 +195,7 @@ export class ECS {
         }
     }
 
-    static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(config?: {[x: string]: any}): IEntity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
+    static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): IEntity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
         return function(constructor: {new(...args): IEntity}){
             Object.defineProperty(constructor.prototype, "components", {
                 get: function() {

@@ -1,23 +1,26 @@
 import {ComponentBitmaskMap, IComponent, injectComponent} from "./Component";
-import {Entity, IEntity, injectEntity} from "./Entity";
+import {Entity, EntityProp, IEntity, injectEntity} from "./Entity";
 import {UUIDGenerator} from "./UUIDGenerator";
 import * as EventEmitter from "eventemitter3";
-import {ECM_EVENTS} from "./Events";
+import {ECM_EVENTS, ECM_WORKER_EVENTS} from "./Events";
 
 export interface IEntityComponentManager {
     readonly events: EventEmitter;
     readonly entities: {[id: string]: IEntity};
     uuid: () => string;
     createEntity(entity?: IEntity,components?: {[x: string]: IComponent}): IEntity;
-    addEntity<T extends IEntity>(entity: T,components?: {[x: string]: IComponent},silent?: boolean): T;
+    addEntity<T extends IEntity>(entity: T,components?: {[x: string]: IComponent},silent?: boolean, silentWorker?: boolean): T;
+    updateEntities(entities: EntityMap, silent?:boolean, silentWorker?: boolean): void;
+    getEntitiesByBitmask(bitmask: number): IEntity[];
     getEntities(...components: {new(config?: {[x: string]: any}): any}[]): IEntity[];
-    removeEntity(entity: IEntity,silent?: boolean): IEntity;
+    removeEntity(entity: IEntity,silent?: boolean, silentWorker?: boolean): IEntity;
     removeAllEntities(): IEntity[];
-    addComponent(entity: IEntity, component: IComponent,silent?: boolean): void;
+    addComponent(entity: IEntity, component: IComponent, silent?: boolean, silentWorker?: boolean): void;
     hasEntity(entity: IEntity): boolean;
-    removeComponent<T extends IComponent>(entity: IEntity,component: {new(...args): T}|string, silent?: boolean): boolean;
+    removeComponent<T extends IComponent>(entity: IEntity, component: {new(...args): T}|string, silent?: boolean, silentWorker?: boolean): boolean;
 }
 
+export type EntityMap = {[id: string]: EntityProp};
 /**
  * The EntityComponentManager stores and manages all Entities and their components
  * Its also responsible for adding and removing components from and entity or creating/removing entities
@@ -28,7 +31,7 @@ export class EntityComponentManager implements IEntityComponentManager {
     private componentBitmask: ComponentBitmaskMap;
     private _entities: {[id: string]: IEntity};
 
-    constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter, uuid: () => string=UUIDGenerator.uuid){
+    constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter, uuid: () => string = UUIDGenerator.uuid){
         this._events = events;
         this._uuid = uuid;
         this.componentBitmask = componentBitmaskMap;
@@ -52,8 +55,9 @@ export class EntityComponentManager implements IEntityComponentManager {
     }
 
     private updateComponentBitmask(entity: IEntity): void{
-        for(let key in entity.components){
-            entity.bitmask = entity.bitmask|this.componentBitmask.get(entity.components[key].id);
+        const keys = Object.keys(entity.components);
+        for(let i=0, component; component = entity.components[keys[i]]; i++){
+            entity.bitmask = entity.bitmask | this.componentBitmask.get(component.id);
         }
     }
 
@@ -62,17 +66,65 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param entity - Entity to add to the ECS
      * @param components - Components for the entity, if provided this will override the current components of the entity
      * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
+     * @param silentWorker - do not dispatch entity added worker - used to manage shared entities between WebWorkers
      */
-    addEntity<T extends IEntity>(entity: T,components?: {[x: string]: IComponent},silent: boolean=false): T{
+    addEntity<T extends IEntity>(entity: T, components?: {[x: string]: IComponent}, silent: boolean=false, silentWorker: boolean=false): T{
         injectEntity(entity);
         this._entities[entity.id] = entity;
         entity.components = components || entity.components || Object.create(null);
         entity.bitmask = entity.bitmask || 0;
         this.updateComponentBitmask(entity);
         if(!silent) {
-            this._events.emit(ECM_EVENTS.ENTITY_ADDED,entity);
+            this._events.emit(ECM_EVENTS.ENTITY_ADDED, entity);
+        }
+        if(!silentWorker) {
+            this._events.emit(ECM_WORKER_EVENTS.ENTITY_ADDED, entity);
         }
         return entity;
+    }
+
+    /**
+     * Updates entities, if the entity already exists the old and new components will be merged
+     * otherwise the entity will be added as a new entity
+     * @param entities
+     * @param silent
+     * @param silentWorker
+     */
+    updateEntities(entities: EntityMap, silent?:boolean, silentWorker?: boolean): void {
+        const keys = Object.keys(entities);
+        for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
+            let components = {
+                ...entity.components
+            };
+            if (this.hasEntity(entity)) {
+                components = {
+                    ...this._entities[entity.id].components,
+                    ...entity.components
+                };
+            }
+            this.addEntity(new Entity(entity.id), components, true);
+        }
+        if (!silent) {
+            this._events.emit(ECM_EVENTS.ENTITIES_UPDATED, entities);
+        }
+        if(!silentWorker) {
+            this._events.emit(ECM_WORKER_EVENTS.ENTITIES_UPDATED, entities);
+        }
+    }
+
+    /**
+     * returns a list of entities that match the given bitmask
+     * @param bitmask
+     */
+    getEntitiesByBitmask(bitmask: number): IEntity[] {
+        const entities: EntityProp[] = [];
+        const keys = Object.keys(this._entities);
+        for(let i=0, entity: EntityProp; entity = this._entities[keys[i]]; i++){
+            if((entity.bitmask & bitmask) === bitmask){
+                entities.push(entity);
+            }
+        }
+        return entities;
     }
 
     /**
@@ -97,13 +149,17 @@ export class EntityComponentManager implements IEntityComponentManager {
 
     /**
      * @param entity - Entity to remove
-     * @param silent - do not dispatch onEntityRemoved Signal(Removing the Entity from the Systems)
+     * @param silent - do not dispatch onEntityRemoved Signal(Removing the Entity from the Systems)#
+     * @param silentWorker - do not dispatch WorkerEvent
      * @returns {IEntity} - the removed Entity
      */
-    removeEntity(entity: IEntity,silent: boolean=false): IEntity{
-        if(this._entities[entity.id]){
-            if(!silent && this.hasEntity(entity)) {
-                this._events.emit(ECM_EVENTS.ENTITY_REMOVED,entity);
+    removeEntity(entity: IEntity,silent: boolean=false, silentWorker?: boolean): IEntity{
+        if(this.hasEntity(entity)){
+            if (!silent) {
+                this._events.emit(ECM_EVENTS.ENTITY_REMOVED, entity);
+            }
+            if (!silentWorker) {
+                this._events.emit(ECM_WORKER_EVENTS.ENTITY_REMOVED, entity);
             }
             delete this._entities[entity.id];
             return entity;
@@ -137,13 +193,17 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param entity - Entity
      * @param component - Component to add
      * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
+     * @param silentWorker - if true no worker signal is dispatched
      */
-    addComponent(entity: IEntity, component: IComponent, silent: boolean=false): void {
+    addComponent(entity: IEntity, component: IComponent, silent: boolean=false, silentWorker?: boolean): void {
         injectComponent(component);
         entity.components[component.id] = component;
         entity.bitmask = entity.bitmask | this.componentBitmask.get(component.id);
         if(!silent && this.hasEntity(entity)) {
-            this._events.emit(ECM_EVENTS.COMPONENT_ADDED,entity,component);
+            this._events.emit(ECM_EVENTS.COMPONENT_ADDED, entity, component);
+        }
+        if (!silentWorker && this.hasEntity(entity)) {
+            this._events.emit(ECM_WORKER_EVENTS.COMPONENT_ADDED, entity, component);
         }
     }
 
@@ -152,9 +212,10 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param entity - Entity
      * @param component - Component type to remove or the Id
      * @param silent - if true the onComponentRemoved signal is not dispatched and no system will be updated
+     * @param silentWorker
      * @returns {boolean}
      */
-    removeComponent<T extends IComponent>(entity: IEntity, component: {new(...args): T} | string, silent: boolean=false): boolean{
+    removeComponent<T extends IComponent>(entity: IEntity, component: {new(...args): T} | string, silent: boolean=false, silentWorker?: boolean): boolean{
         let comp: IComponent;
         if(typeof component === 'string') {
             comp = entity.components[component];
@@ -164,7 +225,10 @@ export class EntityComponentManager implements IEntityComponentManager {
         if(comp){
             entity.bitmask = entity.bitmask ^ this.componentBitmask.get(comp.id);
             if(!silent && this.hasEntity(entity)) {
-                this._events.emit(ECM_EVENTS.COMPONENT_REMOVED,entity,comp);
+                this._events.emit(ECM_EVENTS.COMPONENT_REMOVED, entity, comp);
+            }
+            if(!silentWorker && this.hasEntity(entity)) {
+                this._events.emit(ECM_WORKER_EVENTS.COMPONENT_REMOVED, entity, comp);
             }
             comp.remove();
             return delete entity.components[comp.id];

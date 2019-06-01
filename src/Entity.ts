@@ -1,15 +1,20 @@
 import { IComponent } from './Component';
 import { ECS } from './ECS';
 
+export type ComponentMap =  {[component: string]: IComponent};
+
+export type EntityProp = {
+    id?: string;
+    components?: ComponentMap;
+    bitmask?: number;
+};
+
 export interface EntityDecoratorComponent {
     component: { new(config?: {[x: string]: any}): any };
     config?: { [x: string]: any };
 }
 
-export interface IEntity {
-    readonly id?: string;
-    components?: {[id: string]: IComponent};
-    bitmask?: number;
+export interface IEntity extends EntityProp {
     get?<T extends IComponent>(comp: {new(...args): T}|string): T;
     getAll?(): {[id: string]: IComponent};
     has?<T extends IComponent>(comp: {new(...args): T}|string): boolean;
@@ -24,14 +29,14 @@ const ENTITY_PROPERTIES = {
     bitmask:()=>{return 0;}
 };
 
-export class Entity implements IEntity{
+export class Entity implements IEntity {
 
     readonly id: string;
     readonly components: {[id: string]: IComponent};
     readonly bitmask: number;
 
-    constructor(){
-        this.id = ENTITY_PROPERTIES.id();
+    constructor(uuid?: string){
+        this.id = uuid || ENTITY_PROPERTIES.id();
         this.components = ENTITY_PROPERTIES.components();
         this.bitmask = ENTITY_PROPERTIES.bitmask();
     }

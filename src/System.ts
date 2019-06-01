@@ -5,6 +5,7 @@ import * as EventEmitter from "eventemitter3";
 export interface ISystem {
     id?: string;
     bitmask?: number;
+    readonly entityMap?: {[id:string]: number};
     readonly entities?: IEntity[];
     readonly events?: EventEmitter;
     setUp?(): void;
@@ -15,21 +16,24 @@ export interface ISystem {
 }
 
 export const SYSTEM_PROPERTIES = {
+    entityMap:()=>{return Object.create(null);},
     entities:()=>{return [];},
     events:()=>{return new EventEmitter();}
 };
 
 export class System implements ISystem {
+    readonly entityMap: {[id:string]: number};
     readonly entities: IEntity[];
     readonly events: EventEmitter;
 
     constructor() {
+        this.entityMap = SYSTEM_PROPERTIES.entityMap();
         this.entities = SYSTEM_PROPERTIES.entities();
         this.events = SYSTEM_PROPERTIES.events();
     }
 
     has(entity: IEntity): boolean {
-        return this.entities.indexOf(entity) !== -1;
+        return !!this.entities[this.entityMap[entity.id]];
     }
 
     remove(entity: IEntity, fromECS: boolean=true): void {
