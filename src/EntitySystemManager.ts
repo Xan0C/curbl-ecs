@@ -177,6 +177,7 @@ export class EntitySystemManager implements IEntitySystemManager {
             const idx = system.entityMap[entity.id];
             if (idx >= 0) {
                 system.entities.splice(idx, 1);
+                delete system.entityMap[entity.id];
             }
             system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED, entity);
         }else{

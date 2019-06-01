@@ -47,7 +47,7 @@ export class EntityComponentSystem extends ECSBase {
     }
 
     private onEntityRemoved(entity: IEntity){
-        this.scm.updateEntity(entity);
+        this.scm.removeEntity(entity);
     }
 
     private onEntityRemovedFromWorker(entity: EntityProp): void {
