@@ -1,13 +1,14 @@
 import { IComponent } from './Component';
 import { ECS } from './ECS';
+import { Injector } from './Injector';
 
-export type ComponentMap =  {[component: string]: IComponent};
+export interface ComponentMap {[component: string]: IComponent}
 
-export type EntityProp = {
+export interface EntityProp {
     id?: string;
     components?: ComponentMap;
     bitmask?: number;
-};
+}
 
 export interface EntityDecoratorComponent {
     component: { new(config?: {[x: string]: any}): any };
@@ -86,25 +87,5 @@ export const ENTITY_PROPERTY_DECORATOR = {
 };
 
 export function injectEntity(entity: IEntity){
-    for(let propKey in ENTITY_PROPERTIES){
-        if(entity[propKey] === undefined || entity[propKey] === null){
-            entity[propKey] = ENTITY_PROPERTIES[propKey]();
-        }
-    }
-    for(let propKey in ENTITY_PROPERTY_DECORATOR){
-        if(entity[propKey] === undefined || entity[propKey] === null){
-            ENTITY_PROPERTY_DECORATOR[propKey](entity);
-        }
-    }
-    for(let protoKey in ENTITY_PROTOTYPE){
-        if(entity.constructor && entity.constructor.prototype){
-            if(entity.constructor.prototype[protoKey] === undefined || entity.constructor.prototype[protoKey] === null){
-                entity.constructor.prototype[protoKey] = ENTITY_PROTOTYPE[protoKey]();
-            }
-        }else{
-            if(entity[protoKey] === undefined || entity[protoKey] === null){
-                entity[protoKey] = ENTITY_PROTOTYPE[protoKey]();
-            }
-        }
-    }
+    Injector.inject(entity, ENTITY_PROPERTIES, ENTITY_PROTOTYPE, ENTITY_PROPERTY_DECORATOR);
 }

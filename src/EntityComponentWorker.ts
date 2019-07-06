@@ -29,7 +29,7 @@ export class EntityComponentWorker extends ECSBase {
         this.scm.updateEntity(entity);
     }
 
-    private onEntityAddedToWorker(entity: IEntity):void {
+    private onEntityAddedToWorker(entity: IEntity): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.ENTITY_ADDED,
             entity: entity
@@ -59,11 +59,11 @@ export class EntityComponentWorker extends ECSBase {
         });
     }
 
-    private onComponentRemoved(entity: IEntity):void {
+    private onComponentRemoved(entity: IEntity): void {
         this.scm.updateEntity(entity);
     }
 
-    private onComponentRemovedFromWorker(entity: IEntity, component: IComponent):void {
+    private onComponentRemovedFromWorker(entity: IEntity, component: IComponent): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.COMPONENT_REMOVED,
             entity: entity,
@@ -173,7 +173,7 @@ export class EntityComponentWorker extends ECSBase {
         throw "WebWorkers can only be added to the main thread";
     }
 
-    update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any): void {
+    update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void {
         this.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
 
         this.sendEventToMaster({

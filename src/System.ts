@@ -1,11 +1,12 @@
 import {IEntity} from "./Entity";
 import {ECS} from "./ECS";
 import * as EventEmitter from "eventemitter3";
+import { Injector } from './Injector';
 
 export interface ISystem {
     id?: string;
     bitmask?: number;
-    readonly entityMap?: {[id:string]: number};
+    readonly entityMap?: {[id: string]: number};
     readonly entities?: IEntity[];
     readonly events?: EventEmitter;
     setUp?(): void;
@@ -22,7 +23,7 @@ export const SYSTEM_PROPERTIES = {
 };
 
 export class System implements ISystem {
-    readonly entityMap: {[id:string]: number};
+    readonly entityMap: {[id: string]: number};
     readonly entities: IEntity[];
     readonly events: EventEmitter;
 
@@ -60,37 +61,7 @@ export const SYSTEM_PROPERTY_DECORATOR = {
 
 };
 
-export function injectSystem(system: ISystem,updateMethods: string[]){
-    for(let propKey in SYSTEM_PROPERTIES){
-        if(system[propKey] === undefined || system[propKey] === null){
-            system[propKey] = SYSTEM_PROPERTIES[propKey]();
-        }
-    }
-    for(let propKey in SYSTEM_PROPERTY_DECORATOR){
-        if(system[propKey] === undefined || system[propKey] === null){
-            SYSTEM_PROPERTY_DECORATOR[propKey](system);
-        }
-    }
-    for(let protoKey in SYSTEM_PROTOTYPE){
-        if(system.constructor && system.constructor.prototype){
-            if(system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null){
-                system.constructor.prototype[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
-            }
-        }else{
-            if(system[protoKey] === undefined || system[protoKey] === null){
-                system[protoKey] = SYSTEM_PROTOTYPE[protoKey]();
-            }
-        }
-    }
-    for(let i=0, protoKey; protoKey = updateMethods[i]; i++) {
-        if (system.constructor && system.constructor.prototype) {
-            if (system.constructor.prototype[protoKey] === undefined || system.constructor.prototype[protoKey] === null) {
-                system.constructor.prototype[protoKey] = ECS.noop;
-            }
-        } else {
-            if (system[protoKey] === undefined || system[protoKey] === null) {
-                system[protoKey] = ECS.noop;
-            }
-        }
-    }
+export function injectSystem(system: ISystem, updateMethods: string[]) {
+    Injector.inject(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
+    Injector.addNoopMethodsToPrototype(system, updateMethods);
 }

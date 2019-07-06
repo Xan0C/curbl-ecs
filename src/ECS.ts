@@ -1,7 +1,7 @@
 import {EntityDecoratorComponent, IEntity} from './Entity';
 import {IComponent} from './Component';
 import {ISystem} from './System';
-import {InjectorService} from './InjectorService';
+import {Injector} from './Injector';
 import * as EventEmitter from 'eventemitter3';
 import {EntityComponentWorker} from "./EntityComponentWorker";
 import {EntityComponentSystem} from "./EntityComponentSystem";
@@ -33,8 +33,8 @@ export class ECS {
         return fn(obj, proto);
     }
 
-    static get Injector(): InjectorService{
-        return InjectorService.instance;
+    static get Injector(): Injector{
+        return Injector.instance;
     }
 
     static noop(){}

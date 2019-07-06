@@ -7,8 +7,8 @@ import {EntityMap} from "./EntityComponentManager";
 
 export class EntityComponentSystem extends ECSBase {
 
-    private workers: Array<Worker>;
-    private workerBitmasks: Array<number>;
+    private workers: Worker[];
+    private workerBitmasks: number[];
 
     constructor() {
         super();
@@ -108,7 +108,7 @@ export class EntityComponentSystem extends ECSBase {
         this.scm.updateEntity(entity);
     }
 
-    private onComponentRemovedFromWorker(entity: EntityProp, component: IComponent):void {
+    private onComponentRemovedFromWorker(entity: EntityProp, component: IComponent): void {
         for(let i=0, worker: Worker; worker = this.workers[i]; i++) {
             if ( (this.workerBitmasks[i] & entity.bitmask) !== 0) {
                 worker.postMessage({
@@ -222,7 +222,7 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any): void {
+    update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void {
         this.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
 
         this.sendEventToAllWorkers({

@@ -21,7 +21,7 @@ export class PositionComponent implements IComponent {
 }
 
 @ECS.System(PositionComponent)
-class System implements ISystem {
+class System {
     entities: IEntity[];
     public x;
     public y;

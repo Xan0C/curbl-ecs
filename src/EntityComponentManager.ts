@@ -10,7 +10,7 @@ export interface IEntityComponentManager {
     uuid: () => string;
     createEntity(entity?: IEntity,components?: {[x: string]: IComponent}): IEntity;
     addEntity<T extends IEntity>(entity: T,components?: {[x: string]: IComponent},silent?: boolean, silentWorker?: boolean): T;
-    updateEntities(entities: EntityMap, silent?:boolean, silentWorker?: boolean): void;
+    updateEntities(entities: EntityMap, silent?: boolean, silentWorker?: boolean): void;
     getEntitiesByBitmask(bitmask: number): IEntity[];
     getEntities(...components: {new(config?: {[x: string]: any}): any}[]): IEntity[];
     removeEntity(entity: IEntity,silent?: boolean, silentWorker?: boolean): IEntity;
@@ -20,7 +20,7 @@ export interface IEntityComponentManager {
     removeComponent<T extends IComponent>(entity: IEntity, component: {new(...args): T}|string, silent?: boolean, silentWorker?: boolean): boolean;
 }
 
-export type EntityMap = {[id: string]: EntityProp};
+export interface EntityMap {[id: string]: EntityProp}
 /**
  * The EntityComponentManager stores and manages all Entities and their components
  * Its also responsible for adding and removing components from and entity or creating/removing entities
@@ -90,7 +90,7 @@ export class EntityComponentManager implements IEntityComponentManager {
      * @param silent
      * @param silentWorker
      */
-    updateEntities(entities: EntityMap, silent?:boolean, silentWorker?: boolean): void {
+    updateEntities(entities: EntityMap, silent?: boolean, silentWorker?: boolean): void {
         const keys = Object.keys(entities);
         for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
             let components = {

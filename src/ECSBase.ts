@@ -19,7 +19,7 @@ export abstract class ECSBase {
 
     protected abstract registerEvents(): void;
 
-    abstract update(a1?:any,a2?:any,a3?:any,a4?:any,a5?:any,a6?:any,a7?:any,a8?:any,a9?:any): void;
+    abstract update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void;
     abstract addWorker(worker: Worker): void;
     abstract init(cb: () => void): void;
 }
