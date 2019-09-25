@@ -1,6 +1,6 @@
-import {EntityDecoratorComponent, IEntity} from './Entity';
-import {IComponent} from './Component';
-import {ISystem} from './System';
+import {EntityDecoratorComponent, Entity} from './EntityHandle';
+import {Component} from './Component';
+import {System} from './System';
 import {Injector} from './Injector';
 import * as EventEmitter from 'eventemitter3';
 import {EntityComponentWorker} from "./EntityComponentWorker";
@@ -44,7 +44,7 @@ export class ECS {
      * @param entity {optional} - use existing entity
      * @param components {optional} - components to add to the entity if provided this will override the current components of the entity if any
      */
-    static createEntity(entity?: IEntity,components?: {[x: string]: IComponent}): IEntity{
+    static createEntity(entity?: Entity, components?: {[x: string]: Component}): Entity{
         return ECS.instance.ecm.createEntity(entity,components);
     }
 
@@ -53,7 +53,7 @@ export class ECS {
      * @param entity - Entity to add to the ECS
      * @param components - Components for the entity, if provided this will override the current components of the entity if any
      */
-    static addEntity<T extends IEntity>(entity: T,components?: {[x: string]: IComponent}): T{
+    static addEntity<T extends Entity>(entity: T, components?: {[x: string]: Component}): T{
         return ECS.instance.ecm.addEntity(entity,components);
     }
 
@@ -62,67 +62,67 @@ export class ECS {
      * since we need to check all entities this can be quite slow
      * @param components - list of components the entity needs to have
      */
-    static getEntities(...components: { new(config?: { [p: string]: any }): any }[]): IEntity[] {
+    static getEntities<T extends Entity>(...components: { new(config?: { [p: string]: any }): any }[]): T[] {
         return ECS.instance.ecm.getEntities(...components);
     }
 
     /**
      * removes the entity from the ECS, it will keep all of its components
      * @param entity - Entity to remove
-     * @returns {IEntity}
+     * @returns {Entity}
      */
-    static removeEntity(entity: IEntity): IEntity {
+    static removeEntity<T extends Entity>(entity: T): T {
         return ECS.instance.ecm.removeEntity(entity);
     }
 
     /**
      * removes all entities from the ecs
      */
-    static removeAllEntities(): IEntity[] {
+    static removeAllEntities(): Entity[] {
         return ECS.instance.ecm.removeAllEntities();
     }
 
-    static hasEntity(entity: IEntity): boolean{
+    static hasEntity(entity: Entity): boolean{
         return ECS.instance.ecm.hasEntity(entity);
     }
 
-    static removeComponent<T extends IComponent>(entity: IEntity,component: {new(...args): T}|string): boolean{
+    static removeComponent<T extends Component>(entity: Entity, component: {new(...args): T}|string): boolean{
         return ECS.instance.ecm.removeComponent(entity,component);
     }
 
-    static addComponent(entity: IEntity,component: IComponent): void{
+    static addComponent(entity: Entity, component: Component): void{
         return ECS.instance.ecm.addComponent(entity,component);
     }
 
-    static addSystem<T extends ISystem>(system: T,componentMask?: {new(config?: {[x: string]: any}): any}[]): T{
+    static addSystem<T extends System>(system: T, componentMask?: {new(config?: {[x: string]: any}): any}[]): T{
         return ECS.instance.scm.add(system,componentMask);
     }
 
-    static hasSystem(system: ISystem): boolean{
+    static hasSystem(system: System): boolean{
         return ECS.instance.scm.has(system);
     }
 
-    static hasSystemOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
+    static hasSystemOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
         return ECS.instance.scm.hasOf(constructor);
     }
 
-    static removeSystem(system: ISystem): boolean{
+    static removeSystem(system: System): boolean{
         return ECS.instance.scm.remove(system);
     }
 
-    static removeSystemOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
+    static removeSystemOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
         return ECS.instance.scm.removeOf(constructor);
     }
 
-    static getSystemComponentMaskOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): number{
+    static getSystemComponentMaskOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): number{
         return ECS.instance.scm.getComponentMaskOf(constructor);
     }
 
-    static removeEntityFromSystem(entity: IEntity,system?: ISystem): void{
+    static removeEntityFromSystem(entity: Entity, system?: System): void{
         ECS.instance.scm.removeEntity(entity,system);
     }
 
-    static getSystem<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): T{
+    static getSystem<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): T{
         return ECS.instance.scm.get(constructor);
     }
 
@@ -146,7 +146,7 @@ export class ECS {
         ECS.instance.init(cb);
     }
 
-    private static createComponentsFromDecorator(components: EntityDecoratorComponent[]): {[x: string]: IComponent}{
+    private static createComponentsFromDecorator(components: EntityDecoratorComponent[]): {[x: string]: Component}{
         const comps = Object.create(null);
         let component;
         for(let dec of components){
@@ -156,7 +156,7 @@ export class ECS {
         return comps;
     }
 
-    static Component(id?: string): (constructor: { new(...args): IComponent }) => any {
+    static Component<T>(id?: string): (constructor: { new(...args): T }) => any {
         const getter = id ? function() {
             return this._id || (this._id = id);
         } : function() {
@@ -167,7 +167,7 @@ export class ECS {
             this._id = id;
         };
 
-        return function(constructor: { new(...args): IComponent }) {
+        return function(constructor: { new(...args): Component }) {
             Object.defineProperty(constructor.prototype, "id", {
                 get: getter,
                 set: setter
@@ -176,8 +176,8 @@ export class ECS {
         }
     }
 
-    static System(...components: {new(...args): IComponent}[]): (constructor: { new(...args): ISystem }) => any{
-        return function(constructor: {new(...args): ISystem}){
+    static System(...components: {new(...args): Component}[]): (constructor: { new(...args): System }) => any{
+        return function(constructor: {new(...args): System}){
             Object.defineProperty(constructor.prototype, "id", {
                 get: function() {
                     return this._id || (this._id = this.constructor.name);
@@ -195,8 +195,8 @@ export class ECS {
         }
     }
 
-    static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): IEntity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
-        return function(constructor: {new(...args): IEntity}){
+    static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): Entity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
+        return function(constructor: {new(...args): Entity}){
             Object.defineProperty(constructor.prototype, "components", {
                 get: function() {
                     return this._components || (this._components = ECS.createComponentsFromDecorator(components));

@@ -1,8 +1,8 @@
-import { IComponent } from './Component';
+import { Component } from './Component';
 import { ECS } from './ECS';
 import { Injector } from './Injector';
 
-export interface ComponentMap {[component: string]: IComponent}
+export interface ComponentMap {[component: string]: Component}
 
 export interface EntityProp {
     id?: string;
@@ -15,13 +15,13 @@ export interface EntityDecoratorComponent {
     config?: { [x: string]: any };
 }
 
-export interface IEntity extends EntityProp {
-    get?<T extends IComponent>(comp: {new(...args): T}|string): T;
-    getAll?(): {[id: string]: IComponent};
-    has?<T extends IComponent>(comp: {new(...args): T}|string): boolean;
-    add?(component: IComponent): void;
-    remove?<T extends IComponent>(component: {new(...args): T}|string): boolean;
-    dispose?(): IEntity;
+export interface Entity extends EntityProp {
+    get?<T extends Component>(comp: {new(...args): T}|string): T;
+    getAll?(): {[id: string]: Component};
+    has?<T extends Component>(comp: {new(...args): T}|string): boolean;
+    add?(component: Component): void;
+    remove?<T extends Component>(component: {new(...args): T}|string): boolean;
+    dispose?(): Entity;
 }
 
 const ENTITY_PROPERTIES = {
@@ -30,10 +30,10 @@ const ENTITY_PROPERTIES = {
     bitmask:()=>{return 0;}
 };
 
-export class Entity implements IEntity {
+export class EntityHandle implements Entity {
 
     readonly id: string;
-    readonly components: {[id: string]: IComponent};
+    readonly components: {[id: string]: Component};
     readonly bitmask: number;
 
     constructor(uuid?: string){
@@ -42,50 +42,50 @@ export class Entity implements IEntity {
         this.bitmask = ENTITY_PROPERTIES.bitmask();
     }
 
-    getAll(): {[id: string]: IComponent}{
+    getAll(): {[id: string]: Component}{
         return this.components;
     }
 
-    get<T extends IComponent>(component: { new(...args): T }|string): T {
+    get<T extends Component>(component: { new(...args): T }|string): T {
         if(typeof component === 'string') {
             return this.components[component] as T;
         }
         return this.components[component.prototype.constructor.name] as T;
     }
 
-    has<T extends IComponent>(component: { new(...args): T }|string): boolean {
+    has<T extends Component>(component: { new(...args): T }|string): boolean {
         if(typeof component === 'string'){
             return !!this.components[component];
         }
         return !!this.components[component.prototype.constructor.name];
     }
 
-    add(component: IComponent): void{
+    add(component: Component): void{
         return ECS.addComponent(this,component);
     }
 
-    remove<T extends IComponent>(component: {new(...args): T}|string): boolean{
+    remove<T extends Component>(component: {new(...args): T}|string): boolean{
         return ECS.removeComponent(this,component);
     }
 
-    dispose(): IEntity{
-        return ECS.removeEntity(this)
+    dispose(): this {
+        return ECS.removeEntity(this);
     }
 }
 
 const ENTITY_PROTOTYPE = {
-    get:()=>{return Entity.prototype.get;},
-    getAll:()=>{return Entity.prototype.getAll;},
-    has:()=>{return Entity.prototype.has;},
-    add:()=>{return Entity.prototype.add;},
-    remove:()=>{return Entity.prototype.remove;},
-    dispose:()=>{return Entity.prototype.dispose;},
+    get:()=>{return EntityHandle.prototype.get;},
+    getAll:()=>{return EntityHandle.prototype.getAll;},
+    has:()=>{return EntityHandle.prototype.has;},
+    add:()=>{return EntityHandle.prototype.add;},
+    remove:()=>{return EntityHandle.prototype.remove;},
+    dispose:()=>{return EntityHandle.prototype.dispose;},
 };
 
 export const ENTITY_PROPERTY_DECORATOR = {
 
 };
 
-export function injectEntity(entity: IEntity){
+export function injectEntity(entity: Entity){
     Injector.inject(entity, ENTITY_PROPERTIES, ENTITY_PROTOTYPE, ENTITY_PROPERTY_DECORATOR);
 }

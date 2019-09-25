@@ -1,20 +1,7 @@
-import {IEntity} from "./Entity";
+import {Entity} from "./EntityHandle";
 import {ECS} from "./ECS";
 import * as EventEmitter from "eventemitter3";
 import { Injector } from './Injector';
-
-export interface ISystem {
-    id?: string;
-    bitmask?: number;
-    readonly entityMap?: {[id: string]: number};
-    readonly entities?: IEntity[];
-    readonly events?: EventEmitter;
-    setUp?(): void;
-    tearDown?(): void;
-    has?(entity: IEntity): boolean;
-    remove?(entity: IEntity, fromECS?: boolean): void;
-    dispose?(): void;
-}
 
 export const SYSTEM_PROPERTIES = {
     entityMap:()=>{return Object.create(null);},
@@ -22,9 +9,12 @@ export const SYSTEM_PROPERTIES = {
     events:()=>{return new EventEmitter();}
 };
 
-export class System implements ISystem {
+export class System {
+    id?: string; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
+    bitmask?: number; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
+
     readonly entityMap: {[id: string]: number};
-    readonly entities: IEntity[];
+    readonly entities: Entity[];
     readonly events: EventEmitter;
 
     constructor() {
@@ -33,11 +23,14 @@ export class System implements ISystem {
         this.events = SYSTEM_PROPERTIES.events();
     }
 
-    has(entity: IEntity): boolean {
+    setUp() {}
+    tearDown() {}
+
+    has(entity: Entity): boolean {
         return !!this.entities[this.entityMap[entity.id]];
     }
 
-    remove(entity: IEntity, fromECS: boolean=true): void {
+    remove(entity: Entity, fromECS: boolean=true): void {
         if(fromECS) {
             ECS.removeEntity(entity);
         }
@@ -61,7 +54,7 @@ export const SYSTEM_PROPERTY_DECORATOR = {
 
 };
 
-export function injectSystem(system: ISystem, updateMethods: string[]) {
+export function injectSystem<T>(system: T, updateMethods: string[]) {
     Injector.inject(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
     Injector.addNoopMethodsToPrototype(system, updateMethods);
 }

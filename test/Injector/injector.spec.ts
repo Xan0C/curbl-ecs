@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {ECS, IEntity, ISystem} from "../../src";
+import { ECS, Entity, System } from '../../src';
 
 @ECS.Component()
 export class PositionComponent {
@@ -21,12 +21,13 @@ export class PositionComponent {
 }
 
 @ECS.System(PositionComponent)
-class System implements ISystem {
-    entities: IEntity[];
+class TestSystem extends System {
+    entities: Entity[];
     public x;
     public y;
 
     constructor(config: { x: number; y: number }) {
+        super();
         this.x = config.x;
         this.y = config.y;
     }
@@ -40,11 +41,11 @@ class System implements ISystem {
 }
 
 @ECS.Injector.System({
-    system: System
+    system: TestSystem
 })
 class Injected {
 
-    public system: ISystem;
+    public system: System;
 
     constructor() {
 
@@ -52,11 +53,11 @@ class Injected {
 }
 
 describe('SystemDecorator', function () {
-    var system: ISystem;
+    let system: System;
     this.timeout(0);
 
     beforeEach(() => {
-        system = ECS.addSystem(new System({x: 42, y: 12}));
+        system = ECS.addSystem(new TestSystem({x: 42, y: 12}));
     });
 
     afterEach(() => {
@@ -66,7 +67,7 @@ describe('SystemDecorator', function () {
     describe('#inject', () => {
         it('#System#Checks that the system got injected as a property', () => {
             let injected = new Injected();
-            expect(injected.system).to.equal(ECS.getSystem(System));
+            expect(injected.system).to.equal(ECS.getSystem(TestSystem));
         });
     });
 });

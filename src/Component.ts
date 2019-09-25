@@ -10,7 +10,7 @@ export class ComponentBitmaskMap {
         this._bitmaskMap = Object.create(null);
     }
 
-    has<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string): boolean{
+    has<T extends Component>(component: {new(config?: {[x: string]: any}): T}|string): boolean{
         if(typeof component === "string"){
             return !!this._bitmaskMap[component];
         }else {
@@ -18,7 +18,7 @@ export class ComponentBitmaskMap {
         }
     }
 
-    add<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string){
+    add<T extends Component>(component: {new(config?: {[x: string]: any}): T}|string){
         if(typeof component === "string"){
             this._bitmaskMap[component] = 1 << this.size;
         }else {
@@ -26,7 +26,7 @@ export class ComponentBitmaskMap {
         }
     }
 
-    get<T extends IComponent>(component: {new(config?: {[x: string]: any}): T}|string): number{
+    get<T extends Component>(component: {new(config?: {[x: string]: any}): T}|string): number{
         if(!this.has(component)){
             this.add(component);
         }
@@ -67,17 +67,17 @@ const COMPONENT_PROTOTYPE = {
 export const COMPONENT_PROPERTY_DECORATOR = {
     id: (component) => {
         Object.defineProperty(component, "id", {
-            get: function() { return this._id || (this._id = this.constructor.name); },
-            set: function(id: string) { this._id = id; }
+            get: function() { return this.id || (this.id = this.constructor.name); },
+            set: function(id: string) { this.id = id; }
         })
     }
 };
 
-export function injectComponent(component: IComponent){
+export function injectComponent(component: Component){
     Injector.inject(component, COMPONENT_PROPERTIES, COMPONENT_PROTOTYPE, COMPONENT_PROPERTY_DECORATOR);
 }
 
-export interface IComponent {
+export interface Component {
     id?: string;
     remove?(): void;
 }

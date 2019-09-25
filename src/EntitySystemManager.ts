@@ -1,35 +1,15 @@
-import {injectSystem, ISystem} from "./System";
-import {IEntity} from "./Entity";
+import { injectSystem, System } from './System';
+import {Entity} from "./EntityHandle";
 import {ComponentBitmaskMap} from "./Component";
 import * as EventEmitter from "eventemitter3";
 import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
 
-export interface IEntitySystemManager {
-    readonly events: EventEmitter;
-    systemUpdateMethods: string[];
-    updateSystemMethods(): void;
-    updateBitmask(system: ISystem, componentMask?: {new(config?: {[x: string]: any}): any}[]): ISystem;
-    add<T extends ISystem>(system: T,componentMask?: {new(config?: {[x: string]: any}): any}[],silent?: boolean): T;
-    has(system: ISystem): boolean;
-    remove(system: ISystem,silent?: boolean): boolean;
-    callSystemMethod(funcId: string);
-    update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void;
-    hasOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): boolean;
-    removeOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T},silent?: boolean): boolean;
-    get<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): T;
-    getEntitiesOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): IEntity[];
-    getComponentMaskOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): number;
-    addEntity(entity: IEntity,system?: ISystem,silent?: boolean): void;
-    removeEntity(entity: IEntity,system?: ISystem,silent?: boolean): void;
-    updateEntity(entity: IEntity,system?: ISystem): void;
-}
-
-export class EntitySystemManager implements IEntitySystemManager {
+export class EntitySystemManager {
     private componentBitmask: ComponentBitmaskMap;
     private _events: EventEmitter;
 
     private ids: string[];
-    private systems: {[id: string]: ISystem};
+    private systems: {[id: string]: System};
 
     private _systemUpdateMethods: string[];
 
@@ -46,7 +26,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param system
      * @param componentMask
      */
-    updateBitmask(system: ISystem, componentMask: {new(config?: {[x: string]: any}): any}[]=[]): ISystem{
+    updateBitmask(system: System, componentMask: {new(config?: {[x: string]: any}): any}[]=[]): System{
         for(let i = 0, component; component = componentMask[i]; i++){
             system.bitmask = system.bitmask | this.componentBitmask.get(component);
         }
@@ -60,7 +40,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param componentMask - componentBitmask for the System
      * @param silent - if true the ECS wont be notified that a System got added to the ECS
      */
-    add<T extends ISystem>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent: boolean=false): T {
+    add<T extends System>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent: boolean=false): T {
         if(!this.has(system)) {
             injectSystem(system, this.systemUpdateMethods);
             this.systems[system.id] = system;
@@ -81,7 +61,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param system
      * @returns {boolean}
      */
-    has(system: ISystem): boolean {
+    has(system: System): boolean {
         return !!this.systems[system.id];
     }
 
@@ -90,7 +70,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param constructor
      * @returns {boolean}
      */
-    hasOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
+    hasOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
         return !!this.systems[constructor.prototype.constructor.name];
     }
 
@@ -100,7 +80,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    remove(system: ISystem,silent: boolean=false): boolean{
+    remove(system: System,silent: boolean=false): boolean{
         if(this.has(system)) {
             if(!silent){
                 this._events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
@@ -118,16 +98,16 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    removeOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}, silent?: boolean): boolean{
+    removeOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}, silent?: boolean): boolean{
         return this.remove(this.get(constructor), silent);
     }
 
     /**
      * Returns entities for the system of the type if it exists in the ECS
      * @param constructor
-     * @returns {undefined|Map<string, IEntity>}
+     * @returns {undefined|Map<string, Entity>}
      */
-    getEntitiesOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): IEntity[]{
+    getEntitiesOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): Entity[]{
         let system = this.get(constructor);
         if(system){
             return system.entities;
@@ -135,7 +115,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         return undefined;
     }
 
-    getComponentMaskOf<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): number{
+    getComponentMaskOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): number{
         let system = this.get(constructor);
         if(system){
             return system.bitmask;
@@ -143,7 +123,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         return undefined;
     }
 
-    get<T extends ISystem>(constructor: {new(config?: {[x: string]: any}): T}): T{
+    get<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): T{
         return this.systems[constructor.prototype.constructor.name] as T;
     }
 
@@ -152,7 +132,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param entity
      * @param system - optional system to add the entity to
      */
-    addEntity(entity: IEntity,system?: ISystem): void{
+    addEntity(entity: Entity, system?: System): void{
         if(system){
             if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
                 system.entityMap[entity.id] = system.entities.push(entity) - 1;
@@ -161,7 +141,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         }else{
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system: ISystem; system = systems[ids[i]]; i++){
+            for(let i=0, system: System; system = systems[ids[i]]; i++){
                 this.addEntity(entity, system);
             }
         }
@@ -172,7 +152,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param entity
      * @param system
      */
-    removeEntity(entity: IEntity,system?: ISystem): void{
+    removeEntity(entity: Entity, system?: System): void{
         if(system) {
             const idx = system.entityMap[entity.id];
             if (idx >= 0) {
@@ -183,7 +163,7 @@ export class EntitySystemManager implements IEntitySystemManager {
         }else{
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system: ISystem; system = systems[ids[i]]; i++){
+            for(let i=0, system: System; system = systems[ids[i]]; i++){
                 this.removeEntity(entity, system);
             }
         }
@@ -194,7 +174,7 @@ export class EntitySystemManager implements IEntitySystemManager {
      * @param entity
      * @param system - optional only update for for the given system(ether add or remove the entity from the system)
      */
-    updateEntity(entity: IEntity,system?: ISystem): void{
+    updateEntity(entity: Entity, system?: System): void{
         if(system){
             this.addEntityToSystem(system,entity);
         }else {
@@ -206,14 +186,14 @@ export class EntitySystemManager implements IEntitySystemManager {
         }
     }
 
-    private updateSystemEntity(entity: IEntity, system: ISystem): void {
+    private updateSystemEntity(entity: Entity, system: System): void {
         if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
             const idx = system.entityMap[entity.id];
             system.entities[idx] = entity;
         }
     }
 
-    private addEntityToSystem(system: ISystem,entity: IEntity): void{
+    private addEntityToSystem(system: System,entity: Entity): void{
         if ((entity.bitmask & system.bitmask) === system.bitmask) {
             if(!system.has(entity)) {
                 this.addEntity(entity, system);

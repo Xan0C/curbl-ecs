@@ -1,6 +1,6 @@
 export * from "./Component";
 export * from "./ECS";
-export * from "./Entity";
+export * from "./EntityHandle";
 export * from "./EntityComponentManager";
 export * from "./EntitySystemManager";
 export * from "./Injector";

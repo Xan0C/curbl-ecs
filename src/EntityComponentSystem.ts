@@ -1,9 +1,9 @@
 import {ECSBase} from "./ECSBase";
 import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {ComponentMap, EntityProp, IEntity} from "./Entity";
-import {ISystem} from "./System";
-import {IComponent, injectComponent} from "./Component";
+import {ComponentMap, EntityProp, Entity} from "./EntityHandle";
+import {Component, injectComponent} from "./Component";
 import {EntityMap} from "./EntityComponentManager";
+import { System } from './System';
 
 export class EntityComponentSystem extends ECSBase {
 
@@ -31,7 +31,7 @@ export class EntityComponentSystem extends ECSBase {
         this.events.on(ECM_WORKER_EVENTS.ENTITIES_UPDATED, this.onEntitiesUpdatedForWorker.bind(this));
     }
 
-    private onEntityAdded(entity: IEntity){
+    private onEntityAdded(entity: Entity){
         this.scm.updateEntity(entity);
     }
 
@@ -46,7 +46,7 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private onEntityRemoved(entity: IEntity){
+    private onEntityRemoved(entity: Entity){
         this.scm.removeEntity(entity);
     }
 
@@ -61,11 +61,11 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private onComponentAdded(entity: IEntity){
+    private onComponentAdded(entity: Entity){
         this.scm.updateEntity(entity);
     }
 
-    private onComponentAddedToWorker(entity: EntityProp, component: IComponent): void {
+    private onComponentAddedToWorker(entity: EntityProp, component: Component): void {
         for(let i=0, worker: Worker; worker = this.workers[i]; i++) {
             if ( (this.workerBitmasks[i] & entity.bitmask) !== 0) {
                 worker.postMessage({
@@ -104,11 +104,11 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private onComponentRemoved(entity: IEntity){
+    private onComponentRemoved(entity: Entity){
         this.scm.updateEntity(entity);
     }
 
-    private onComponentRemovedFromWorker(entity: EntityProp, component: IComponent): void {
+    private onComponentRemovedFromWorker(entity: EntityProp, component: Component): void {
         for(let i=0, worker: Worker; worker = this.workers[i]; i++) {
             if ( (this.workerBitmasks[i] & entity.bitmask) !== 0) {
                 worker.postMessage({
@@ -120,7 +120,7 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private onSystemAdded(system: ISystem){
+    private onSystemAdded(system: System){
         for(let id in this.ecm.entities){
             this.scm.updateEntity(this.ecm.entities[id], system);
         }
@@ -138,19 +138,19 @@ export class EntityComponentSystem extends ECSBase {
 
     private injectEntities(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: IEntity; entity = entities[keys[i]]; i++) {
+        for(let i=0, entity: Entity; entity = entities[keys[i]]; i++) {
             this.injectComponents(entity.components);
         }
     }
 
     private injectComponents(components: ComponentMap): void {
         const keys = Object.keys(components);
-        for (let i = 0, component: IComponent; component = components[keys[i]]; i++) {
+        for (let i = 0, component: Component; component = components[keys[i]]; i++) {
             this.injectComponent(component);
         }
     }
 
-    private injectComponent(component: IComponent): void {
+    private injectComponent(component: Component): void {
         injectComponent(component);
     }
 
@@ -231,7 +231,7 @@ export class EntityComponentSystem extends ECSBase {
         });
     }
 
-    init(cb: () => void): void {
+    init(): void {
         throw "init is only used by workers";
     }
 }

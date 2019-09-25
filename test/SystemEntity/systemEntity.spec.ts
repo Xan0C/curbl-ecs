@@ -1,8 +1,9 @@
-import {ECS, IComponent, IEntity, ISystem} from "../../src";
+import {ECS, Component, Entity} from "../../src";
 import {expect} from "chai";
+import { System } from '../../src';
 
 @ECS.Component('NameComponent')
-class NameComponent implements IComponent {
+class NameComponent implements Component {
     private _name: string;
 
     constructor(config: { name: string } = {name:""}) {
@@ -26,7 +27,7 @@ class NameComponent implements IComponent {
 }
 
 @ECS.Component('NameComponent')
-class ExtendedNameComponent extends NameComponent implements IComponent {
+class ExtendedNameComponent extends NameComponent implements Component {
     public nameTwo: string;
 
     constructor(config: {name: string;nameTwo: string}={name:"",nameTwo:""}){
@@ -64,13 +65,13 @@ class PositionComponent {
 @ECS.Entity(
     {component:NameComponent, config:{name:"EntityTest"}}
 )
-class NameEntity implements IEntity {
+class NameEntity implements Entity {
 }
 
 @ECS.Entity(
     {component:PositionComponent, config:{x:42, y:42}}
 )
-class PositionEntity implements IEntity {
+class PositionEntity implements Entity {
 }
 
 @ECS.Entity(
@@ -87,16 +88,14 @@ class FullEntity {
 class ExtendedEntity {}
 
 @ECS.System(PositionComponent)
-class PositionSystem implements ISystem {
-    entities: IEntity[];
+class PositionSystem extends System {
+    entities: Entity[];
 
-    constructor() {
-    }
 }
 
 @ECS.System(PositionComponent, NameComponent)
-class FullSystem implements ISystem {
-    entities: IEntity[];
+class FullSystem extends System  {
+    entities: Entity[];
 
     update() {
         for(let i=0,entity; entity = this.entities[i];i++){
@@ -109,9 +108,9 @@ class FullSystem implements ISystem {
 }
 
 @ECS.System(NameComponent)
-class NameSystem implements ISystem {
+class NameSystem extends System  {
 
-    entities: IEntity[];
+    entities: Entity[];
 
     postUpdate() {
         for(let i=0,entity; entity = this.entities[i];i++){
@@ -121,9 +120,9 @@ class NameSystem implements ISystem {
 }
 
 describe('System_Entity', function () {
-    var positionSystem: ISystem;
-    var nameSystem: ISystem;
-    var fullSystem: ISystem;
+    let positionSystem: System;
+    let nameSystem: System;
+    let fullSystem: System;
     this.timeout(0);
 
     beforeEach(() => {
@@ -141,7 +140,7 @@ describe('System_Entity', function () {
 
     describe('#CreateEntities', () => {
         it('Creates PositionEntity and checks if its added to the right System', () => {
-            let entity: IEntity = ECS.addEntity(new PositionEntity());
+            let entity: Entity = ECS.addEntity(new PositionEntity());
             expect(positionSystem.has(entity)).to.equal(true);
             expect(nameSystem.has(entity)).to.equal(false);
             expect(fullSystem.has(entity)).to.equal(false);
@@ -150,7 +149,7 @@ describe('System_Entity', function () {
         });
 
         it('Creates a NameEntity and checks if its added to the right System', () => {
-            let entity: IEntity = ECS.addEntity(new NameEntity());
+            let entity: Entity = ECS.addEntity(new NameEntity());
             expect(positionSystem.has(entity)).to.equal(false);
             expect(nameSystem.has(entity)).to.equal(true);
             expect(fullSystem.has(entity)).to.equal(false);
@@ -159,7 +158,7 @@ describe('System_Entity', function () {
         });
 
         it('Creates a FullEntity and checks if its added to the right Systems', () => {
-            let entity: IEntity = ECS.addEntity(new FullEntity());
+            let entity: Entity = ECS.addEntity(new FullEntity());
             expect(positionSystem.has(entity)).to.equal(true);
             expect(nameSystem.has(entity)).to.equal(true);
             expect(fullSystem.has(entity)).to.equal(true);
@@ -172,7 +171,7 @@ describe('System_Entity', function () {
 
     describe('#addComponent', () => {
         it('Adds a NameComponent to the PositionEntity and checks if its added to the right Systems', () => {
-            let entity: IEntity = ECS.addEntity(new PositionEntity());
+            let entity: Entity = ECS.addEntity(new PositionEntity());
             expect(positionSystem.has(entity)).to.equal(true);
             expect(nameSystem.has(entity)).to.equal(false);
             expect(fullSystem.has(entity)).to.equal(false);
@@ -185,7 +184,7 @@ describe('System_Entity', function () {
 
     describe('#removeComponent', () => {
         it('Removes a NameComponent from the FullEntity and checks if its removed from the Systems', () => {
-            let entity: IEntity = ECS.addEntity(new FullEntity());
+            let entity: Entity = ECS.addEntity(new FullEntity());
             expect(positionSystem.has(entity)).to.equal(true);
             expect(nameSystem.has(entity)).to.equal(true);
             expect(fullSystem.has(entity)).to.equal(true);
@@ -198,7 +197,7 @@ describe('System_Entity', function () {
 
     describe('#systemUpdateMethods', () => {
         it('Calls ECS update method which calls update method of all systems', () => {
-            let entity: IEntity = ECS.addEntity(new FullEntity());
+            let entity: Entity = ECS.addEntity(new FullEntity());
             expect(entity.get(NameComponent).name).to.equal("FullEntity");
             ECS.update();
             expect(entity.get(NameComponent).name).to.equal("NAME_COMP");
@@ -207,7 +206,7 @@ describe('System_Entity', function () {
 
     describe('#callSystemUpdateMethod', () => {
         it('Calls ECS update method which calls update method of all systems', () => {
-            let entity: IEntity = ECS.addEntity(new FullEntity());
+            let entity: Entity = ECS.addEntity(new FullEntity());
             expect(entity.get(NameComponent).name).to.equal("FullEntity");
             ECS.callSystemMethod('update');
             expect(entity.get(NameComponent).name).to.equal("CHANGED_NAME");
@@ -218,8 +217,8 @@ describe('System_Entity', function () {
 
     describe('#extendedComponent',()=>{
         it('Add entity with an ExtendedNameComponent and an entity with NameComponent, both should be handled by the same system',()=>{
-            let fEntity: IEntity = ECS.addEntity(new FullEntity());
-            let eEntity: IEntity = ECS.addEntity(new ExtendedEntity());
+            let fEntity: Entity = ECS.addEntity(new FullEntity());
+            let eEntity: Entity = ECS.addEntity(new ExtendedEntity());
             expect(eEntity.get<ExtendedNameComponent>('NameComponent').name).to.equal('Normal');
             expect(eEntity.get<ExtendedNameComponent>('NameComponent').nameTwo).to.equal('Extended');
             expect(fEntity.get<ExtendedNameComponent>('NameComponent').nameTwo).to.be.undefined;
@@ -231,7 +230,7 @@ describe('System_Entity', function () {
 
     describe('#ReAddRemovedEntity',()=>{
         it('Add an entity which was previously removed from the ECS, but still has all components',()=>{
-            let fEntity: IEntity = ECS.addEntity(new FullEntity());
+            let fEntity: Entity = ECS.addEntity(new FullEntity());
             expect(fEntity.has(NameComponent)).to.be.true;
             expect(fEntity.has(PositionComponent)).to.be.true;
             expect(positionSystem.has(fEntity)).to.be.true;

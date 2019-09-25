@@ -1,9 +1,9 @@
 import {EntityMap} from "./EntityComponentManager";
-import {IComponent, injectComponent} from "./Component";
+import {Component, injectComponent} from "./Component";
 import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {ComponentMap, EntityProp, IEntity} from "./Entity";
-import {ISystem} from "./System";
+import {ComponentMap, EntityProp, Entity} from "./EntityHandle";
 import {ECSBase} from "./ECSBase";
+import { System } from './System';
 
 export class EntityComponentWorker extends ECSBase {
     private initialized: boolean;
@@ -25,33 +25,33 @@ export class EntityComponentWorker extends ECSBase {
         self.addEventListener("message", (ev) => this.delegateWorkerEvents(ev));
     }
 
-    private onEntityAdded(entity: IEntity){
+    private onEntityAdded(entity: Entity){
         this.scm.updateEntity(entity);
     }
 
-    private onEntityAddedToWorker(entity: IEntity): void {
+    private onEntityAddedToWorker(entity: Entity): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.ENTITY_ADDED,
             entity: entity
         });
     }
 
-    private onEntityRemoved(entity: IEntity) {
+    private onEntityRemoved(entity: Entity) {
         this.scm.removeEntity(entity);
     }
 
-    private onEntityRemovedFromWorker(entity: IEntity): void {
+    private onEntityRemovedFromWorker(entity: Entity): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.ENTITY_REMOVED,
             entity: entity
         });
     }
 
-    private onComponentAdded(entity: IEntity){
+    private onComponentAdded(entity: Entity){
         this.scm.updateEntity(entity);
     }
 
-    private onComponentAddedToWorker(entity: IEntity, component: IComponent): void {
+    private onComponentAddedToWorker(entity: Entity, component: Component): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.COMPONENT_ADDED,
             entity: entity,
@@ -59,11 +59,11 @@ export class EntityComponentWorker extends ECSBase {
         });
     }
 
-    private onComponentRemoved(entity: IEntity): void {
+    private onComponentRemoved(entity: Entity): void {
         this.scm.updateEntity(entity);
     }
 
-    private onComponentRemovedFromWorker(entity: IEntity, component: IComponent): void {
+    private onComponentRemovedFromWorker(entity: Entity, component: Component): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.COMPONENT_REMOVED,
             entity: entity,
@@ -71,7 +71,7 @@ export class EntityComponentWorker extends ECSBase {
         });
     }
 
-    private onSystemAdded(system: ISystem){
+    private onSystemAdded(system: System){
         for(let id in this.ecm.entities){
             this.scm.updateEntity(this.ecm.entities[id], system);
         }
@@ -108,12 +108,12 @@ export class EntityComponentWorker extends ECSBase {
 
     private injectComponents(components: ComponentMap): void {
         const keys = Object.keys(components);
-        for (let i = 0, component: IComponent; component = components[keys[i]]; i++) {
+        for (let i = 0, component: Component; component = components[keys[i]]; i++) {
             this.injectComponent(component);
         }
     }
 
-    private injectComponent(component: IComponent): void {
+    private injectComponent(component: Component): void {
         injectComponent(component);
     }
 
@@ -156,7 +156,7 @@ export class EntityComponentWorker extends ECSBase {
 
     private updateEntities(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: IEntity; entity = entities[keys[i]]; i++) {
+        for(let i=0, entity: Entity; entity = entities[keys[i]]; i++) {
             this.injectComponents(entity.components);
         }
         this.ecm.updateEntities(entities, false, true);
@@ -169,7 +169,7 @@ export class EntityComponentWorker extends ECSBase {
         }
     }
 
-    addWorker(worker: Worker): void {
+    addWorker(): void {
         throw "WebWorkers can only be added to the main thread";
     }
 

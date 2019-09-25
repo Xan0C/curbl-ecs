@@ -1,8 +1,8 @@
-import {ECS, IComponent, IEntity, ISystem} from "../../src";
+import { ECS, Component, Entity, System } from '../../src';
 import {expect} from "chai";
 
 @ECS.Component()
-export class PositionComponent implements IComponent {
+export class PositionComponent implements Component {
 
     public x;
     public y;
@@ -21,12 +21,13 @@ export class PositionComponent implements IComponent {
 }
 
 @ECS.System(PositionComponent)
-class System {
-    entities: IEntity[];
+class TestSystem extends System {
+    entities: Entity[];
     public x;
     public y;
 
     constructor(config: { x: number; y: number }) {
+        super();
         this.x = config.x;
         this.y = config.y;
     }
@@ -40,8 +41,8 @@ class System {
 }
 
 @ECS.System(PositionComponent)
-class SystemTwo implements ISystem {
-    entities: IEntity[];
+class SystemTwo extends System {
+    entities: Entity[];
 
     update(): void {
         for (let i = 0, entity; entity = this.entities[i]; i++) {
@@ -52,16 +53,16 @@ class SystemTwo implements ISystem {
 }
 
 @ECS.System()
-class EmptySystem implements ISystem {
-    entities: IEntity[];
+class EmptySystem extends System {
+    entities: Entity[];
 
     update(): void {
     }
 }
 
 @ECS.System()
-class ArgumentSystem implements ISystem {
-    entities: IEntity[];
+class ArgumentSystem extends System {
+    entities: Entity[];
     name: string;
 
     update(name: string): void {
@@ -70,7 +71,7 @@ class ArgumentSystem implements ISystem {
 }
 
 @ECS.System()
-class SetupAndTearDownSystem implements ISystem {
+class SetupAndTearDownSystem extends System {
     public setUpCalled: boolean;
     public tearDownCalled: boolean;
 
@@ -84,11 +85,11 @@ class SetupAndTearDownSystem implements ISystem {
 }
 
 describe('SystemDecorator', function () {
-    var system: ISystem;
+    let system: System;
     this.timeout(0);
 
     beforeEach(() => {
-        system = ECS.addSystem(new System({x: 42, y: 12}));
+        system = ECS.addSystem(new TestSystem({x: 42, y: 12}));
     });
 
     afterEach(() => {
@@ -146,7 +147,7 @@ describe('SystemDecorator', function () {
         });
 
         it('Removes an Entity from the System but not from the ECS', () => {
-            let scdSystem: ISystem = new SystemTwo();
+            let scdSystem: System = new SystemTwo();
             ECS.addSystem(scdSystem);
             let entity = ECS.createEntity();
             entity.add(new PositionComponent({x: 0, y: 0}));

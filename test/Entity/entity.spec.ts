@@ -1,8 +1,8 @@
 import {expect} from "chai";
-import {ECS, IComponent, IEntity} from "../../src";
+import { ECS, Component, Entity } from '../../src';
 
 @ECS.Component()
-class NameComponent implements IComponent {
+class NameComponent implements Component {
     public name: string;
 
     constructor(config: { name: string } = {name: ""}) {
@@ -18,7 +18,7 @@ class NameComponent implements IComponent {
 }
 
 @ECS.Component()
-class PositionComponent implements IComponent {
+class PositionComponent implements Component {
     public x;
     public y;
 
@@ -40,7 +40,7 @@ class PositionComponent implements IComponent {
 @ECS.Entity(
     {component: NameComponent, config: {name: "EntityTest"}}
 )
-class Entity implements IEntity {
+class TestEntity implements Entity {
     readonly id: string;
 
     public x;
@@ -53,11 +53,11 @@ class Entity implements IEntity {
 }
 
 describe('EntityDecorator', function () {
-    let entity: IEntity;
+    let entity: Entity;
     this.timeout(0);
 
     beforeEach(() => {
-        entity = ECS.addEntity(new Entity({x: 42, y: 12}));
+        entity = ECS.addEntity(new TestEntity({x: 42, y: 12}));
     });
 
     afterEach(() => {
@@ -115,7 +115,7 @@ describe('EntityDecorator', function () {
         });
 
         it('Removes all entities from the ecs, but the entities keep all components', () => {
-            const sEntity: IEntity = new Entity({x: 12, y: 69});
+            const sEntity: Entity = new TestEntity({x: 12, y: 69});
             ECS.addEntity(sEntity);
             expect(entity.has(NameComponent)).to.equal(true);
             expect(sEntity.has(NameComponent)).to.equal(true);
@@ -133,13 +133,13 @@ describe('EntityDecorator', function () {
         it('get entities with the specified components', () => {
             expect(ECS.hasEntity(entity)).to.equal(true);
             entity.add(new PositionComponent());
-            const sEntity = new Entity({x: 21, y: 12});
+            const sEntity = new TestEntity({x: 21, y: 12});
             ECS.addEntity(sEntity);
-            const nameAndPosEntities: IEntity[] = ECS.getEntities(PositionComponent, NameComponent);
+            const nameAndPosEntities: TestEntity[] = ECS.getEntities(PositionComponent, NameComponent);
             expect(nameAndPosEntities.length).to.equal(1);
             expect(nameAndPosEntities[0]).to.equal(entity);
 
-            const nameEntities: IEntity[] = ECS.getEntities(NameComponent);
+            const nameEntities: TestEntity[] = ECS.getEntities(NameComponent);
             expect(nameEntities.length).to.equal(2);
             expect(nameEntities[0]).to.equal(entity);
             expect(nameEntities[1]).to.equal(sEntity);
