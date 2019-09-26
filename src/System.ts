@@ -1,4 +1,4 @@
-import {Entity} from "./EntityHandle";
+import { Entity, EntityProp } from './EntityHandle';
 import {ECS} from "./ECS";
 import * as EventEmitter from "eventemitter3";
 import { Injector } from './Injector';
@@ -14,7 +14,7 @@ export class System {
     bitmask?: number; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
 
     readonly entityMap: {[id: string]: number};
-    readonly entities: Entity[];
+    readonly entities: Entity [];
     readonly events: EventEmitter;
 
     constructor() {
@@ -26,7 +26,7 @@ export class System {
     setUp() {}
     tearDown() {}
 
-    has(entity: Entity): boolean {
+    has(entity: EntityProp): boolean {
         return !!this.entities[this.entityMap[entity.id]];
     }
 
@@ -54,7 +54,8 @@ export const SYSTEM_PROPERTY_DECORATOR = {
 
 };
 
-export function injectSystem<T>(system: T, updateMethods: string[]) {
-    Injector.inject(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
+export function injectSystem<T extends object>(system: T, updateMethods: string[]): System & T {
+    const injectedSystem = Injector.inject<T & System>(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
     Injector.addNoopMethodsToPrototype(system, updateMethods);
+    return injectedSystem;
 }

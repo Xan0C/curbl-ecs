@@ -37,7 +37,7 @@ export class Injector {
         }
     }
 
-    public static inject<T>(object: T, properties: {[key: string]: () => any}, prototype: {[key: string]: () => (...args) => any}, decorators: {[key: string]: (T) => void}) {
+    public static inject<T>(object: object, properties: {[key: string]: () => any}, prototype: {[key: string]: () => (...args) => any}, decorators: {[key: string]: (T) => void}): T {
         for(let propKey in properties){
             if(object[propKey] === undefined || object[propKey] === null){
                 object[propKey] = properties[propKey]();
@@ -59,6 +59,8 @@ export class Injector {
                 }
             }
         }
+
+        return object as unknown as T;
     }
 
     public static addNoopMethodsToPrototype(object: any, methods: string[]) {

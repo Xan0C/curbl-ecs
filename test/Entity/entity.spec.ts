@@ -40,8 +40,7 @@ class PositionComponent implements Component {
 @ECS.Entity(
     {component: NameComponent, config: {name: "EntityTest"}}
 )
-class TestEntity implements Entity {
-    readonly id: string;
+class TestEntity {
 
     public x;
     public y;
@@ -115,8 +114,7 @@ describe('EntityDecorator', function () {
         });
 
         it('Removes all entities from the ecs, but the entities keep all components', () => {
-            const sEntity: Entity = new TestEntity({x: 12, y: 69});
-            ECS.addEntity(sEntity);
+            const sEntity = ECS.addEntity(new TestEntity({x: 12, y: 69}));
             expect(entity.has(NameComponent)).to.equal(true);
             expect(sEntity.has(NameComponent)).to.equal(true);
             expect(ECS.hasEntity(entity)).to.equal(true);
@@ -135,11 +133,11 @@ describe('EntityDecorator', function () {
             entity.add(new PositionComponent());
             const sEntity = new TestEntity({x: 21, y: 12});
             ECS.addEntity(sEntity);
-            const nameAndPosEntities: TestEntity[] = ECS.getEntities(PositionComponent, NameComponent);
+            const nameAndPosEntities = ECS.getEntities(PositionComponent, NameComponent);
             expect(nameAndPosEntities.length).to.equal(1);
             expect(nameAndPosEntities[0]).to.equal(entity);
 
-            const nameEntities: TestEntity[] = ECS.getEntities(NameComponent);
+            const nameEntities = ECS.getEntities(NameComponent);
             expect(nameEntities.length).to.equal(2);
             expect(nameEntities[0]).to.equal(entity);
             expect(nameEntities[1]).to.equal(sEntity);

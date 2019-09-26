@@ -67,14 +67,14 @@ const COMPONENT_PROTOTYPE = {
 export const COMPONENT_PROPERTY_DECORATOR = {
     id: (component) => {
         Object.defineProperty(component, "id", {
-            get: function() { return this.id || (this.id = this.constructor.name); },
-            set: function(id: string) { this.id = id; }
-        })
+            get: function() { return this._id || (this._id = this.constructor.name); },
+            set: function(id: string) { this._id = id; }
+        });
     }
 };
 
-export function injectComponent(component: Component){
-    Injector.inject(component, COMPONENT_PROPERTIES, COMPONENT_PROTOTYPE, COMPONENT_PROPERTY_DECORATOR);
+export function injectComponent<T extends object>(component: T): T & Component {
+    return Injector.inject(component, COMPONENT_PROPERTIES, COMPONENT_PROTOTYPE, COMPONENT_PROPERTY_DECORATOR);
 }
 
 export interface Component {

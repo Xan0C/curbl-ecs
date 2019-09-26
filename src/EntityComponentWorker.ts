@@ -1,9 +1,20 @@
 import {EntityMap} from "./EntityComponentManager";
-import {Component, injectComponent} from "./Component";
+import { BitmaskMap, Component, injectComponent } from './Component';
 import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {ComponentMap, EntityProp, Entity} from "./EntityHandle";
+import {EntityProp, Entity} from "./EntityHandle";
 import {ECSBase} from "./ECSBase";
 import { System } from './System';
+
+interface ECSMessageEvent extends MessageEvent {
+    data: {
+        message: string;
+        args?: any[];
+        entity?: EntityProp;
+        entities?: EntityProp[] & EntityMap;
+        component?: Component;
+        bitmaskMap?: BitmaskMap;
+    };
+}
 
 export class EntityComponentWorker extends ECSBase {
     private initialized: boolean;
@@ -22,7 +33,7 @@ export class EntityComponentWorker extends ECSBase {
         this.events.on(ECM_WORKER_EVENTS.COMPONENT_ADDED, this.onComponentAddedToWorker.bind(this));
         this.events.on(ECM_WORKER_EVENTS.COMPONENT_REMOVED, this.onComponentRemovedFromWorker.bind(this));
 
-        self.addEventListener("message", (ev) => this.delegateWorkerEvents(ev));
+        self.addEventListener("message", (ev: ECSMessageEvent) => this.delegateWorkerEvents(ev));
     }
 
     private onEntityAdded(entity: Entity){
@@ -106,18 +117,15 @@ export class EntityComponentWorker extends ECSBase {
         }
     }
 
-    private injectComponents(components: ComponentMap): void {
+    private static injectComponents(entity: EntityProp): void {
+        const components = entity._components || entity.components;
         const keys = Object.keys(components);
         for (let i = 0, component: Component; component = components[keys[i]]; i++) {
-            this.injectComponent(component);
+            injectComponent(component);
         }
     }
 
-    private injectComponent(component: Component): void {
-        injectComponent(component);
-    }
-
-    private delegateWorkerEvents(ev: MessageEvent): void {
+    private delegateWorkerEvents(ev: ECSMessageEvent): void {
         switch(ev.data.message) {
             case ECS_WORKER_EVENTS.INIT_WORKER:
                 this.triggerInit(ev);
@@ -126,21 +134,21 @@ export class EntityComponentWorker extends ECSBase {
                 this.update(...ev.data.args);
                 break;
             case ECM_WORKER_EVENTS.ENTITY_ADDED:
-                this.injectComponents(ev.data.entity.components);
-                this.ecm.addEntity(ev.data.entity, ev.data.entity.components, false, true);
+                EntityComponentWorker.injectComponents(ev.data.entity);
+                this.ecm.addEntity(ev.data.entity, ev.data.entity._components || ev.data.entity.components, false, true);
                 break;
             case ECM_WORKER_EVENTS.ENTITY_REMOVED:
-                this.injectComponents(ev.data.entity.components);
+                EntityComponentWorker.injectComponents(ev.data.entity);
                 this.ecm.removeEntity(ev.data.entity, false, true);
                 break;
             case ECM_WORKER_EVENTS.COMPONENT_ADDED:
-                this.injectComponents(ev.data.entity.components);
-                this.injectComponent(ev.data.component);
+                EntityComponentWorker.injectComponents(ev.data.entity);
+                injectComponent(ev.data.component);
                 this.ecm.addComponent(ev.data.entity, ev.data.component, false, true);
                 break;
             case ECM_WORKER_EVENTS.COMPONENT_REMOVED:
-                this.injectComponents(ev.data.entity.components);
-                this.injectComponent(ev.data.component);
+                EntityComponentWorker.injectComponents(ev.data.entity);
+                injectComponent(ev.data.component);
                 this.ecm.removeComponent(ev.data.entity, ev.data.component.id, false, true);
                 break;
             case ESM_WORKER_EVENTS.SYSTEM_ADDED:
@@ -156,16 +164,16 @@ export class EntityComponentWorker extends ECSBase {
 
     private updateEntities(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: Entity; entity = entities[keys[i]]; i++) {
-            this.injectComponents(entity.components);
+        for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
+            EntityComponentWorker.injectComponents(entity);
         }
         this.ecm.updateEntities(entities, false, true);
     }
 
     private addEntitiesForSystem(entities: EntityProp[]): void {
         for(let i=0, entity: EntityProp; entity = entities[i]; i++) {
-            this.injectComponents(entity.components);
-            this.ecm.addEntity(entity, entity.components, false, true);
+            EntityComponentWorker.injectComponents(entity);
+            this.ecm.addEntity(entity, entity._components || entity.components, false, true);
         }
     }
 

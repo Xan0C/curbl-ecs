@@ -1,4 +1,4 @@
-import {EntityDecoratorComponent, Entity} from './EntityHandle';
+import { EntityDecoratorComponent, Entity, EntityHandle } from './EntityHandle';
 import {Component} from './Component';
 import {System} from './System';
 import {Injector} from './Injector';
@@ -44,7 +44,7 @@ export class ECS {
      * @param entity {optional} - use existing entity
      * @param components {optional} - components to add to the entity if provided this will override the current components of the entity if any
      */
-    static createEntity(entity?: Entity, components?: {[x: string]: Component}): Entity{
+    static createEntity<T extends Entity>(entity?: T | Entity, components?: {[x: string]: Component}): T & EntityHandle {
         return ECS.instance.ecm.createEntity(entity,components);
     }
 
@@ -53,7 +53,7 @@ export class ECS {
      * @param entity - Entity to add to the ECS
      * @param components - Components for the entity, if provided this will override the current components of the entity if any
      */
-    static addEntity<T extends Entity>(entity: T, components?: {[x: string]: Component}): T{
+    static addEntity<T extends object>(entity: T, components?: {[x: string]: Component}): T & Entity {
         return ECS.instance.ecm.addEntity(entity,components);
     }
 
@@ -148,15 +148,14 @@ export class ECS {
 
     private static createComponentsFromDecorator(components: EntityDecoratorComponent[]): {[x: string]: Component}{
         const comps = Object.create(null);
-        let component;
-        for(let dec of components){
-            component = new dec.component(dec.config);
+        for(const dec of components){
+            const component = new dec.component(dec.config);
             comps[component.id] = component;
         }
         return comps;
     }
 
-    static Component<T>(id?: string): (constructor: { new(...args): T }) => any {
+    static Component<T extends object>(id?: string): (constructor: { new(...args): T }) => any {
         const getter = id ? function() {
             return this._id || (this._id = id);
         } : function() {
@@ -176,7 +175,7 @@ export class ECS {
         }
     }
 
-    static System(...components: {new(...args): Component}[]): (constructor: { new(...args): System }) => any{
+    static System(...components: {new(...args): object | Component}[]): (constructor: { new(...args): System }) => any{
         return function(constructor: {new(...args): System}){
             Object.defineProperty(constructor.prototype, "id", {
                 get: function() {
@@ -195,8 +194,8 @@ export class ECS {
         }
     }
 
-    static Entity(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): Entity }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
-        return function(constructor: {new(...args): Entity}){
+    static Entity<T extends object>(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): T }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
+        return function(constructor: {new(...args): T}){
             Object.defineProperty(constructor.prototype, "components", {
                 get: function() {
                     return this._components || (this._components = ECS.createComponentsFromDecorator(components));

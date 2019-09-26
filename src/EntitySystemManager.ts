@@ -1,5 +1,5 @@
 import { injectSystem, System } from './System';
-import {Entity} from "./EntityHandle";
+import { Entity, EntityHandle, EntityProp } from './EntityHandle';
 import {ComponentBitmaskMap} from "./Component";
 import * as EventEmitter from "eventemitter3";
 import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
@@ -132,10 +132,10 @@ export class EntitySystemManager {
      * @param entity
      * @param system - optional system to add the entity to
      */
-    addEntity(entity: Entity, system?: System): void{
+    addEntity(entity: EntityProp, system?: System): void{
         if(system){
             if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
-                system.entityMap[entity.id] = system.entities.push(entity) - 1;
+                system.entityMap[entity.id] = system.entities.push(entity as EntityHandle) - 1;
                 system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED, entity);
             }
         }else{
@@ -152,7 +152,7 @@ export class EntitySystemManager {
      * @param entity
      * @param system
      */
-    removeEntity(entity: Entity, system?: System): void{
+    removeEntity(entity: EntityProp, system?: System): void{
         if(system) {
             const idx = system.entityMap[entity.id];
             if (idx >= 0) {
@@ -174,7 +174,7 @@ export class EntitySystemManager {
      * @param entity
      * @param system - optional only update for for the given system(ether add or remove the entity from the system)
      */
-    updateEntity(entity: Entity, system?: System): void{
+    updateEntity(entity: EntityProp, system?: System): void{
         if(system){
             this.addEntityToSystem(system,entity);
         }else {
@@ -186,14 +186,14 @@ export class EntitySystemManager {
         }
     }
 
-    private updateSystemEntity(entity: Entity, system: System): void {
+    private updateSystemEntity(entity: EntityProp, system: System): void {
         if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
             const idx = system.entityMap[entity.id];
-            system.entities[idx] = entity;
+            system.entities[idx] = entity as Entity;
         }
     }
 
-    private addEntityToSystem(system: System,entity: Entity): void{
+    private addEntityToSystem(system: System,entity: EntityProp): void{
         if ((entity.bitmask & system.bitmask) === system.bitmask) {
             if(!system.has(entity)) {
                 this.addEntity(entity, system);

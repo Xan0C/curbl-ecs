@@ -3,18 +3,11 @@ import {expect} from "chai";
 import { System } from '../../src';
 
 @ECS.Component('NameComponent')
-class NameComponent implements Component {
+class NameComponent {
     private _name: string;
 
     constructor(config: { name: string } = {name:""}) {
-        this.init(config);
-    }
-
-    init(config: { name: string } = {name:""}): void {
         this._name = config.name;
-    }
-
-    remove(): void {
     }
 
     public get name(): string {
@@ -27,21 +20,15 @@ class NameComponent implements Component {
 }
 
 @ECS.Component('NameComponent')
-class ExtendedNameComponent extends NameComponent implements Component {
+class ExtendedNameComponent extends NameComponent {
     public nameTwo: string;
 
     constructor(config: {name: string;nameTwo: string}={name:"",nameTwo:""}){
         super(config);
-        this.init(config);
-    }
-
-    init(config: {name: string;nameTwo: string}={name:"",nameTwo:""}): void {
         this.name = config.name;
         this.nameTwo = config.nameTwo;
     }
 
-    remove(): void {
-    }
 }
 
 @ECS.Component()
@@ -50,28 +37,21 @@ class PositionComponent {
     public y;
 
     constructor(config: { x: number; y: number } = {x:0, y:0}) {
-        this.init(config);
-    }
-
-    init(config: { x: number; y: number } = {x:0, y:0}): void {
         this.x = config.x;
         this.y = config.y;
-    }
-
-    remove(): void {
     }
 }
 
 @ECS.Entity(
     {component:NameComponent, config:{name:"EntityTest"}}
 )
-class NameEntity implements Entity {
+class NameEntity {
 }
 
 @ECS.Entity(
     {component:PositionComponent, config:{x:42, y:42}}
 )
-class PositionEntity implements Entity {
+class PositionEntity {
 }
 
 @ECS.Entity(

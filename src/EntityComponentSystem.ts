@@ -7,8 +7,8 @@ import { System } from './System';
 
 export class EntityComponentSystem extends ECSBase {
 
-    private workers: Worker[];
-    private workerBitmasks: number[];
+    private readonly workers: Worker[];
+    private readonly workerBitmasks: number[];
 
     constructor() {
         super();
@@ -126,7 +126,7 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private sendEventToWorker(worker: Worker, message: any): void {
+    private static sendEventToWorker(worker: Worker, message: any): void {
         worker.postMessage(message);
     }
 
@@ -136,22 +136,18 @@ export class EntityComponentSystem extends ECSBase {
         }
     }
 
-    private injectEntities(entities: EntityMap): void {
+    private static injectEntities(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: Entity; entity = entities[keys[i]]; i++) {
-            this.injectComponents(entity.components);
+        for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
+            EntityComponentSystem.injectComponents(entity.components);
         }
     }
 
-    private injectComponents(components: ComponentMap): void {
+    private static injectComponents(components: ComponentMap): void {
         const keys = Object.keys(components);
         for (let i = 0, component: Component; component = components[keys[i]]; i++) {
-            this.injectComponent(component);
+            injectComponent(component);
         }
-    }
-
-    private injectComponent(component: Component): void {
-        injectComponent(component);
     }
 
     private delegateWorkerEvents(ev: MessageEvent): void {
@@ -160,29 +156,29 @@ export class EntityComponentSystem extends ECSBase {
                 this.sendInitEvent(ev.target as Worker);
                 break;
             case ECM_WORKER_EVENTS.ENTITY_ADDED:
-                this.injectComponents(ev.data.entity.components);
+                EntityComponentSystem.injectComponents(ev.data.entity.components);
                 this.ecm.addEntity(ev.data.entity, ev.data.entity.components);
                 break;
             case ECM_WORKER_EVENTS.ENTITY_REMOVED:
-                this.injectComponents(ev.data.entity.components);
-                this.injectComponent(ev.data.component);
+                EntityComponentSystem.injectComponents(ev.data.entity.components);
+                injectComponent(ev.data.component);
                 this.ecm.removeEntity(ev.data.entity);
                 break;
             case ECM_WORKER_EVENTS.COMPONENT_ADDED:
-                this.injectComponents(ev.data.entity.components);
-                this.injectComponent(ev.data.component);
+                EntityComponentSystem.injectComponents(ev.data.entity.components);
+                injectComponent(ev.data.component);
                 this.ecm.addComponent(ev.data.entity, ev.data.component);
                 break;
             case ECM_WORKER_EVENTS.COMPONENT_REMOVED:
-                this.injectComponents(ev.data.entity.components);
-                this.injectComponent(ev.data.component);
+                EntityComponentSystem.injectComponents(ev.data.entity.components);
+                injectComponent(ev.data.component);
                 this.ecm.removeComponent(ev.data.entity, ev.data.component.id);
                 break;
             case ESM_WORKER_EVENTS.SYSTEM_ADDED:
                 this.sendSystemEntitiesToWorker(ev);
                 break;
             case ECS_WORKER_EVENTS.UPDATE_WORKER:
-                this.injectEntities(ev.data.entities);
+                EntityComponentSystem.injectEntities(ev.data.entities);
                 this.ecm.updateEntities(ev.data.entities);
                 break;
         }
@@ -194,7 +190,7 @@ export class EntityComponentSystem extends ECSBase {
         if ( index !== -1 ) {
             this.workerBitmasks[index] = this.workerBitmasks[index] | ev.data.bitmask;
             const entities = this.ecm.getEntitiesByBitmask(ev.data.bitmask);
-            this.sendEventToWorker(ev.target as Worker, {
+            EntityComponentSystem.sendEventToWorker(ev.target as Worker, {
                 message: ESM_WORKER_EVENTS.SYSTEM_ADDED,
                 entities: entities,
                 bitmaskMap: this.componentBitmaskMap.bitmaskMap
