@@ -1,6 +1,6 @@
 {
   "name": "curbl-ecs",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Small Entity Component System",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
