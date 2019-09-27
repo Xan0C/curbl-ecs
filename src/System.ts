@@ -30,7 +30,7 @@ export class System {
         return !!this.entities[this.entityMap[entity.id]];
     }
 
-    remove(entity: Entity, fromECS: boolean=true): void {
+    remove(entity: Entity, fromECS=true): void {
         if(fromECS) {
             ECS.removeEntity(entity);
         }

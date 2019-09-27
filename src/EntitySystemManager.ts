@@ -41,7 +41,7 @@ export class EntitySystemManager {
      * @param componentMask - componentBitmask for the System
      * @param silent - if true the ECS wont be notified that a System got added to the ECS
      */
-    add<T extends System>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent: boolean=false): T {
+    add<T extends System>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent=false): T {
         if(!this.has(system)) {
             injectSystem(system, this.systemUpdateMethods);
             this.systems[system.id] = system;
@@ -81,7 +81,7 @@ export class EntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    remove(system: System,silent: boolean=false): boolean{
+    remove(system: System,silent=false): boolean{
         if(this.has(system)) {
             if(!silent){
                 this._events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
@@ -109,7 +109,7 @@ export class EntitySystemManager {
      * @returns {undefined|Map<string, Entity>}
      */
     getEntitiesOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): Entity[]{
-        let system = this.get(constructor);
+        const system = this.get(constructor);
         if(system){
             return system.entities;
         }
@@ -117,7 +117,7 @@ export class EntitySystemManager {
     }
 
     getComponentMaskOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): number{
-        let system = this.get(constructor);
+        const system = this.get(constructor);
         if(system){
             return system.bitmask;
         }

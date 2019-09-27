@@ -38,7 +38,7 @@ export class ECS {
         return Injector.instance;
     }
 
-    static noop(){}
+    static noop() {}
 
     /**
      * create an entity

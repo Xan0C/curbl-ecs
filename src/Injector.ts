@@ -5,7 +5,7 @@ export class Injector {
 
     private static _instance: Injector;
 
-    private constructor(){}
+    private constructor() {}
 
     public static get instance(): Injector{
         if(Injector._instance){
@@ -24,6 +24,7 @@ export class Injector {
         return function(constructor: {new(...args): any}){
             const wrapper = function (...args) {
                 // @ts-ignore
+                //eslint-disable-next-line
                 return new (constructor.bind.apply(constructor, [void 0].concat(args)))();
             };
 
@@ -43,17 +44,17 @@ export class Injector {
     }
 
     public static inject<T>(object: object, properties: {[key: string]: () => any}, prototype: {[key: string]: () => (...args) => any}, decorators: {[key: string]: (T) => void}): T {
-        for(let propKey in properties){
+        for(const propKey in properties){
             if(object[propKey] === undefined || object[propKey] === null){
                 object[propKey] = properties[propKey]();
             }
         }
-        for(let propKey in decorators){
+        for(const propKey in decorators){
             if(object[propKey] === undefined || object[propKey] === null){
                 decorators[propKey](object);
             }
         }
-        for(let protoKey in prototype){
+        for(const protoKey in prototype){
             if(object.constructor && object.constructor.prototype){
                 if(object.constructor.prototype[protoKey] === undefined || object.constructor.prototype[protoKey] === null){
                     object.constructor.prototype[protoKey] = prototype[protoKey]();

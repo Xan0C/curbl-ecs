@@ -54,7 +54,7 @@ export class EntityComponentManager {
      * @param silent - dispatch the entityAdded signal(If added silent the entity wont be added to an system)
      * @param silentWorker - do not dispatch entity added worker - used to manage shared entities between WebWorkers
      */
-    addEntity<T extends object>(entity: T, components?: {[x: string]: Component}, silent: boolean=false, silentWorker: boolean=false): T & Entity {
+    addEntity<T extends object>(entity: T, components?: {[x: string]: Component}, silent=false, silentWorker=false): T & Entity {
         const injectedEntity = injectEntity(entity);
         this._entities[injectedEntity.id] = injectedEntity;
         injectedEntity.components = components || injectedEntity.components || Object.create(null);
@@ -139,7 +139,7 @@ export class EntityComponentManager {
      * @param silentWorker - do not dispatch WorkerEvent
      * @returns {Entity} - the removed Entity
      */
-    removeEntity<T extends EntityProp>(entity: T,silent: boolean=false, silentWorker?: boolean): T {
+    removeEntity<T extends EntityProp>(entity: T,silent=false, silentWorker?: boolean): T {
         if(this.hasEntity(entity)){
             if (!silent) {
                 this._events.emit(ECM_EVENTS.ENTITY_REMOVED, entity);
@@ -181,7 +181,7 @@ export class EntityComponentManager {
      * @param silent - If true this onComponentAdded signal is not dispatched and no system is updated
      * @param silentWorker - if true no worker signal is dispatched
      */
-    addComponent<T extends object>(entity: EntityProp, component: T, silent: boolean=false, silentWorker?: boolean): void {
+    addComponent<T extends object>(entity: EntityProp, component: T, silent=false, silentWorker?: boolean): void {
         const injectedComponent = injectComponent(component);
         entity.components[injectedComponent.id] = injectedComponent;
         entity.bitmask = entity.bitmask | this.componentBitmask.get(injectedComponent.id);
@@ -201,7 +201,7 @@ export class EntityComponentManager {
      * @param silentWorker
      * @returns {boolean}
      */
-    removeComponent<T extends Component>(entity: EntityProp, component: {new(...args): T} | string, silent: boolean=false, silentWorker?: boolean): boolean{
+    removeComponent<T extends Component>(entity: EntityProp, component: {new(...args): T} | string, silent=false, silentWorker?: boolean): boolean{
         let comp: Component;
         if(typeof component === 'string') {
             comp = entity.components[component];

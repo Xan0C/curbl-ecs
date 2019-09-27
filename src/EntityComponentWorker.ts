@@ -84,7 +84,7 @@ export class EntityComponentWorker extends ECSBase {
     }
 
     private onSystemAdded(system: System){
-        for(let id in this.ecm.entities){
+        for(const id in this.ecm.entities){
             this.scm.updateEntity(this.ecm.entities[id], system);
         }
 
