@@ -6,7 +6,12 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "declaration": false,
-    "outDir": "../dist"
+    "outDir": "../dist",
+
+    "lib": [
+      "dom",
+      "es2015"
+    ]
   },
   "include": [
     "**/*.ts"
