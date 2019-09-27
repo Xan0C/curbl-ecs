@@ -1,8 +1,7 @@
 # CURBL-ECS
 
-curbl-ecs is a Entity Component System written in Typescript.
- - Its using Decorators to simply add Component, Entities and Systems.
- - eventemitter3 for event handling
+curbl-ecs is an lightweight Entity Component System using decorator magic for Components, Entities and Systems.
+There is also a simple web worker support.
 
 ## Example
 
@@ -29,9 +28,12 @@ class PositionComponent {
 @ECS.Entity(
     { component: PositionComponent, config: { x:12, y:12 }}
 )
-class Entity implements IEntity {
-   readonly id: string;
-}
+class PositionEntity {}
+```
+
+* Adding a Entity with predefined Components
+```javascript
+const entity = ECS.addEntity(new PositionEntity());
 ```
 
 * Create entity and add Component
@@ -65,9 +67,27 @@ export class MySystem {
      }
      
      update(): void{
-         for(let i = 0, entity: IEntity; entity = this.entities[i]; i++){
+         for(let i = 0, entity: Entity; entity = this.entities[i]; i++){
              //Do stuff with the entities
          }
      }
 }
+```
+* Using Web Workers by adding the WebWorker to the main-thread.
+All Entities are automatically shared between all workers.
+```javascript
+@ECS.Entity(
+    {component: PositionComponent, config: {x: 1, y: 2, z: 4}}
+)
+class PositionEntity {}
+
+ECS.addEntity(new PositionEntity());
+
+const readWorker = new ReadWorker();
+ECS.addWorker(readWorker);
+
+const writeWorker = new WriteWorker();
+ECS.addWorker(writeWorker);
+
+ECS.update();
 ```

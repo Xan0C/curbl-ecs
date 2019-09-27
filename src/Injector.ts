@@ -20,9 +20,13 @@ export class Injector {
      * @returns {(target: Object, propKey: (number | string)) => void}
      * @constructor
      */
-    public System<T extends System>(systems: {[id: string]: {new(...args): T}}): (constructor: { new(...args): any }) => any{
+    public System<T extends System>(systems: {[id: string]: {new(...args): T}}): (constructor: { new(...args): any }) => any {
         return function(constructor: {new(...args): any}){
-            const wrapper = function (...args) { return new (constructor.bind.apply(constructor, [void 0].concat(args)))(); };
+            const wrapper = function (...args) {
+                // @ts-ignore
+                return new (constructor.bind.apply(constructor, [void 0].concat(args)))();
+            };
+
             const DecoratorInjector: any = function(...args){
                 const object = wrapper.apply(this,args);
                 ECS.setPrototypeOf(object,Object.getPrototypeOf(this));
@@ -32,6 +36,7 @@ export class Injector {
                 }
                 return object;
             };
+
             DecoratorInjector.prototype = constructor.prototype;
             return DecoratorInjector;
         }
@@ -76,4 +81,5 @@ export class Injector {
             }
         }
     }
+
 }

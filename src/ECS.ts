@@ -1,4 +1,4 @@
-import { EntityDecoratorComponent, Entity, EntityHandle } from './EntityHandle';
+import { EntityHandle } from './EntityHandle';
 import {Component} from './Component';
 import {System} from './System';
 import {Injector} from './Injector';
@@ -6,6 +6,7 @@ import * as EventEmitter from 'eventemitter3';
 import {EntityComponentWorker} from "./EntityComponentWorker";
 import {EntityComponentSystem} from "./EntityComponentSystem";
 import {ECSBase} from "./ECSBase";
+import { Entity, EntityDecoratorComponent } from './Entity';
 
 export class ECS {
     private static _instance: ECSBase;
@@ -194,7 +195,7 @@ export class ECS {
         }
     }
 
-    static Entity<T extends object>(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): T }) => any)&((target: Record<string, any>, propKey: number | string) => void)  {
+    static Entity<T extends object>(...components: EntityDecoratorComponent[]): ((constructor: { new(...args): T }) => any)  {
         return function(constructor: {new(...args): T}){
             Object.defineProperty(constructor.prototype, "components", {
                 get: function() {

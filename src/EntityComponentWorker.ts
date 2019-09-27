@@ -1,9 +1,10 @@
 import {EntityMap} from "./EntityComponentManager";
-import { BitmaskMap, Component, injectComponent } from './Component';
+import { Component, injectComponent } from './Component';
 import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {EntityProp, Entity} from "./EntityHandle";
 import {ECSBase} from "./ECSBase";
 import { System } from './System';
+import { Entity, EntityProp } from './Entity';
+import { BitmaskMap } from './ComponentBitmaskMap';
 
 interface ECSMessageEvent extends MessageEvent {
     data: {
@@ -118,7 +119,7 @@ export class EntityComponentWorker extends ECSBase {
     }
 
     private static injectComponents(entity: EntityProp): void {
-        const components = entity._components || entity.components;
+        const components = entity.components || entity['_components'];
         const keys = Object.keys(components);
         for (let i = 0, component: Component; component = components[keys[i]]; i++) {
             injectComponent(component);
@@ -135,7 +136,7 @@ export class EntityComponentWorker extends ECSBase {
                 break;
             case ECM_WORKER_EVENTS.ENTITY_ADDED:
                 EntityComponentWorker.injectComponents(ev.data.entity);
-                this.ecm.addEntity(ev.data.entity, ev.data.entity._components || ev.data.entity.components, false, true);
+                this.ecm.addEntity(ev.data.entity, ev.data.entity.components || ev.data.entity['_components'], false, true);
                 break;
             case ECM_WORKER_EVENTS.ENTITY_REMOVED:
                 EntityComponentWorker.injectComponents(ev.data.entity);
@@ -173,7 +174,7 @@ export class EntityComponentWorker extends ECSBase {
     private addEntitiesForSystem(entities: EntityProp[]): void {
         for(let i=0, entity: EntityProp; entity = entities[i]; i++) {
             EntityComponentWorker.injectComponents(entity);
-            this.ecm.addEntity(entity, entity._components || entity.components, false, true);
+            this.ecm.addEntity(entity, entity.components || entity['_components'], false, true);
         }
     }
 

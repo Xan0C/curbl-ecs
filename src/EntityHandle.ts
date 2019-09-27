@@ -1,34 +1,36 @@
 import { Component } from './Component';
 import { ECS } from './ECS';
 import { Injector } from './Injector';
+import { Entity } from './Entity';
 
 export interface ComponentMap {[component: string]: Component}
-
-export interface EntityProp {
-    id: string;
-    _components?: ComponentMap;
-    components?: ComponentMap;
-    bitmask: number;
-}
-
-export interface EntityDecoratorComponent {
-    component: { new(config?: {[x: string]: any}): any };
-    config?: { [x: string]: any };
-}
-
-export interface Entity extends EntityProp {
-    get<T extends object>(comp: {new(...args): T }|string): T;
-    getAll(): {[id: string]: Component};
-    has<T extends object>(comp: {new(...args): T | Component | object}|string): boolean;
-    add<T extends object>(component: T | Component | object): void;
-    remove<T extends object>(component: {new(...args): T | Component | object}|string): boolean;
-    dispose(): this;
-}
 
 const ENTITY_PROPERTIES = {
     id:()=>{return ECS.uuid();},
     components:function () {return this._components || Object.create(null);},
     bitmask:()=>{return 0;}
+};
+
+const ENTITY_PROPERTY_DECORATOR = {
+    components: (entity) => {
+        Object.defineProperty(entity, "components", {
+            get: function() {
+                return this._components;
+            },
+            set: function(components) {
+                this._components = components;
+            }
+        })
+    }
+};
+
+const ENTITY_PROTOTYPE = {
+    get:()=>{return EntityHandle.prototype.get;},
+    getAll:()=>{return EntityHandle.prototype.getAll;},
+    has:()=>{return EntityHandle.prototype.has;},
+    add:()=>{return EntityHandle.prototype.add;},
+    remove:()=>{return EntityHandle.prototype.remove;},
+    dispose:()=>{return EntityHandle.prototype.dispose;},
 };
 
 export class EntityHandle implements Entity {
@@ -73,28 +75,6 @@ export class EntityHandle implements Entity {
         return ECS.removeEntity(this);
     }
 }
-
-const ENTITY_PROTOTYPE = {
-    get:()=>{return EntityHandle.prototype.get;},
-    getAll:()=>{return EntityHandle.prototype.getAll;},
-    has:()=>{return EntityHandle.prototype.has;},
-    add:()=>{return EntityHandle.prototype.add;},
-    remove:()=>{return EntityHandle.prototype.remove;},
-    dispose:()=>{return EntityHandle.prototype.dispose;},
-};
-
-export const ENTITY_PROPERTY_DECORATOR = {
-    components: (entity) => {
-        Object.defineProperty(entity, "components", {
-            get: function() {
-                return this._components;
-            },
-            set: function(components) {
-                this._components = components;
-            }
-        })
-    }
-};
 
 export function injectEntity<T extends object>(entity: T): T & Entity {
     return Injector.inject(entity, ENTITY_PROPERTIES, ENTITY_PROTOTYPE, ENTITY_PROPERTY_DECORATOR);

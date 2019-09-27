@@ -1,9 +1,10 @@
 import {ECSBase} from "./ECSBase";
 import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {ComponentMap, EntityProp, Entity} from "./EntityHandle";
+import {ComponentMap} from "./EntityHandle";
 import {Component, injectComponent} from "./Component";
 import {EntityMap} from "./EntityComponentManager";
 import { System } from './System';
+import { Entity, EntityProp } from './Entity';
 
 export class EntityComponentSystem extends ECSBase {
 

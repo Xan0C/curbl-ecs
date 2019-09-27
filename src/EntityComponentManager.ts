@@ -1,8 +1,10 @@
-import {ComponentBitmaskMap, Component, injectComponent} from "./Component";
-import { Entity, EntityHandle, EntityProp, injectEntity } from './EntityHandle';
+import { Component, injectComponent } from "./Component";
+import { EntityHandle, injectEntity } from './EntityHandle';
 import {UUIDGenerator} from "./UUIDGenerator";
 import * as EventEmitter from "eventemitter3";
 import {ECM_EVENTS, ECM_WORKER_EVENTS} from "./Events";
+import { Entity, EntityProp } from './Entity';
+import { ComponentBitmaskMap } from './ComponentBitmaskMap';
 
 export interface EntityMap {[id: string]: EntityProp}
 /**

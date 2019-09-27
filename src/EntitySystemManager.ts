@@ -1,8 +1,9 @@
 import { injectSystem, System } from './System';
-import { Entity, EntityHandle, EntityProp } from './EntityHandle';
-import {ComponentBitmaskMap} from "./Component";
+import { EntityHandle } from './EntityHandle';
 import * as EventEmitter from "eventemitter3";
 import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
+import { ComponentBitmaskMap } from './ComponentBitmaskMap';
+import { Entity, EntityProp } from './Entity';
 
 export class EntitySystemManager {
     private componentBitmask: ComponentBitmaskMap;

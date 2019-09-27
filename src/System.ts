@@ -1,4 +1,4 @@
-import { Entity, EntityProp } from './EntityHandle';
+import { Entity, EntityProp } from './Entity';
 import {ECS} from "./ECS";
 import * as EventEmitter from "eventemitter3";
 import { Injector } from './Injector';

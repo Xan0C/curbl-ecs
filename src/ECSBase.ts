@@ -1,6 +1,6 @@
 import {EntityComponentManager} from "./EntityComponentManager";
 import {EntitySystemManager} from "./EntitySystemManager";
-import {ComponentBitmaskMap} from "./Component";
+import { ComponentBitmaskMap } from './ComponentBitmaskMap';
 import * as EventEmitter from "eventemitter3";
 
 export abstract class ECSBase {
