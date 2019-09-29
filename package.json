@@ -1,5 +1,5 @@
 {
-  "name": "curbl-ecs",
+  "name": "@curbl/ecs",
   "version": "2.1.1",
   "description": "Small Entity Component System",
   "main": "./lib/index.js",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Xan0C/curbl-ecs"
+    "url": "git+https://github.com/Xan0C/curbl-ecs.git"
   },
   "keywords": [
     "ts",
@@ -45,5 +45,14 @@
   },
   "dependencies": {
     "eventemitter3": "^4.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/Xan0C/curbl-ecs/issues"
+  },
+  "homepage": "https://github.com/Xan0C/curbl-ecs#readme",
+  "directories": {
+    "example": "example",
+    "lib": "lib",
+    "test": "test"
   }
 }
