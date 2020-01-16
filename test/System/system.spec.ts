@@ -1,9 +1,8 @@
 import { ECS, Component, Entity, System } from '../../src';
-import {expect} from "chai";
+import { expect } from 'chai';
 
 @ECS.Component()
 export class PositionComponent implements Component {
-
     public x;
     public y;
 
@@ -16,8 +15,7 @@ export class PositionComponent implements Component {
         this.y = config.y;
     }
 
-    remove(): void {
-    }
+    remove(): void {}
 }
 
 @ECS.System(PositionComponent)
@@ -33,7 +31,7 @@ class TestSystem extends System {
     }
 
     update(): void {
-        for (let i = 0, entity; entity = this.entities[i]; i++) {
+        for (let i = 0, entity; (entity = this.entities[i]); i++) {
             entity.get(PositionComponent).x = 42;
             entity.get(PositionComponent).y = 42;
         }
@@ -45,7 +43,7 @@ class SystemTwo extends System {
     entities: Entity[];
 
     update(): void {
-        for (let i = 0, entity; entity = this.entities[i]; i++) {
+        for (let i = 0, entity; (entity = this.entities[i]); i++) {
             entity.get(PositionComponent).x = 12;
             entity.get(PositionComponent).y = 12;
         }
@@ -56,8 +54,7 @@ class SystemTwo extends System {
 class EmptySystem extends System {
     entities: Entity[];
 
-    update(): void {
-    }
+    update(): void {}
 }
 
 @ECS.System()
@@ -84,12 +81,12 @@ class SetupAndTearDownSystem extends System {
     }
 }
 
-describe('SystemDecorator', function () {
+describe('SystemDecorator', function() {
     let system: System;
     this.timeout(0);
 
     beforeEach(() => {
-        system = ECS.addSystem(new TestSystem({x: 42, y: 12}));
+        system = ECS.addSystem(new TestSystem({ x: 42, y: 12 }));
     });
 
     afterEach(() => {
@@ -127,8 +124,8 @@ describe('SystemDecorator', function () {
 
     describe('#has', () => {
         it('Checks if the Entity is in the system', () => {
-            let entity = ECS.createEntity();
-            entity.add(new PositionComponent({x: 0, y: 0}));
+            const entity = ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
             expect(system.has(entity)).to.equal(false);
             ECS.addEntity(entity);
             expect(system.has(entity)).to.equal(true);
@@ -137,8 +134,8 @@ describe('SystemDecorator', function () {
 
     describe('#remove', () => {
         it('Removes an Entity from ECS and from all systems', () => {
-            let entity = ECS.createEntity();
-            entity.add(new PositionComponent({x: 0, y: 0}));
+            const entity = ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
             expect(system.has(entity)).to.equal(false);
             ECS.addEntity(entity);
             expect(system.has(entity)).to.equal(true);
@@ -147,10 +144,10 @@ describe('SystemDecorator', function () {
         });
 
         it('Removes an Entity from the System but not from the ECS', () => {
-            let scdSystem: System = new SystemTwo();
+            const scdSystem: System = new SystemTwo();
             ECS.addSystem(scdSystem);
-            let entity = ECS.createEntity();
-            entity.add(new PositionComponent({x: 0, y: 0}));
+            const entity = ECS.createEntity();
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
             expect(system.has(entity)).to.equal(false);
             expect(scdSystem.has(entity)).to.equal(false);
             ECS.addEntity(entity);
@@ -175,7 +172,7 @@ describe('SystemDecorator', function () {
         it('Add a System without a component mask and checks that no entity is added to the System', () => {
             const system = ECS.addSystem(new EmptySystem());
             const entity = ECS.createEntity();
-            entity.add(new PositionComponent({x: 0, y: 0}));
+            entity.add(new PositionComponent({ x: 0, y: 0 }));
             ECS.addEntity(entity);
             expect(system.entities.indexOf(entity)).to.equal(-1);
         });
@@ -184,8 +181,8 @@ describe('SystemDecorator', function () {
     describe('#ArgumentsUpdate', () => {
         it('Adds parameter arguments to the systems/ecs update function', () => {
             const system = ECS.addSystem(new ArgumentSystem());
-            ECS.update("ArgumentSystemTest");
-            expect(system.name).to.equal("ArgumentSystemTest");
+            ECS.update('ArgumentSystemTest');
+            expect(system.name).to.equal('ArgumentSystemTest');
         });
-    })
+    });
 });

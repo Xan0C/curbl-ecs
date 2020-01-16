@@ -1,20 +1,19 @@
-import {expect} from "chai";
+import { expect } from 'chai';
 import { ECS, Component, Entity } from '../../src';
 
 @ECS.Component()
 class NameComponent implements Component {
     public name: string;
 
-    constructor(config: { name: string } = {name: ""}) {
+    constructor(config: { name: string } = { name: '' }) {
         this.init(config);
     }
 
-    init(config: { name: string } = {name: ""}): void {
+    init(config: { name: string } = { name: '' }): void {
         this.name = config.name;
     }
 
-    remove(): void {
-    }
+    remove(): void {}
 }
 
 @ECS.Component()
@@ -22,26 +21,21 @@ class PositionComponent implements Component {
     public x;
     public y;
 
-    constructor(config: { x: number; y: number } = {x: 0, y: 0}) {
+    constructor(config: { x: number; y: number } = { x: 0, y: 0 }) {
         this.x = config.x;
         this.y = config.y;
     }
 
-    init(config: { x: number; y: number } = {x: 0, y: 0}): void {
+    init(config: { x: number; y: number } = { x: 0, y: 0 }): void {
         this.x = config.x;
         this.y = config.y;
     }
 
-    remove(): void {
-    }
-
+    remove(): void {}
 }
 
-@ECS.Entity(
-    {component: NameComponent, config: {name: "EntityTest"}}
-)
+@ECS.Entity({ component: NameComponent, config: { name: 'EntityTest' } })
 class TestEntity {
-
     public x;
     public y;
 
@@ -51,12 +45,12 @@ class TestEntity {
     }
 }
 
-describe('EntityDecorator', function () {
+describe('EntityDecorator', function() {
     let entity: Entity;
     this.timeout(0);
 
     beforeEach(() => {
-        entity = ECS.addEntity(new TestEntity({x: 42, y: 12}));
+        entity = ECS.addEntity(new TestEntity({ x: 42, y: 12 }));
     });
 
     afterEach(() => {
@@ -65,24 +59,24 @@ describe('EntityDecorator', function () {
 
     describe('#id', () => {
         it('Checks that the entity constructor is properly called', () => {
-            expect(entity["x"]).to.equal(42, 'Expected entity.x to equal 42');
-            expect(entity["y"]).to.equal(12, 'Expected entity.y to equal 12');
+            expect(entity['x']).to.equal(42, 'Expected entity.x to equal 42');
+            expect(entity['y']).to.equal(12, 'Expected entity.y to equal 12');
         });
     });
 
     describe('#add', () => {
         it('Adds a PositionComponent to the Entity', () => {
             expect(entity.has(PositionComponent)).to.equal(false);
-            let comp = new PositionComponent({x: 42, y: 12});
+            const comp = new PositionComponent({ x: 42, y: 12 });
             entity.add(comp);
             expect(entity.has(PositionComponent)).to.equal(true);
-        })
+        });
     });
 
     describe('#get', () => {
         it('Adds PositionComponent and expects it to get returned by the get method', () => {
             expect(entity.get(PositionComponent)).to.equal(undefined);
-            let comp = new PositionComponent({x: 42, y: 12});
+            const comp = new PositionComponent({ x: 42, y: 12 });
             entity.add(comp);
             expect(entity.get(PositionComponent)).to.equal(comp);
         });
@@ -90,7 +84,7 @@ describe('EntityDecorator', function () {
 
     describe('#has', () => {
         it('Adds PositionComponent and expects it has to return true', () => {
-            let comp = new PositionComponent({x: 42, y: 12});
+            const comp = new PositionComponent({ x: 42, y: 12 });
             entity.add(comp);
             expect(entity.has(PositionComponent)).to.equal(true);
         });
@@ -98,7 +92,7 @@ describe('EntityDecorator', function () {
 
     describe('#remove', () => {
         it('Adds Position component and call remove to be true', () => {
-            let comp = new PositionComponent({x: 42, y: 12});
+            const comp = new PositionComponent({ x: 42, y: 12 });
             entity.add(comp);
             expect(entity.remove(PositionComponent)).to.equal(true);
             expect(entity.has(PositionComponent)).to.equal(false);
@@ -114,7 +108,7 @@ describe('EntityDecorator', function () {
         });
 
         it('Removes all entities from the ecs, but the entities keep all components', () => {
-            const sEntity = ECS.addEntity(new TestEntity({x: 12, y: 69}));
+            const sEntity = ECS.addEntity(new TestEntity({ x: 12, y: 69 }));
             expect(entity.has(NameComponent)).to.equal(true);
             expect(sEntity.has(NameComponent)).to.equal(true);
             expect(ECS.hasEntity(entity)).to.equal(true);
@@ -131,7 +125,7 @@ describe('EntityDecorator', function () {
         it('get entities with the specified components', () => {
             expect(ECS.hasEntity(entity)).to.equal(true);
             entity.add(new PositionComponent());
-            const sEntity = new TestEntity({x: 21, y: 12});
+            const sEntity = new TestEntity({ x: 21, y: 12 });
             ECS.addEntity(sEntity);
             const nameAndPosEntities = ECS.getEntities(PositionComponent, NameComponent);
             expect(nameAndPosEntities.length).to.equal(1);

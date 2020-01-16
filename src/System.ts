@@ -1,20 +1,26 @@
 import { Entity, EntityProp } from './Entity';
-import {ECS} from "./ECS";
-import * as EventEmitter from "eventemitter3";
+import { ECS } from './ECS';
+import * as EventEmitter from 'eventemitter3';
 import { Injector } from './Injector';
 
 export const SYSTEM_PROPERTIES = {
-    entityMap:()=>{return Object.create(null);},
-    entities:()=>{return [];},
-    events:()=>{return new EventEmitter();}
+    entityMap: () => {
+        return Object.create(null);
+    },
+    entities: () => {
+        return [];
+    },
+    events: () => {
+        return new EventEmitter();
+    },
 };
 
 export class System {
     id?: string; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
     bitmask?: number; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
 
-    readonly entityMap: {[id: string]: number};
-    readonly entities: Entity [];
+    readonly entityMap: { [id: string]: number };
+    readonly entities: Entity[];
     readonly events: EventEmitter;
 
     constructor() {
@@ -30,8 +36,8 @@ export class System {
         return !!this.entities[this.entityMap[entity.id]];
     }
 
-    remove(entity: Entity, fromECS=true): void {
-        if(fromECS) {
+    remove(entity: Entity, fromECS = true): void {
+        if (fromECS) {
             ECS.removeEntity(entity);
         }
         ECS.removeEntityFromSystem(entity, this);
@@ -43,16 +49,24 @@ export class System {
 }
 
 export const SYSTEM_PROTOTYPE = {
-    setUp:()=>{return ECS.noop;},
-    tearDown:()=>{return ECS.noop;},
-    has:()=>{return System.prototype.has;},
-    remove:()=>{return System.prototype.remove;},
-    dispose:()=>{return System.prototype.dispose}
+    setUp: () => {
+        return ECS.noop;
+    },
+    tearDown: () => {
+        return ECS.noop;
+    },
+    has: () => {
+        return System.prototype.has;
+    },
+    remove: () => {
+        return System.prototype.remove;
+    },
+    dispose: () => {
+        return System.prototype.dispose;
+    },
 };
 
-export const SYSTEM_PROPERTY_DECORATOR = {
-
-};
+export const SYSTEM_PROPERTY_DECORATOR = {};
 
 export function injectSystem<T extends object>(system: T, updateMethods: string[]): System & T {
     const injectedSystem = Injector.inject<T & System>(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);

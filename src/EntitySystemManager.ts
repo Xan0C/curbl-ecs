@@ -1,7 +1,7 @@
 import { injectSystem, System } from './System';
 import { EntityHandle } from './EntityHandle';
-import * as EventEmitter from "eventemitter3";
-import {ESM_EVENTS, SYSTEM_EVENTS} from "./Events";
+import * as EventEmitter from 'eventemitter3';
+import { ESM_EVENTS, SYSTEM_EVENTS } from './Events';
 import { ComponentBitmaskMap } from './ComponentBitmaskMap';
 import { Entity, EntityProp } from './Entity';
 
@@ -10,11 +10,11 @@ export class EntitySystemManager {
     private _events: EventEmitter;
 
     private ids: string[];
-    private systems: {[id: string]: System};
+    private systems: { [id: string]: System };
 
     private _systemUpdateMethods: string[];
 
-    constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter){
+    constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter) {
         this._events = events;
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
@@ -27,8 +27,8 @@ export class EntitySystemManager {
      * @param system
      * @param componentMask
      */
-    updateBitmask(system: System, componentMask: {new(config?: {[x: string]: any}): any}[]=[]): System{
-        for(let i = 0, component; component = componentMask[i]; i++){
+    updateBitmask(system: System, componentMask: { new (config?: { [x: string]: any }): any }[] = []): System {
+        for (let i = 0, component; (component = componentMask[i]); i++) {
             system.bitmask = system.bitmask | this.componentBitmask.get(component);
         }
         return system;
@@ -41,18 +41,18 @@ export class EntitySystemManager {
      * @param componentMask - componentBitmask for the System
      * @param silent - if true the ECS wont be notified that a System got added to the ECS
      */
-    add<T extends System>(system: T, componentMask: {new(config?: {[x: string]: any}): any}[]=[] ,silent=false): T {
-        if(!this.has(system)) {
+    add<T extends System>(system: T, componentMask: { new (config?: { [x: string]: any }): any }[] = [], silent = false): T {
+        if (!this.has(system)) {
             injectSystem(system, this.systemUpdateMethods);
             this.systems[system.id] = system;
             this.ids.push(system.id);
             this.updateBitmask(system, componentMask);
             system.setUp();
-            if(!silent){
-                this._events.emit(ESM_EVENTS.SYSTEM_ADDED,system);
+            if (!silent) {
+                this._events.emit(ESM_EVENTS.SYSTEM_ADDED, system);
             }
-        }else{
-            console.warn('System '+system+' already exists! And can only exists ones');
+        } else {
+            console.warn('System ' + system + ' already exists! And can only exists ones');
         }
         return system;
     }
@@ -71,7 +71,7 @@ export class EntitySystemManager {
      * @param constructor
      * @returns {boolean}
      */
-    hasOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): boolean{
+    hasOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): boolean {
         return !!this.systems[constructor.prototype.constructor.name];
     }
 
@@ -81,13 +81,13 @@ export class EntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    remove(system: System,silent=false): boolean{
-        if(this.has(system)) {
-            if(!silent){
+    remove(system: System, silent = false): boolean {
+        if (this.has(system)) {
+            if (!silent) {
                 this._events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
             }
             system.tearDown();
-            this.ids.splice(this.ids.indexOf(system.id),1);
+            this.ids.splice(this.ids.indexOf(system.id), 1);
             return delete this.systems[system.id];
         }
         return false;
@@ -99,7 +99,7 @@ export class EntitySystemManager {
      * @param silent
      * @returns {boolean}
      */
-    removeOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}, silent?: boolean): boolean{
+    removeOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }, silent?: boolean): boolean {
         return this.remove(this.get(constructor), silent);
     }
 
@@ -108,23 +108,23 @@ export class EntitySystemManager {
      * @param constructor
      * @returns {undefined|Map<string, Entity>}
      */
-    getEntitiesOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): Entity[]{
+    getEntitiesOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): Entity[] {
         const system = this.get(constructor);
-        if(system){
+        if (system) {
             return system.entities;
         }
         return undefined;
     }
 
-    getComponentMaskOf<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): number{
+    getComponentMaskOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): number {
         const system = this.get(constructor);
-        if(system){
+        if (system) {
             return system.bitmask;
         }
         return undefined;
     }
 
-    get<T extends System>(constructor: {new(config?: {[x: string]: any}): T}): T{
+    get<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): T {
         return this.systems[constructor.prototype.constructor.name] as T;
     }
 
@@ -133,16 +133,16 @@ export class EntitySystemManager {
      * @param entity
      * @param system - optional system to add the entity to
      */
-    addEntity(entity: EntityProp, system?: System): void{
-        if(system){
-            if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
+    addEntity(entity: EntityProp, system?: System): void {
+        if (system) {
+            if (system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask) {
                 system.entityMap[entity.id] = system.entities.push(entity as EntityHandle) - 1;
                 system.events.emit(SYSTEM_EVENTS.ENTITY_ADDED, entity);
             }
-        }else{
+        } else {
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system: System; system = systems[ids[i]]; i++){
+            for (let i = 0, system: System; (system = systems[ids[i]]); i++) {
                 this.addEntity(entity, system);
             }
         }
@@ -153,18 +153,18 @@ export class EntitySystemManager {
      * @param entity
      * @param system
      */
-    removeEntity(entity: EntityProp, system?: System): void{
-        if(system) {
+    removeEntity(entity: EntityProp, system?: System): void {
+        if (system) {
             const idx = system.entityMap[entity.id];
             if (idx >= 0) {
                 system.entities.splice(idx, 1);
                 delete system.entityMap[entity.id];
             }
             system.events.emit(SYSTEM_EVENTS.ENTITY_REMOVED, entity);
-        }else{
+        } else {
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system: System; system = systems[ids[i]]; i++){
+            for (let i = 0, system: System; (system = systems[ids[i]]); i++) {
                 this.removeEntity(entity, system);
             }
         }
@@ -175,28 +175,28 @@ export class EntitySystemManager {
      * @param entity
      * @param system - optional only update for for the given system(ether add or remove the entity from the system)
      */
-    updateEntity(entity: EntityProp, system?: System): void{
-        if(system){
-            this.addEntityToSystem(system,entity);
-        }else {
+    updateEntity(entity: EntityProp, system?: System): void {
+        if (system) {
+            this.addEntityToSystem(system, entity);
+        } else {
             const ids = this.ids;
             const systems = this.systems;
-            for(let i=0, system; system = systems[ids[i]]; i++){
+            for (let i = 0, system; (system = systems[ids[i]]); i++) {
                 this.addEntityToSystem(system, entity);
             }
         }
     }
 
     private updateSystemEntity(entity: EntityProp, system: System): void {
-        if(system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask){
+        if (system.bitmask !== 0 && (entity.bitmask & system.bitmask) === system.bitmask) {
             const idx = system.entityMap[entity.id];
             system.entities[idx] = entity as Entity;
         }
     }
 
-    private addEntityToSystem(system: System,entity: EntityProp): void{
+    private addEntityToSystem(system: System, entity: EntityProp): void {
         if ((entity.bitmask & system.bitmask) === system.bitmask) {
-            if(!system.has(entity)) {
+            if (!system.has(entity)) {
                 this.addEntity(entity, system);
             } else {
                 this.updateSystemEntity(entity, system);
@@ -209,32 +209,32 @@ export class EntitySystemManager {
     /**
      * Calls the Method for all Systems and Subsystems
      */
-    callSystemMethod(id: string,a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any) {
+    callSystemMethod(id: string, a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any) {
         const ids = this.ids;
         const systems = this.systems;
-        for(let i=0, system; system = systems[ids[i]]; i++){
-            system[id](a1,a2,a3,a4,a5,a6,a7,a8,a9);
+        for (let i = 0, system; (system = systems[ids[i]]); i++) {
+            system[id](a1, a2, a3, a4, a5, a6, a7, a8, a9);
         }
     }
 
     /**
      * Calls all system update methods for all system and child systems
      */
-    update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void {
-        for(let i = 0, method; method = this._systemUpdateMethods[i]; i++) {
-            this.callSystemMethod(method,a1,a2,a3,a4,a5,a6,a7,a8,a9);
+    update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        for (let i = 0, method; (method = this._systemUpdateMethods[i]); i++) {
+            this.callSystemMethod(method, a1, a2, a3, a4, a5, a6, a7, a8, a9);
         }
     }
 
     /**
      * Injects the SystemMethods into all systems if the methods does not exist a noop method will be added
      */
-    updateSystemMethods(): void{
+    updateSystemMethods(): void {
         const ids = this.ids;
         const systems = this.systems;
         const methods = this.systemUpdateMethods;
-        for(let i=0, system; system = systems[ids[i]]; i++){
-            injectSystem(system,methods);
+        for (let i = 0, system; (system = systems[ids[i]]); i++) {
+            injectSystem(system, methods);
         }
     }
 

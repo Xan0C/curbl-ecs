@@ -1,8 +1,7 @@
-/.idea
+.idea
 *.iml
-/node_modules
-/lib
-/dist
+node_modules
+dist
+lib
 coverage
 npm-debug.log
-example

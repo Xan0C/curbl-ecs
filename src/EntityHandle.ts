@@ -3,72 +3,91 @@ import { ECS } from './ECS';
 import { Injector } from './Injector';
 import { Entity } from './Entity';
 
-export interface ComponentMap {[component: string]: Component}
+export interface ComponentMap {
+    [component: string]: Component;
+}
 
 const ENTITY_PROPERTIES = {
-    id:()=>{return ECS.uuid();},
-    components:function () {return this._components || Object.create(null);},
-    bitmask:()=>{return 0;}
+    id: () => {
+        return ECS.uuid();
+    },
+    components: function() {
+        return this._components || Object.create(null);
+    },
+    bitmask: () => {
+        return 0;
+    },
 };
 
 const ENTITY_PROPERTY_DECORATOR = {
-    components: (entity) => {
-        Object.defineProperty(entity, "components", {
+    components: entity => {
+        Object.defineProperty(entity, 'components', {
             get: function() {
                 return this._components;
             },
             set: function(components) {
                 this._components = components;
-            }
-        })
-    }
+            },
+        });
+    },
 };
 
 const ENTITY_PROTOTYPE = {
-    get:()=>{return EntityHandle.prototype.get;},
-    getAll:()=>{return EntityHandle.prototype.getAll;},
-    has:()=>{return EntityHandle.prototype.has;},
-    add:()=>{return EntityHandle.prototype.add;},
-    remove:()=>{return EntityHandle.prototype.remove;},
-    dispose:()=>{return EntityHandle.prototype.dispose;},
+    get: () => {
+        return EntityHandle.prototype.get;
+    },
+    getAll: () => {
+        return EntityHandle.prototype.getAll;
+    },
+    has: () => {
+        return EntityHandle.prototype.has;
+    },
+    add: () => {
+        return EntityHandle.prototype.add;
+    },
+    remove: () => {
+        return EntityHandle.prototype.remove;
+    },
+    dispose: () => {
+        return EntityHandle.prototype.dispose;
+    },
 };
 
 export class EntityHandle implements Entity {
-
     readonly id: string;
-    readonly components: {[id: string]: Component};
+    readonly components: { [id: string]: Component };
     readonly bitmask: number;
 
-    constructor(uuid?: string){
+    constructor(uuid?: string) {
         this.id = uuid || ENTITY_PROPERTIES.id();
         this.components = ENTITY_PROPERTIES.components();
         this.bitmask = ENTITY_PROPERTIES.bitmask();
     }
 
-    getAll(): {[id: string]: Component}{
+    getAll(): { [id: string]: Component } {
         return this.components;
     }
 
-    get<T extends object>(component: { new(...args): T }|string): T {
-        if(typeof component === 'string') {
+    get<T extends object>(component: { new (...args): T } | string): T {
+        if (typeof component === 'string') {
             return this.components[component] as T;
         }
         return this.components[component.prototype.constructor.name] as T;
     }
 
-    has<T extends object>(component: { new(...args): T }|string): boolean {
-        if(typeof component === 'string'){
+    has<T extends object>(component: { new (...args): T } | string): boolean {
+        if (typeof component === 'string') {
             return !!this.components[component];
         }
         return !!this.components[component.prototype.constructor.name];
     }
 
-    add<T extends object>(component: T ): void{
-        return ECS.addComponent(this,component);
+    add<T extends object>(component: T): void {
+        return ECS.addComponent(this, component);
     }
 
-    remove<T extends object>(component: {new(...args): T}|string): boolean{
-        return ECS.removeComponent(this,component);
+    remove<T extends object>(component: { new (...args): T } | string): boolean {
+        return ECS.removeComponent(this, component);
     }
 
     dispose(): this {

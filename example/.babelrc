@@ -1,0 +1,12 @@
+{
+  "presets": [
+    "@babel/preset-env",
+    "@babel/typescript"
+  ],
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/proposal-class-properties", { "loose": true }],
+    ["@babel/plugin-transform-classes", { "loose": true }],
+    "@babel/plugin-transform-runtime"
+  ]
+}

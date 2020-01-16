@@ -1,9 +1,8 @@
-import {expect} from "chai";
+import { expect } from 'chai';
 import { ECS, Entity, System } from '../../src';
 
 @ECS.Component()
 export class PositionComponent {
-
     public x;
     public y;
 
@@ -16,8 +15,7 @@ export class PositionComponent {
         this.y = config.y;
     }
 
-    remove(): void {
-    }
+    remove(): void {}
 }
 
 @ECS.System(PositionComponent)
@@ -33,7 +31,7 @@ class TestSystem extends System {
     }
 
     update(): void {
-        for (let i = 0, entity; entity = this.entities[i]; i++) {
+        for (let i = 0, entity; (entity = this.entities[i]); i++) {
             entity.get(PositionComponent).x = 42;
             entity.get(PositionComponent).y = 42;
         }
@@ -41,23 +39,20 @@ class TestSystem extends System {
 }
 
 @ECS.Injector.System({
-    system: TestSystem
+    system: TestSystem,
 })
 class Injected {
-
     public system: System;
 
-    constructor() {
-
-    }
+    constructor() {}
 }
 
-describe('SystemDecorator', function () {
+describe('SystemDecorator', function() {
     let system: System;
     this.timeout(0);
 
     beforeEach(() => {
-        system = ECS.addSystem(new TestSystem({x: 42, y: 12}));
+        system = ECS.addSystem(new TestSystem({ x: 42, y: 12 }));
     });
 
     afterEach(() => {
@@ -66,7 +61,7 @@ describe('SystemDecorator', function () {
 
     describe('#inject', () => {
         it('#System#Checks that the system got injected as a property', () => {
-            let injected = new Injected();
+            const injected = new Injected();
             expect(injected.system).to.equal(ECS.getSystem(TestSystem));
         });
     });

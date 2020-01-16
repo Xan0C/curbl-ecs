@@ -8,9 +8,8 @@
   "scripts": {
     "build": "tsc",
     "test": "karma start",
-    "eslint:check": "eslint ./src/**/*.ts",
-    "eslint:fix": "eslint ./src/**/*.ts --fix",
-    "eslint:tests": "eslint ./test/**/*.ts --fix"
+    "eslint": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts",
+    "eslint:fix": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -28,20 +27,23 @@
   "author": "Sören Vullriede",
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.2.3",
+    "@types/chai": "^4.2.7",
     "@types/eventemitter3": "^2.0.2",
     "@types/mocha": "^5.2.7",
-    "@typescript-eslint/eslint-plugin": "^2.3.1",
-    "@typescript-eslint/parser": "^2.3.1",
+    "@typescript-eslint/eslint-plugin": "^2.16.0",
+    "@typescript-eslint/parser": "^2.16.0",
     "chai": "^4.2.0",
-    "eslint": "^6.4.0",
-    "karma": "^4.3.0",
+    "eslint": "^6.8.0",
+    "karma": "^4.4.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-mocha": "^1.3.0",
     "karma-typescript": "^4.1.1",
-    "mocha": "^6.2.0",
-    "typescript": "^3.6.3"
+    "mocha": "^7.0.0",
+    "typescript": "^3.7.4",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "prettier": "^1.19.1"
   },
   "dependencies": {
     "eventemitter3": "^4.0.0"

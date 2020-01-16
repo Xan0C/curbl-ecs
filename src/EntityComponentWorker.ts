@@ -1,7 +1,7 @@
-import {EntityMap} from "./EntityComponentManager";
+import { EntityMap } from './EntityComponentManager';
 import { Component, injectComponent } from './Component';
-import {ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS} from "./Events";
-import {ECSBase} from "./ECSBase";
+import { ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS } from './Events';
+import { ECSBase } from './ECSBase';
 import { System } from './System';
 import { Entity, EntityProp } from './Entity';
 import { BitmaskMap } from './ComponentBitmaskMap';
@@ -34,17 +34,17 @@ export class EntityComponentWorker extends ECSBase {
         this.events.on(ECM_WORKER_EVENTS.COMPONENT_ADDED, this.onComponentAddedToWorker.bind(this));
         this.events.on(ECM_WORKER_EVENTS.COMPONENT_REMOVED, this.onComponentRemovedFromWorker.bind(this));
 
-        self.addEventListener("message", (ev: ECSMessageEvent) => this.delegateWorkerEvents(ev));
+        self.addEventListener('message', (ev: ECSMessageEvent) => this.delegateWorkerEvents(ev));
     }
 
-    private onEntityAdded(entity: Entity){
+    private onEntityAdded(entity: Entity) {
         this.scm.updateEntity(entity);
     }
 
     private onEntityAddedToWorker(entity: Entity): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.ENTITY_ADDED,
-            entity: entity
+            entity: entity,
         });
     }
 
@@ -55,11 +55,11 @@ export class EntityComponentWorker extends ECSBase {
     private onEntityRemovedFromWorker(entity: Entity): void {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.ENTITY_REMOVED,
-            entity: entity
+            entity: entity,
         });
     }
 
-    private onComponentAdded(entity: Entity){
+    private onComponentAdded(entity: Entity) {
         this.scm.updateEntity(entity);
     }
 
@@ -67,7 +67,7 @@ export class EntityComponentWorker extends ECSBase {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.COMPONENT_ADDED,
             entity: entity,
-            component: component
+            component: component,
         });
     }
 
@@ -79,12 +79,12 @@ export class EntityComponentWorker extends ECSBase {
         this.sendEventToMaster({
             message: ECM_WORKER_EVENTS.COMPONENT_REMOVED,
             entity: entity,
-            component: component
+            component: component,
         });
     }
 
-    private onSystemAdded(system: System){
-        for(const id in this.ecm.entities){
+    private onSystemAdded(system: System) {
+        for (const id in this.ecm.entities) {
             this.scm.updateEntity(this.ecm.entities[id], system);
         }
 
@@ -97,7 +97,7 @@ export class EntityComponentWorker extends ECSBase {
 
     private onEntitiesUpdated(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
+        for (let i = 0, entity: EntityProp; (entity = entities[keys[i]]); i++) {
             this.scm.updateEntity(entity);
         }
     }
@@ -108,11 +108,11 @@ export class EntityComponentWorker extends ECSBase {
     }
 
     private triggerInit(ev: MessageEvent): void {
-        if(!this.initialized) {
+        if (!this.initialized) {
             this.componentBitmaskMap.set(ev.data.bitmaskMap);
             this.initialized = true;
 
-            if(this.initcb) {
+            if (this.initcb) {
                 this.initcb();
             }
         }
@@ -121,13 +121,13 @@ export class EntityComponentWorker extends ECSBase {
     private static injectComponents(entity: EntityProp): void {
         const components = entity.components || entity['_components'];
         const keys = Object.keys(components);
-        for (let i = 0, component: Component; component = components[keys[i]]; i++) {
+        for (let i = 0, component: Component; (component = components[keys[i]]); i++) {
             injectComponent(component);
         }
     }
 
     private delegateWorkerEvents(ev: ECSMessageEvent): void {
-        switch(ev.data.message) {
+        switch (ev.data.message) {
             case ECS_WORKER_EVENTS.INIT_WORKER:
                 this.triggerInit(ev);
                 break;
@@ -165,36 +165,36 @@ export class EntityComponentWorker extends ECSBase {
 
     private updateEntities(entities: EntityMap): void {
         const keys = Object.keys(entities);
-        for(let i=0, entity: EntityProp; entity = entities[keys[i]]; i++) {
+        for (let i = 0, entity: EntityProp; (entity = entities[keys[i]]); i++) {
             EntityComponentWorker.injectComponents(entity);
         }
         this.ecm.updateEntities(entities, false, true);
     }
 
     private addEntitiesForSystem(entities: EntityProp[]): void {
-        for(let i=0, entity: EntityProp; entity = entities[i]; i++) {
+        for (let i = 0, entity: EntityProp; (entity = entities[i]); i++) {
             EntityComponentWorker.injectComponents(entity);
             this.ecm.addEntity(entity, entity.components || entity['_components'], false, true);
         }
     }
 
     addWorker(): void {
-        throw "WebWorkers can only be added to the main thread";
+        throw 'WebWorkers can only be added to the main thread';
     }
 
-    update(a1?: any,a2?: any,a3?: any,a4?: any,a5?: any,a6?: any,a7?: any,a8?: any,a9?: any): void {
-        this.scm.update(a1,a2,a3,a4,a5,a6,a7,a8,a9);
+    update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        this.scm.update(a1, a2, a3, a4, a5, a6, a7, a8, a9);
 
         this.sendEventToMaster({
             message: ECS_WORKER_EVENTS.UPDATE_WORKER,
-            entities: this.ecm.entities
+            entities: this.ecm.entities,
         });
     }
 
     init(cb: () => void): void {
         this.initcb = cb;
         this.sendEventToMaster({
-            message: ECS_WORKER_EVENTS.INIT_WORKER
+            message: ECS_WORKER_EVENTS.INIT_WORKER,
         });
     }
 }
