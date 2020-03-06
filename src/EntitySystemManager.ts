@@ -7,7 +7,7 @@ import { Entity, EntityProp } from './Entity';
 
 export class EntitySystemManager {
     private componentBitmask: ComponentBitmaskMap;
-    private _events: EventEmitter;
+    readonly events: EventEmitter;
 
     private ids: string[];
     private systems: { [id: string]: System };
@@ -15,7 +15,7 @@ export class EntitySystemManager {
     private _systemUpdateMethods: string[];
 
     constructor(componentBitmaskMap: ComponentBitmaskMap, events: EventEmitter) {
-        this._events = events;
+        this.events = events;
         this._systemUpdateMethods = ['update'];
         this.componentBitmask = componentBitmaskMap;
         this.systems = Object.create(null);
@@ -49,7 +49,7 @@ export class EntitySystemManager {
             this.updateBitmask(system, componentMask);
             system.setUp();
             if (!silent) {
-                this._events.emit(ESM_EVENTS.SYSTEM_ADDED, system);
+                this.events.emit(ESM_EVENTS.SYSTEM_ADDED, system);
             }
         } else {
             console.warn('System ' + system + ' already exists! And can only exists ones');
@@ -84,7 +84,7 @@ export class EntitySystemManager {
     remove(system: System, silent = false): boolean {
         if (this.has(system)) {
             if (!silent) {
-                this._events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
+                this.events.emit(ESM_EVENTS.SYSTEM_REMOVED, system);
             }
             system.tearDown();
             this.ids.splice(this.ids.indexOf(system.id), 1);
@@ -236,10 +236,6 @@ export class EntitySystemManager {
         for (let i = 0, system; (system = systems[ids[i]]); i++) {
             injectSystem(system, methods);
         }
-    }
-
-    public get events(): EventEmitter {
-        return this._events;
     }
 
     public get systemUpdateMethods(): string[] {

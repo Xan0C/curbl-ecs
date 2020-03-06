@@ -1,7 +1,7 @@
 import { Entity, EntityProp } from './Entity';
 import { ECS } from './ECS';
 import * as EventEmitter from 'eventemitter3';
-import { Injector } from './Injector';
+import { addNoopMethodsToPrototype, inject } from './Injector';
 
 export const SYSTEM_PROPERTIES = {
     entityMap: () => {
@@ -69,7 +69,7 @@ export const SYSTEM_PROTOTYPE = {
 export const SYSTEM_PROPERTY_DECORATOR = {};
 
 export function injectSystem<T extends object>(system: T, updateMethods: string[]): System & T {
-    const injectedSystem = Injector.inject<T & System>(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
-    Injector.addNoopMethodsToPrototype(system, updateMethods);
+    const injectedSystem = inject<T & System>(system, SYSTEM_PROPERTIES, SYSTEM_PROTOTYPE, SYSTEM_PROPERTY_DECORATOR);
+    addNoopMethodsToPrototype(system, updateMethods);
     return injectedSystem;
 }

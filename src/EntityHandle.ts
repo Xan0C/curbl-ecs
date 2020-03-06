@@ -1,6 +1,6 @@
 import { Component } from './Component';
 import { ECS } from './ECS';
-import { Injector } from './Injector';
+import { inject } from './Injector';
 import { Entity } from './Entity';
 
 export interface ComponentMap {
@@ -20,7 +20,7 @@ const ENTITY_PROPERTIES = {
 };
 
 const ENTITY_PROPERTY_DECORATOR = {
-    components: entity => {
+    components: function(entity) {
         Object.defineProperty(entity, 'components', {
             get: function() {
                 return this._components;
@@ -29,27 +29,6 @@ const ENTITY_PROPERTY_DECORATOR = {
                 this._components = components;
             },
         });
-    },
-};
-
-const ENTITY_PROTOTYPE = {
-    get: () => {
-        return EntityHandle.prototype.get;
-    },
-    getAll: () => {
-        return EntityHandle.prototype.getAll;
-    },
-    has: () => {
-        return EntityHandle.prototype.has;
-    },
-    add: () => {
-        return EntityHandle.prototype.add;
-    },
-    remove: () => {
-        return EntityHandle.prototype.remove;
-    },
-    dispose: () => {
-        return EntityHandle.prototype.dispose;
     },
 };
 
@@ -95,6 +74,15 @@ export class EntityHandle implements Entity {
     }
 }
 
+const ENTITY_PROTOTYPE = {
+    get: EntityHandle.prototype.get,
+    getAll: EntityHandle.prototype.getAll,
+    has: EntityHandle.prototype.has,
+    add: EntityHandle.prototype.add,
+    remove: EntityHandle.prototype.remove,
+    dispose: EntityHandle.prototype.dispose
+};
+
 export function injectEntity<T extends object>(entity: T): T & Entity {
-    return Injector.inject(entity, ENTITY_PROPERTIES, ENTITY_PROTOTYPE, ENTITY_PROPERTY_DECORATOR);
+    return inject(entity, ENTITY_PROPERTIES, ENTITY_PROTOTYPE, ENTITY_PROPERTY_DECORATOR);
 }

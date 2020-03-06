@@ -1,44 +1,22 @@
 import { EntityHandle } from './EntityHandle';
 import { Component } from './Component';
 import { System } from './System';
-import { Injector } from './Injector';
 import * as EventEmitter from 'eventemitter3';
 import { EntityComponentWorker } from './EntityComponentWorker';
 import { EntityComponentSystem } from './EntityComponentSystem';
-import { ECSBase } from './ECSBase';
+import { EntityComponentBase } from './EntityComponentBase';
 import { Entity, EntityDecoratorComponent } from './Entity';
 
 export class ECS {
-    private static _instance: ECSBase;
+    static instance: EntityComponentBase =
+        //@ts-ignore
+        typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope
+            ? new EntityComponentWorker()
+            : new EntityComponentSystem();
+    static uuid: () => string = ECS.instance.ecm.uuid;
+    static events: Readonly<EventEmitter> = ECS.instance.events;
 
     private constructor() {}
-
-    private static get instance(): ECSBase {
-        if (ECS._instance) {
-            return ECS._instance;
-        }
-        //@ts-ignore
-        if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-            return (ECS._instance = new EntityComponentWorker());
-        } else {
-            return (ECS._instance = new EntityComponentSystem());
-        }
-    }
-
-    static setPrototypeOf<T>(obj: T, proto): T {
-        //@ts-ignore
-        const fn =
-            Object.setPrototypeOf ||
-            function(obj, proto) {
-                obj.__proto__ = proto;
-                return obj;
-            };
-        return fn(obj, proto);
-    }
-
-    static get Injector(): Injector {
-        return Injector.instance;
-    }
 
     static noop() {}
 
@@ -213,23 +191,11 @@ export class ECS {
         };
     }
 
-    static get uuid(): () => string {
-        return ECS.instance.ecm.uuid;
-    }
-
-    static set uuid(value: () => string) {
-        ECS.instance.ecm.uuid = value;
-    }
-
     static get systemUpdateMethods(): string[] {
         return ECS.instance.scm.systemUpdateMethods;
     }
 
-    static set systemUpdateMethods(methods: string[]) {
-        ECS.instance.scm.systemUpdateMethods = methods;
-    }
-
-    static get events(): EventEmitter {
-        return ECS.instance.events;
+    static set systemUpdateMethods(systemUpdateMethpds: string[]) {
+        ECS.instance.scm.systemUpdateMethods = systemUpdateMethpds;
     }
 }

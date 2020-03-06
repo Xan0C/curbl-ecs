@@ -1,5 +1,5 @@
 import { ECS } from './ECS';
-import { Injector } from './Injector';
+import { inject } from './Injector';
 
 export interface Component {
     id?: string;
@@ -7,13 +7,11 @@ export interface Component {
 }
 
 const COMPONENT_PROTOTYPE = {
-    remove: () => {
-        return ECS.noop;
-    },
+    remove: ECS.noop,
 };
 
 const COMPONENT_PROPERTY_DECORATOR = {
-    id: component => {
+    id: function(component) {
         Object.defineProperty(component, 'id', {
             get: function() {
                 return this._id || (this._id = this.constructor.name);
@@ -26,5 +24,5 @@ const COMPONENT_PROPERTY_DECORATOR = {
 };
 
 export function injectComponent<T extends object>(component: T): T & Component {
-    return Injector.inject(component, {}, COMPONENT_PROTOTYPE, COMPONENT_PROPERTY_DECORATOR);
+    return inject(component, {}, COMPONENT_PROTOTYPE, COMPONENT_PROPERTY_DECORATOR);
 }

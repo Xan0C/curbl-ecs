@@ -5,25 +5,25 @@ export interface BitmaskMap {
 }
 
 export class ComponentBitmaskMap {
-    private _bitmaskMap: BitmaskMap;
+    bitmaskMap: BitmaskMap;
 
     constructor() {
-        this._bitmaskMap = Object.create(null);
+        this.bitmaskMap = Object.create(null);
     }
 
     has<T extends Component>(component: { new (config?: { [x: string]: any }): T } | string): boolean {
         if (typeof component === 'string') {
-            return !!this._bitmaskMap[component];
+            return !!this.bitmaskMap[component];
         } else {
-            return !!this._bitmaskMap[component.prototype.constructor.name];
+            return !!this.bitmaskMap[component.prototype.constructor.name];
         }
     }
 
     add<T extends Component>(component: { new (config?: { [x: string]: any }): T } | string) {
         if (typeof component === 'string') {
-            this._bitmaskMap[component] = 1 << this.size;
+            this.bitmaskMap[component] = 1 << this.size;
         } else {
-            this._bitmaskMap[component.prototype.constructor.name] = 1 << this.size;
+            this.bitmaskMap[component.prototype.constructor.name] = 1 << this.size;
         }
     }
 
@@ -32,9 +32,9 @@ export class ComponentBitmaskMap {
             this.add(component);
         }
         if (typeof component === 'string') {
-            return this._bitmaskMap[component] || 0;
+            return this.bitmaskMap[component] || 0;
         }
-        return this._bitmaskMap[component.prototype.constructor.name] || 0;
+        return this.bitmaskMap[component.prototype.constructor.name] || 0;
     }
 
     getCompound(components: { new (config?: { [x: string]: any }): any }[] | string[] = []): number {
@@ -46,14 +46,10 @@ export class ComponentBitmaskMap {
     }
 
     get size(): number {
-        return Object.keys(this._bitmaskMap).length;
+        return Object.keys(this.bitmaskMap).length;
     }
 
     set(map: BitmaskMap): void {
-        this._bitmaskMap = map;
-    }
-
-    get bitmaskMap(): { [p: string]: number } {
-        return this._bitmaskMap;
+        this.bitmaskMap = map;
     }
 }

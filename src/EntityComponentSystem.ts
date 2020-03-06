@@ -1,17 +1,28 @@
-import { ECSBase } from './ECSBase';
 import { ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS } from './Events';
 import { ComponentMap } from './EntityHandle';
 import { Component, injectComponent } from './Component';
-import { EntityMap } from './EntityComponentManager';
+import { EntityComponentManager, EntityMap } from './EntityComponentManager';
 import { System } from './System';
 import { Entity, EntityProp } from './Entity';
+import { ComponentBitmaskMap } from './ComponentBitmaskMap';
+import * as EventEmitter from 'eventemitter3';
+import { EntitySystemManager } from './EntitySystemManager';
+import { EntityComponentBase } from './EntityComponentBase';
 
-export class EntityComponentSystem extends ECSBase {
+export class EntityComponentSystem implements EntityComponentBase {
+    public events: EventEmitter;
+    public ecm: EntityComponentManager;
+    public scm: EntitySystemManager;
+    public componentBitmaskMap: ComponentBitmaskMap;
     private readonly workers: Worker[];
     private readonly workerBitmasks: number[];
 
     constructor() {
-        super();
+        this.componentBitmaskMap = new ComponentBitmaskMap();
+        this.events = new EventEmitter();
+        this.ecm = new EntityComponentManager(this.componentBitmaskMap, this.events);
+        this.scm = new EntitySystemManager(this.componentBitmaskMap, this.events);
+        this.registerEvents();
         this.workers = [];
         this.workerBitmasks = [];
     }

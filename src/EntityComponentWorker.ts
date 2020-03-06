@@ -1,10 +1,12 @@
-import { EntityMap } from './EntityComponentManager';
+import { EntityComponentManager, EntityMap } from './EntityComponentManager';
 import { Component, injectComponent } from './Component';
 import { ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKER_EVENTS } from './Events';
-import { ECSBase } from './ECSBase';
 import { System } from './System';
 import { Entity, EntityProp } from './Entity';
-import { BitmaskMap } from './ComponentBitmaskMap';
+import { BitmaskMap, ComponentBitmaskMap } from './ComponentBitmaskMap';
+import * as EventEmitter from 'eventemitter3';
+import { EntitySystemManager } from './EntitySystemManager';
+import { EntityComponentBase } from './EntityComponentBase';
 
 interface ECSMessageEvent extends MessageEvent {
     data: {
@@ -17,9 +19,21 @@ interface ECSMessageEvent extends MessageEvent {
     };
 }
 
-export class EntityComponentWorker extends ECSBase {
+export class EntityComponentWorker implements EntityComponentBase {
+    public events: EventEmitter;
+    public ecm: EntityComponentManager;
+    public scm: EntitySystemManager;
+    public componentBitmaskMap: ComponentBitmaskMap;
     private initialized: boolean;
     private initcb: () => void;
+
+    constructor() {
+        this.componentBitmaskMap = new ComponentBitmaskMap();
+        this.events = new EventEmitter();
+        this.ecm = new EntityComponentManager(this.componentBitmaskMap, this.events);
+        this.scm = new EntitySystemManager(this.componentBitmaskMap, this.events);
+        this.registerEvents();
+    }
 
     protected registerEvents(): void {
         this.events.on(ECM_EVENTS.ENTITY_ADDED, this.onEntityAdded.bind(this));
