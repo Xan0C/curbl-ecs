@@ -2,14 +2,26 @@
   "name": "@curbl/ecs",
   "version": "2.1.2",
   "description": "Small Entity Component System",
-  "main": "./lib/index.js",
+  "source": "./src/index.ts",
+  "main": "./lib/ecs.js",
+  "module": "./lib/ecs.module.js",
+  "umd:main": "dist/ecs.umd.js",
+  "unpkg": "dist/ecs.umd.js",
   "types": "./lib/index.d.ts",
   "typings": "./lib/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "microbundle --raw",
     "test": "karma start",
     "eslint": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts",
     "eslint:fix": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts --fix"
+  },
+  "exports": {
+    ".": {
+      "browser": "./lib/ecs.module.js",
+      "umd": "./lib/ecs.umd.js",
+      "import": "./lib/ecs.module.js",
+      "require": "./lib/ecs.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -27,23 +39,25 @@
   "author": "Sören Vullriede",
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.2.7",
+    "@types/chai": "^4.2.10",
     "@types/eventemitter3": "^2.0.2",
-    "@types/mocha": "^5.2.7",
-    "@typescript-eslint/eslint-plugin": "^2.16.0",
-    "@typescript-eslint/parser": "^2.16.0",
+    "@types/mocha": "^7.0.2",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "karma": "^4.4.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-mocha": "^1.3.0",
     "karma-typescript": "^4.1.1",
-    "mocha": "^7.0.0",
-    "typescript": "^3.7.4",
-    "eslint-config-prettier": "^6.9.0",
-    "eslint-plugin-prettier": "^3.1.2",
-    "prettier": "^1.19.1"
+    "microbundle": "^0.11.0",
+    "mocha": "^7.1.0",
+    "prettier": "^1.19.1",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "eventemitter3": "^4.0.0"

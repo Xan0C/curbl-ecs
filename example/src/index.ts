@@ -1,4 +1,4 @@
-import { ECS } from '../../lib/ECS';
+import { ECS } from '@curbl/ecs';
 import * as ReadWorker from './reader.worker.ts';
 import * as WriteWorker from './writer.worker.ts';
 import { NoopComponent } from './noopComponent';
@@ -20,10 +20,6 @@ class PositionEntity {}
     const writeWorker = new WriteWorker();
     ECS.addWorker(writeWorker);
 
-    //@ts-ignore
-    (window as any).ECS = ECS._instance;
-    //@ts-ignore
-    console.log(ECS._instance);
     ECS.update();
 
     window.onkeydown = ev => {

@@ -1,4 +1,4 @@
-import { ECS } from '../../lib/ECS';
+import { ECS } from '@curbl/ecs';
 import { PositionSystemWrite } from './positionSystemWrite';
 import { PositionComponent } from './positionComponent';
 

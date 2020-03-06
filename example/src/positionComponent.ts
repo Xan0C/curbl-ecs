@@ -1,4 +1,4 @@
-import { ECS } from '../../lib';
+import { ECS } from '@curbl/ecs';
 
 @ECS.Component()
 export class PositionComponent {

@@ -1,4 +1,4 @@
-import { ECS, Entity, System } from '../../lib';
+import { ECS, Entity, System } from '@curbl/ecs';
 import { PositionComponent } from './positionComponent';
 
 @ECS.System(PositionComponent)
