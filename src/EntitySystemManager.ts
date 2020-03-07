@@ -67,15 +67,6 @@ export class EntitySystemManager {
     }
 
     /**
-     * Checks if a system of the class exists in the ECS
-     * @param constructor
-     * @returns {boolean}
-     */
-    hasOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): boolean {
-        return !!this.systems[constructor.prototype.constructor.name];
-    }
-
-    /**
      * Removes the system
      * @param system
      * @param silent
@@ -91,37 +82,6 @@ export class EntitySystemManager {
             return delete this.systems[system.id];
         }
         return false;
-    }
-
-    /**
-     * Removes the System of the provided type from the ECS
-     * @param constructor
-     * @param silent
-     * @returns {boolean}
-     */
-    removeOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }, silent?: boolean): boolean {
-        return this.remove(this.get(constructor), silent);
-    }
-
-    /**
-     * Returns entities for the system of the type if it exists in the ECS
-     * @param constructor
-     * @returns {undefined|Map<string, Entity>}
-     */
-    getEntitiesOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): Entity[] {
-        const system = this.get(constructor);
-        if (system) {
-            return system.entities;
-        }
-        return undefined;
-    }
-
-    getComponentMaskOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): number {
-        const system = this.get(constructor);
-        if (system) {
-            return system.bitmask;
-        }
-        return undefined;
     }
 
     get<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): T {

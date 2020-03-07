@@ -80,7 +80,7 @@ const ENTITY_PROTOTYPE = {
     has: EntityHandle.prototype.has,
     add: EntityHandle.prototype.add,
     remove: EntityHandle.prototype.remove,
-    dispose: EntityHandle.prototype.dispose
+    dispose: EntityHandle.prototype.dispose,
 };
 
 export function injectEntity<T extends object>(entity: T): T & Entity {

@@ -16,8 +16,8 @@ export const SYSTEM_PROPERTIES = {
 };
 
 export class System {
-    id?: string; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
-    bitmask?: number; //TODO only needed by typescript its replaced by the system injection via @ECS.System decorator
+    id?: string;
+    bitmask?: number;
 
     readonly entityMap: { [id: string]: number };
     readonly entities: Entity[];

@@ -83,20 +83,8 @@ export class ECS {
         return ECS.instance.scm.has(system);
     }
 
-    static hasSystemOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): boolean {
-        return ECS.instance.scm.hasOf(constructor);
-    }
-
     static removeSystem(system: System): boolean {
         return ECS.instance.scm.remove(system);
-    }
-
-    static removeSystemOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): boolean {
-        return ECS.instance.scm.removeOf(constructor);
-    }
-
-    static getSystemComponentMaskOf<T extends System>(constructor: { new (config?: { [x: string]: any }): T }): number {
-        return ECS.instance.scm.getComponentMaskOf(constructor);
     }
 
     static removeEntityFromSystem(entity: Entity, system?: System): void {
