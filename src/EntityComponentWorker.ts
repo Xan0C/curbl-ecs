@@ -4,7 +4,7 @@ import { ECM_EVENTS, ECM_WORKER_EVENTS, ECS_WORKER_EVENTS, ESM_EVENTS, ESM_WORKE
 import { System } from './System';
 import { Entity, EntityProp } from './Entity';
 import { BitmaskMap, ComponentBitmaskMap } from './ComponentBitmaskMap';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter3';
 import { EntitySystemManager } from './EntitySystemManager';
 import { EntityComponentBase } from './EntityComponentBase';
 
@@ -117,6 +117,7 @@ export class EntityComponentWorker implements EntityComponentBase {
     }
 
     private sendEventToMaster(message: any): void {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         self.postMessage(message);
     }

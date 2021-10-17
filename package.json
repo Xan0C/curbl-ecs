@@ -12,6 +12,7 @@
   "scripts": {
     "build": "microbundle --raw",
     "test": "karma start",
+    "tsc:check": "tsc --noEmit",
     "eslint": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts",
     "eslint:fix": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts --fix"
   },
@@ -39,36 +40,30 @@
   "author": "Sören Vullriede",
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.2.10",
-    "@types/eventemitter3": "^2.0.2",
-    "@types/mocha": "^7.0.2",
-    "@typescript-eslint/eslint-plugin": "^2.22.0",
-    "@typescript-eslint/parser": "^2.22.0",
-    "chai": "^4.2.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.0",
-    "eslint-plugin-prettier": "^3.1.2",
-    "karma": "^4.4.1",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "microbundle": "^0.14.1",
+    "prettier": "^2.4.1",
+    "typescript": "^4.4.4",
+    "karma": "^6.3.4",
+    "karma-typescript": "^5.5.2",
+    "mocha": "^9.1.3",
+    "@types/mocha": "^9.0.0",
+    "karma-mocha": "^2.0.1",
+    "chai": "^4.3.4",
+    "@types/chai": "^4.2.22",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
-    "karma-mocha": "^1.3.0",
-    "karma-typescript": "^4.1.1",
-    "microbundle": "^0.11.0",
-    "mocha": "^7.1.0",
-    "prettier": "^1.19.1",
-    "ts-loader": "^6.2.1",
-    "typescript": "^3.8.3"
+    "puppeteer": "^10.4.0"
   },
   "dependencies": {
-    "eventemitter3": "^4.0.0"
+    "eventemitter3": "^4.0.7"
   },
   "bugs": {
     "url": "https://github.com/Xan0C/curbl-ecs/issues"
   },
-  "homepage": "https://github.com/Xan0C/curbl-ecs#readme",
-  "directories": {
-    "example": "example",
-    "lib": "lib",
-    "test": "test"
-  }
+  "homepage": "https://github.com/Xan0C/curbl-ecs#readme"
 }

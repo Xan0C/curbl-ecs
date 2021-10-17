@@ -1,7 +1,7 @@
 import { EntityHandle } from './EntityHandle';
 import { Component } from './Component';
 import { System } from './System';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter3';
 import { EntityComponentWorker } from './EntityComponentWorker';
 import { EntityComponentSystem } from './EntityComponentSystem';
 import { EntityComponentBase } from './EntityComponentBase';
@@ -9,6 +9,7 @@ import { Entity, EntityDecoratorComponent } from './Entity';
 
 export class ECS {
     static instance: EntityComponentBase =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope
             ? new EntityComponentWorker()
@@ -126,18 +127,18 @@ export class ECS {
 
     static Component<T extends object>(id?: string): (constructor: { new (...args): T }) => any {
         const getter = id
-            ? function() {
+            ? function () {
                   return this._id || (this._id = id);
               }
-            : function() {
+            : function () {
                   return this._id || (this._id = this.constructor.name);
               };
 
-        const setter = function(id: string) {
+        const setter = function (id: string) {
             this._id = id;
         };
 
-        return function(constructor: { new (...args): Component }) {
+        return function (constructor: { new (...args): Component }) {
             Object.defineProperty(constructor.prototype, 'id', {
                 get: getter,
                 set: setter,
@@ -147,17 +148,17 @@ export class ECS {
     }
 
     static System(...components: { new (...args): object | Component }[]): (constructor: { new (...args): System }) => any {
-        return function(constructor: { new (...args): System }) {
+        return function (constructor: { new (...args): System }) {
             Object.defineProperty(constructor.prototype, 'id', {
-                get: function() {
+                get: function () {
                     return this._id || (this._id = this.constructor.name);
                 },
             });
             Object.defineProperty(constructor.prototype, 'bitmask', {
-                get: function() {
+                get: function () {
                     return this._bitmask || (this._bitmask = ECS.instance.componentBitmaskMap.getCompound(components));
                 },
-                set: function(bitmask: number) {
+                set: function (bitmask: number) {
                     this._bitmask = bitmask;
                 },
             });
@@ -166,12 +167,12 @@ export class ECS {
     }
 
     static Entity<T extends object>(...components: EntityDecoratorComponent[]): (constructor: { new (...args): T }) => any {
-        return function(constructor: { new (...args): T }) {
+        return function (constructor: { new (...args): T }) {
             Object.defineProperty(constructor.prototype, 'components', {
-                get: function() {
+                get: function () {
                     return this._components || (this._components = ECS.createComponentsFromDecorator(components));
                 },
-                set: function(components) {
+                set: function (components) {
                     this._components = components;
                 },
             });

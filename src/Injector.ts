@@ -28,7 +28,7 @@ export function inject<T>(
         }
     }
 
-    return (object as unknown) as T;
+    return object as unknown as T;
 }
 
 export function addNoopMethodsToPrototype(object: any, methods: string[]) {

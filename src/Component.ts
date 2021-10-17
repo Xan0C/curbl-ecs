@@ -11,12 +11,12 @@ const COMPONENT_PROTOTYPE = {
 };
 
 const COMPONENT_PROPERTY_DECORATOR = {
-    id: function(component) {
+    id: function (component) {
         Object.defineProperty(component, 'id', {
-            get: function() {
+            get: function () {
                 return this._id || (this._id = this.constructor.name);
             },
-            set: function(id: string) {
+            set: function (id: string) {
                 this._id = id;
             },
         });

@@ -45,7 +45,7 @@ class TestEntity {
     }
 }
 
-describe('EntityDecorator', function() {
+describe('EntityDecorator', function () {
     let entity: Entity;
     this.timeout(0);
 

@@ -1,6 +1,6 @@
 import { Entity, EntityProp } from './Entity';
 import { ECS } from './ECS';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter3';
 import { addNoopMethodsToPrototype, inject } from './Injector';
 
 export const SYSTEM_PROPERTIES = {

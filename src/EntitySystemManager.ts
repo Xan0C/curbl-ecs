@@ -1,6 +1,6 @@
 import { injectSystem, System } from './System';
 import { EntityHandle } from './EntityHandle';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter3';
 import { ESM_EVENTS, SYSTEM_EVENTS } from './Events';
 import { ComponentBitmaskMap } from './ComponentBitmaskMap';
 import { Entity, EntityProp } from './Entity';

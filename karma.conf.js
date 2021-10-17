@@ -1,4 +1,7 @@
-module.exports = function(config) {
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+process.env.CHROME_BIN = require('puppeteer').executablePath();
+
+module.exports = function (config) {
     config.set({
         frameworks: ['mocha', 'chai', 'karma-typescript'],
         files: [
@@ -9,7 +12,7 @@ module.exports = function(config) {
             '**/*.ts': 'karma-typescript',
         },
         karmaTypescriptConfig: {
-            tsconfig: './test/tsconfig.json',
+            tsconfig: './tsconfig.test.json',
             reports: {
                 html: {
                     directory: 'coverage',

@@ -1,7 +1,7 @@
 import { EntityComponentManager } from './EntityComponentManager';
 import { EntitySystemManager } from './EntitySystemManager';
 import { ComponentBitmaskMap } from './ComponentBitmaskMap';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter3';
 
 export interface EntityComponentBase {
     events: EventEmitter;

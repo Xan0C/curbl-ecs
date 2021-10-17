@@ -20,7 +20,7 @@ export class PositionComponent implements Component {
 
 @ECS.System(PositionComponent)
 class TestSystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
     public x;
     public y;
 
@@ -40,7 +40,7 @@ class TestSystem extends System {
 
 @ECS.System(PositionComponent)
 class SystemTwo extends System {
-    entities: Entity[];
+    override entities: Entity[];
 
     update(): void {
         for (let i = 0, entity; (entity = this.entities[i]); i++) {
@@ -52,14 +52,14 @@ class SystemTwo extends System {
 
 @ECS.System()
 class EmptySystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
 
     update(): void {}
 }
 
 @ECS.System()
 class ArgumentSystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
     name: string;
 
     update(name: string): void {
@@ -72,16 +72,16 @@ class SetupAndTearDownSystem extends System {
     public setUpCalled: boolean;
     public tearDownCalled: boolean;
 
-    setUp(): void {
+    override setUp(): void {
         this.setUpCalled = true;
     }
 
-    tearDown(): void {
+    override tearDown(): void {
         this.tearDownCalled = true;
     }
 }
 
-describe('SystemDecorator', function() {
+describe('SystemDecorator', function () {
     let system: System;
     this.timeout(0);
 

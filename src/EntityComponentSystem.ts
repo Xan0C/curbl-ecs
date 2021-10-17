@@ -5,9 +5,9 @@ import { EntityComponentManager, EntityMap } from './EntityComponentManager';
 import { System } from './System';
 import { Entity, EntityProp } from './Entity';
 import { ComponentBitmaskMap } from './ComponentBitmaskMap';
-import * as EventEmitter from 'eventemitter3';
 import { EntitySystemManager } from './EntitySystemManager';
 import { EntityComponentBase } from './EntityComponentBase';
+import EventEmitter from 'eventemitter3';
 
 export class EntityComponentSystem implements EntityComponentBase {
     public events: EventEmitter;
@@ -216,7 +216,7 @@ export class EntityComponentSystem implements EntityComponentBase {
     }
 
     private registerWorker(worker: Worker): void {
-        worker.addEventListener('message', ev => this.delegateWorkerEvents(ev));
+        worker.addEventListener('message', (ev) => this.delegateWorkerEvents(ev));
         this.sendInitEvent(worker);
     }
 

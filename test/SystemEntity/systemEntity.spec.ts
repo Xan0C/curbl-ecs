@@ -58,12 +58,12 @@ class ExtendedEntity {}
 
 @ECS.System(PositionComponent)
 class PositionSystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
 }
 
 @ECS.System(PositionComponent, NameComponent)
 class FullSystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
 
     update() {
         for (let i = 0, entity; (entity = this.entities[i]); i++) {
@@ -76,7 +76,7 @@ class FullSystem extends System {
 
 @ECS.System(NameComponent)
 class NameSystem extends System {
-    entities: Entity[];
+    override entities: Entity[];
 
     postUpdate() {
         for (let i = 0, entity; (entity = this.entities[i]); i++) {
@@ -85,7 +85,7 @@ class NameSystem extends System {
     }
 }
 
-describe('System_Entity', function() {
+describe('System_Entity', function () {
     let positionSystem: System;
     let nameSystem: System;
     let fullSystem: System;

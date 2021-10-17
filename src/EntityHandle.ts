@@ -11,7 +11,7 @@ const ENTITY_PROPERTIES = {
     id: () => {
         return ECS.uuid();
     },
-    components: function() {
+    components: function () {
         return this._components || Object.create(null);
     },
     bitmask: () => {
@@ -20,12 +20,12 @@ const ENTITY_PROPERTIES = {
 };
 
 const ENTITY_PROPERTY_DECORATOR = {
-    components: function(entity) {
+    components: function (entity) {
         Object.defineProperty(entity, 'components', {
-            get: function() {
+            get: function () {
                 return this._components;
             },
-            set: function(components) {
+            set: function (components) {
                 this._components = components;
             },
         });
