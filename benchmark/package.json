@@ -1,0 +1,22 @@
+{
+  "name": "benchmark",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "benchmark": "ts-node --project tsconfig.bench.json index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@curbl/ecs": "file:..",
+    "@types/benchmark": "^2.1.1",
+    "yagl-ecs": "^1.1.0"
+  },
+  "devDependencies": {
+    "benchmark": "^2.1.4",
+    "microtime": "^3.0.0",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.4"
+  }
+}

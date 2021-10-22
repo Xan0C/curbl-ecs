@@ -9,12 +9,11 @@ There is also a simple web worker support.
 
 ```javascript
 
-@ECS.Component()
-class PositionComponent {
+@Ecs.Component() class PositionComponent {
     public x: number;
     public y: number;
 
-    constructor(config: {x: number, y: number} = { x:0, y:0 }) {
+    constructor(config: {x: number, y: number} = {x: 0, y: 0}) {
         this.x = config.x;
         this.y = config.y;
     }
@@ -25,21 +24,22 @@ class PositionComponent {
 
 ```javascript
 
-@ECS.Entity(
-    { component: PositionComponent, config: { x:12, y:12 }}
-)
-class PositionEntity {}
+@Ecs.Entity(
+    {component: PositionComponent, config: {x: 12, y: 12}}
+) class PositionEntity {
+}
 ```
 
 * Adding a Entity with predefined Components
+
 ```javascript
-const entity = ECS.addEntity(new PositionEntity());
+const entity = Ecs.addEntity(new PositionEntity());
 ```
 
 * Create entity and add Component
 
 ```javascript
-const entity = ECS.createEntity();
+const entity = Ecs.createEntity();
 entity.add(new PositionComponent());
 ```
 
@@ -55,39 +55,40 @@ entity.get("PositionComponent").x = 42;
 ```javascript
 
 //All Entities with a PositionComponent will be added to the System
-@ECS.System(PositionComponent) 
+@Ecs.System(PositionComponent)
 export class MySystem {
-     
-     setUp(): void{
-          //Called when the System is created/added to the ECS 
-     }
-     
-     tearDown(): void{
-         //Called when the System is removed from the ECS
-     }
-     
-     update(): void{
-         for(let i = 0, entity: Entity; entity = this.entities[i]; i++){
-             //Do stuff with the entities
-         }
-     }
+
+    setUp(): void {
+        //Called when the System is created/added to the ECS 
+    }
+
+    tearDown(): void {
+        //Called when the System is removed from the ECS
+    }
+
+    update(): void {
+        for (let i = 0, entity: Entity; entity = this.entities[i]; i++) {
+            //Do stuff with the entities
+        }
+    }
 }
 ```
 * Using Web Workers by adding the WebWorker to the main-thread.
 All Entities are automatically shared between all workers.
-```javascript
-@ECS.Entity(
-    {component: PositionComponent, config: {x: 1, y: 2, z: 4}}
-)
-class PositionEntity {}
 
-ECS.addEntity(new PositionEntity());
+```javascript
+@Ecs.Entity(
+    {component: PositionComponent, config: {x: 1, y: 2, z: 4}}
+) class PositionEntity {
+}
+
+Ecs.addEntity(new PositionEntity());
 
 const readWorker = new ReadWorker();
-ECS.addWorker(readWorker);
+Ecs.addWorker(readWorker);
 
 const writeWorker = new WriteWorker();
-ECS.addWorker(writeWorker);
+Ecs.addWorker(writeWorker);
 
-ECS.update();
+Ecs.update();
 ```

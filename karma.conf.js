@@ -3,6 +3,7 @@ process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = function (config) {
     config.set({
+        browserDisconnectTimeout: -1,
         frameworks: ['mocha', 'chai', 'karma-typescript'],
         files: [
             { pattern: 'test/**/*.ts', included: true, served: true, watched: false },

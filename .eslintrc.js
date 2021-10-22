@@ -8,6 +8,7 @@ module.exports = {
     },
     rules: {
         'prettier/prettier': ['error', { endOfLine: 'auto' }],
+        '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-member-accessibility': 'off',

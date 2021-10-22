@@ -1,11 +1,14 @@
 node_modules
 src
 test
+benchmark
 .gitignore
 *.iml
 .idea
 dist
 tsconfig.json
+tsconfig.base.json
+tsconfig.test.json
 karma.conf.js
 coverage
 example
