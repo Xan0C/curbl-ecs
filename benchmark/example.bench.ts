@@ -6,25 +6,15 @@ const ECS = new ecs();
 
 const suite = new Benchmark.Suite();
 
-function makeid(length: number): string {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}
-
-@ECS.Component('Name', (name: string) => new NameComponent().init(name))
-class NameComponent {
-    name = '';
-
-    init(name: string): this {
-        this.name = name;
-        return this;
-    }
-}
+// @ECS.Component('Name', (name: string) => new NameComponent().init(name))
+// class NameComponent {
+//     name = '';
+//
+//     init(name: string): this {
+//         this.name = name;
+//         return this;
+//     }
+// }
 
 @ECS.Component('Position', (x: number, y: number) => new PositionComponent().init(x, y))
 class PositionComponent {
@@ -36,21 +26,10 @@ class PositionComponent {
         return this;
     }
 }
-
-for (let i = 0; i < 100000; i++) {
-    ECS.__removeComponent(new PositionComponent() as any);
-    ECS.__removeComponent(new NameComponent() as any);
-}
+new PositionComponent();
 
 @ECS.System('Position')
-class RandomSystem extends System {
-    constructor() {
-        super();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.__bitmask = ECS.componentBitMask.buildMask(makeid(10));
-    }
-
+class PositionSystem extends System {
     onEntityAdded(_: Entity): void {}
 
     onEntityRemoved(_: Entity): void {}
@@ -61,7 +40,7 @@ class RandomSystem extends System {
 
     update(): void {
         for (let i = 0, entity; (entity = this.entities[i]); i++) {
-            entity.get<PositionComponent>('Position').x;
+            entity;
         }
     }
 }
@@ -69,7 +48,7 @@ class RandomSystem extends System {
 const entities: Entity[] = [];
 
 for (let i = 0; i < 1; i++) {
-    ECS.addSystem(new RandomSystem());
+    ECS.addSystem(new PositionSystem());
 }
 for (let i = 0; i < 100_000; i++) {
     const entity = ECS.createEntity();
@@ -84,11 +63,11 @@ suite
         ECS.update();
     })
     .add('ECS#add_and_remove_entities', function () {
-        // for (let i = 0; i < 10; i++) {
-        //     entities[i]!.dispose();
-        //     const entity = ECS.createEntity(ECS.createComponent('Position', 13, 14));
-        //     entities.push(entity);
-        // }
+        for (let i = 0; i < 1000; i++) {
+            entities[i]!.dispose();
+            const entity = ECS.createEntity(ECS.createComponent('Position', 13, 14));
+            entities.push(entity);
+        }
         ECS.update();
     })
     .on('cycle', function (event: Event) {

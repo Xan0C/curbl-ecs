@@ -7,7 +7,9 @@ const suite = new Benchmark.Suite();
 const entity = ECS.createEntity();
 
 @ECS.Component('InitialComponent', () => new InitialComponent())
-class InitialComponent {}
+class InitialComponent {
+    x = 0;
+}
 
 @ECS.Component('TestComponent', () => new TestComponent())
 class TestComponent {}
@@ -22,7 +24,7 @@ suite
         entity.add(new TestComponent());
     })
     .add('Entity#get_component', function () {
-        entity.get('InitialComponent');
+        entity.get<InitialComponent>('InitialComponent').x = 1;
     })
     .add('Entity#has_component_true', function () {
         entity.has('InitialComponent');
