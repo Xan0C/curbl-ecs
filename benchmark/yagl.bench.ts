@@ -24,12 +24,14 @@ const Position = {
 };
 
 class Gravity extends ECS.System {
-    test(entity: any) {
+    test(_: any) {
         // the entity must have a position component
-        return !!entity.components.pos;
+        return true;
     }
     enter(_: any) {}
-    update(_: any) {}
+    update(entity: any) {
+        entity;
+    }
     exit(_: any) {}
 }
 

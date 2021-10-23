@@ -2,11 +2,15 @@ import { Entity, EntityHandle } from './entity';
 import { uuid } from './uuid';
 import { injectSystem, System } from './system';
 import { ComponentBitMask } from './componentBitMask';
+import { noop } from './noop';
+import { CurblComponent } from './component';
 
 export class ECS {
     private readonly componentBitMask: ComponentBitMask;
     private updateCycleMethods: string[];
     private entities: { [id: string]: Entity | undefined };
+    private componentPool: { [id: string]: CurblComponent[] };
+    private componentFactories: { [id: string]: (...args: any[]) => any };
     private deletedEntities: Entity[];
     private modifiedEntities: Entity[];
     private entityPool: Entity[];
@@ -15,6 +19,8 @@ export class ECS {
     constructor() {
         this.entities = Object.create(null);
         this.componentBitMask = new ComponentBitMask();
+        this.componentPool = Object.create(null);
+        this.componentFactories = Object.create(null);
         this.modifiedEntities = [];
         this.deletedEntities = [];
         this.entityPool = [];
@@ -45,6 +51,20 @@ export class ECS {
             handle.add(component);
         }
         return handle;
+    }
+
+    createComponent<T>(id: string, ...args: any[]): T {
+        const pooled = this.componentPool[id]!.pop();
+        if (pooled) {
+            pooled.init!(...args);
+            return pooled as unknown as T;
+        }
+        return this.componentFactories[id]!(...args);
+    }
+
+    __removeComponent(component: CurblComponent): void {
+        component.remove!();
+        this.componentPool[component.__id]!.push(component);
     }
 
     hasEntity(id: string): boolean {
@@ -80,9 +100,21 @@ export class ECS {
         return this.systems.includes(system);
     }
 
-    Component(id: string) {
-        const bitPos = this.componentBitMask.register(id);
+    private registerComponent<T>(id: string, factory: (...args: any[]) => T): number {
+        this.componentPool[id] = [];
+        this.componentFactories[id] = factory;
+        return this.componentBitMask.register(id);
+    }
+
+    Component<T>(id: string, factory: (...args: any) => T) {
+        const bitPos = this.registerComponent(id, factory);
         return function <T extends { new (...args: any[]): object }>(constructor: T) {
+            if (!constructor.prototype.init) {
+                constructor.prototype.init = noop;
+            }
+            if (!constructor.prototype.remove) {
+                constructor.prototype.remove = noop;
+            }
             return class extends constructor {
                 __id = id;
                 __bit = bitPos;

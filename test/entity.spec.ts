@@ -3,7 +3,7 @@ import { ECS as ecs } from '../src';
 
 const ECS = new ecs();
 
-@ECS.Component('TestComponent')
+@ECS.Component('TestComponent', () => new TestComponent())
 class TestComponent {}
 
 describe('Entity', function () {

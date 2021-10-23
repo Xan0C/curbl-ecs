@@ -4,12 +4,12 @@ import { Entity, System } from '../src';
 
 const ECS = new ecs();
 
-@ECS.Component('Position')
+@ECS.Component('Position', (x: number, y: number) => new Position(x, y))
 class Position {
     constructor(public x: number, public y: number) {}
 }
 
-@ECS.Component('Name')
+@ECS.Component('Name', (name: string) => new Name(name))
 class Name {
     constructor(public name: string) {}
 }

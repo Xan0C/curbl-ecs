@@ -22,7 +22,7 @@ class TestSystem extends System {
     onEntityRemoved(_: Entity): void {}
 }
 
-@ECS.Component('TestComponent')
+@ECS.Component('TestComponent', () => new TestComponent())
 class TestComponent {}
 
 describe('System', function () {

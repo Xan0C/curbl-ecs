@@ -1,6 +1,6 @@
 import { ECS } from './ecs';
 import { Bitmask } from './bitmask';
-import { Component } from './component';
+import { CurblComponent } from './component';
 
 export interface Entity {
     readonly __id: string;
@@ -20,8 +20,8 @@ export class EntityHandle implements Entity {
 
     private __dirty: boolean;
     private __ecs: ECS;
-    private __components: { [id: string]: Component | undefined };
-    private readonly __removed: Component[];
+    private __components: { [id: string]: CurblComponent | undefined };
+    private readonly __removed: CurblComponent[];
 
     constructor(id: string, ecs: ECS) {
         this.__id = id;
@@ -40,7 +40,7 @@ export class EntityHandle implements Entity {
     }
 
     add<T>(component: T): void {
-        const comp = component as unknown as Component;
+        const comp = component as unknown as CurblComponent;
         if (!this.__components[comp.__id]) {
             this.__components[comp.__id] = comp;
             this.__bitmask.set(comp.__bit, 1);
@@ -61,7 +61,7 @@ export class EntityHandle implements Entity {
     }
 
     remove(component: string): void {
-        if (this.__components[component] !== undefined) {
+        if (this.__components[component] !== undefined && this.__removed.indexOf(this.__components[component]!) === -1) {
             this.__removed.push(this.__components[component]!);
             this.markDirty();
         }
@@ -71,6 +71,7 @@ export class EntityHandle implements Entity {
         for (let i = 0, component; (component = this.__removed[i]); i++) {
             this.__components[component.__id] = undefined;
             this.__bitmask.set(component.__bit, 0);
+            this.__ecs.__removeComponent(component);
         }
         this.__dirty = false;
         this.__removed.length = 0;

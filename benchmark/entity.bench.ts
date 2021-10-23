@@ -6,10 +6,10 @@ const ECS = new ecs();
 const suite = new Benchmark.Suite();
 const entity = ECS.createEntity();
 
-@ECS.Component('InitialComponent')
+@ECS.Component('InitialComponent', () => new InitialComponent())
 class InitialComponent {}
 
-@ECS.Component('TestComponent')
+@ECS.Component('TestComponent', () => new TestComponent())
 class TestComponent {}
 
 entity.add(new InitialComponent());
