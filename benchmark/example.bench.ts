@@ -6,16 +6,6 @@ const ECS = new ecs();
 
 const suite = new Benchmark.Suite();
 
-// @ECS.Component('Name', (name: string) => new NameComponent().init(name))
-// class NameComponent {
-//     name = '';
-//
-//     init(name: string): this {
-//         this.name = name;
-//         return this;
-//     }
-// }
-
 @ECS.Component('Position')
 class PositionComponent {
     x = 0;

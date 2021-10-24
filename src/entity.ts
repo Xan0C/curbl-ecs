@@ -16,14 +16,14 @@ export class EntityHandle implements Entity {
     readonly __bitmask: Bitmask;
     private dead: boolean;
     private dirty: boolean;
-    private components: { [id: string]: Component | undefined };
+    private components: Map<string, Component>;
     private readonly updates: Map<string, { component: Component; added: boolean }>;
     private readonly markModified: (entity: Entity) => void;
     private readonly addToPool: (entity: Entity) => void;
 
     constructor(markModified: (entity: Entity) => void, addToPool: (entity: Entity) => void) {
         this.__bitmask = new Bitmask(32);
-        this.components = Object.create(null);
+        this.components = new Map();
         this.updates = new Map();
         this.dirty = false;
         this.dead = false;
@@ -53,16 +53,16 @@ export class EntityHandle implements Entity {
     }
 
     get<T>(component: string): T {
-        return this.components[component] as unknown as T;
+        return this.components.get(component) as unknown as T;
     }
 
     has(component: string): boolean {
-        return !!this.components[component];
+        return this.components.has(component);
     }
 
     remove(component: string): void {
-        if (!this.dead && (this.components[component] || this.updates.has(component))) {
-            this.updates.set(component, { component: this.components[component]!, added: false });
+        if (!this.dead && (this.components.has(component) || this.updates.has(component))) {
+            this.updates.set(component, { component: this.components.get(component)!, added: false });
             this.markDirty();
         }
     }
@@ -82,14 +82,14 @@ export class EntityHandle implements Entity {
                 this.__bitmask.set(update.component.constructor.__bit, 1);
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                this.components[update.component.constructor.__id] = update.component;
+                this.components.set(update.component.constructor.__id, update.component);
             } else if (update.component) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 this.__bitmask.set(update.component.constructor.__bit, 0);
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                this.components[update.component.constructor.__id] = undefined;
+                this.components.delete(update.component.constructor.__id);
             }
         }
         this.dirty = false;
@@ -98,7 +98,7 @@ export class EntityHandle implements Entity {
 
     __clear(): void {
         this.__bitmask.clear();
-        this.components = Object.create(null);
+        this.components.clear();
         this.updates.clear();
         this.dirty = false;
         this.dead = false;
