@@ -16,45 +16,40 @@ const suite = new Benchmark.Suite();
 //     }
 // }
 
-@ECS.Component('Position', (x: number, y: number) => new PositionComponent().init(x, y))
+@ECS.Component('Position')
 class PositionComponent {
     x = 0;
     y = 0;
-    init(x: number, y: number): this {
-        this.x = x;
-        this.y = y;
-        return this;
-    }
 }
-for (let i = 0; i < 10000; i++) {
-    ECS.__removeComponent(new PositionComponent() as any);
-}
+new PositionComponent();
 
 @ECS.System('Position')
 class PositionSystem extends System {
-    onEntityAdded(_: Entity): void {}
-
-    onEntityRemoved(_: Entity): void {}
-
     setUp(): void {}
 
     tearDown(): void {}
 
+    onEntityAdded(entity: Entity): void {
+        entity;
+    }
+    onEntityRemoved(entity: Entity): void {
+        entity;
+    }
+
     update(): void {
-        for (let i = 0, entity; (entity = this.entities[i]); i++) {
+        const entities = this.entities();
+        for (let i = 0, entity; (entity = entities[i]); i++) {
             entity;
         }
     }
 }
 
 const entities: Entity[] = [];
+ECS.addSystem(new PositionSystem());
 
-for (let i = 0; i < 50; i++) {
-    ECS.addSystem(new PositionSystem());
-}
 for (let i = 0; i < 100_000; i++) {
     const entity = ECS.createEntity();
-    entity.add(ECS.createComponent('Position', 1, 2));
+    entity.add(new PositionComponent());
     entities.push(entity);
 }
 ECS.update();
@@ -67,17 +62,17 @@ suite
     .add('ECS#add_and_remove_entities_1k_1Component', function () {
         for (let i = 0; i < 1000; i++) {
             entities[i]!.dispose();
-            const entity = ECS.createEntity(ECS.createComponent('Position', 13, 14));
+            const entity = ECS.createEntity(new PositionComponent());
             entities.push(entity);
         }
         ECS.update();
     })
     .add('ECS#add_modify_1k_Entities', function () {
         for (let i = 0; i < 1000; i++) {
-            if (Math.random() > 0.5) {
+            if (i % 2 === 0) {
                 entities[i]!.remove('Position');
             } else {
-                entities[i]!.add(ECS.createComponent('Position', 12, 3));
+                entities[i]!.add(new PositionComponent());
             }
         }
         ECS.update();

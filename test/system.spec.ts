@@ -22,7 +22,7 @@ class TestSystem extends System {
     onEntityRemoved(_: Entity): void {}
 }
 
-@ECS.Component('TestComponent', () => new TestComponent())
+@ECS.Component('TestComponent')
 class TestComponent {}
 
 describe('System', function () {
@@ -40,12 +40,13 @@ describe('System', function () {
         it('should add the matching entities to the system', () => {
             /// given
             const system = new TestSystem();
+            ECS.addSystem(system);
             const entity = ECS.createEntity(new TestComponent());
             // when
-            ECS.addSystem(system);
+            ECS.update();
             // then
             expect(ECS.hasSystem(system)).true;
-            expect(system.entities.includes(entity)).true;
+            expect(system.entities().includes(entity)).true;
         });
     });
 

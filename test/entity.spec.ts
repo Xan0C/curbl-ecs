@@ -1,10 +1,20 @@
 import { expect } from 'chai';
 import { ECS as ecs } from '../src';
+import { System, Entity } from '../src';
 
 const ECS = new ecs();
 
-@ECS.Component('TestComponent', () => new TestComponent())
+@ECS.Component('TestComponent')
 class TestComponent {}
+
+@ECS.System('TestComponent')
+class TestSystem extends System {
+    setUp(): void {}
+    tearDown(): void {}
+    onEntityAdded(_: Entity): void {}
+    onEntityRemoved(_: Entity): void {}
+}
+ECS.addSystem(new TestSystem());
 
 describe('Entity', function () {
     describe('#create', () => {
@@ -15,6 +25,7 @@ describe('Entity', function () {
 
         it('should create a new entity handle with components', () => {
             const entity = ECS.createEntity(new TestComponent());
+            ECS.update();
             expect(entity).not.eq(undefined);
             expect(entity.has('TestComponent')).true;
         });
@@ -27,6 +38,7 @@ describe('Entity', function () {
             const component = new TestComponent();
             // when
             entity.add(component);
+            ECS.update();
             // then
             expect(entity.get('TestComponent')).eql(component);
         });
@@ -39,6 +51,7 @@ describe('Entity', function () {
             const component = new TestComponent();
             // when
             entity.add(component);
+            ECS.update();
             // then
             expect(entity.has('TestComponent')).eql(true);
         });
@@ -46,6 +59,7 @@ describe('Entity', function () {
         it('should not have the component in the entity', () => {
             // given
             const entity = ECS.createEntity();
+            ECS.update();
             // when
             // then
             expect(entity.has('TestComponent')).eql(false);
@@ -58,6 +72,7 @@ describe('Entity', function () {
             const entity = ECS.createEntity();
             const component = new TestComponent();
             entity.add(component);
+            ECS.update();
             // when
             // then
             expect(entity.get('TestComponent')).eql(component);
@@ -75,20 +90,6 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.has('TestComponent')).false;
-        });
-    });
-
-    describe('#dispose', () => {
-        it('should dispose entity from the ecs', () => {
-            // given
-            const entity = ECS.createEntity('myEntity');
-            const component = new TestComponent();
-            entity.add(component);
-            // when
-            entity.dispose();
-            ECS.update();
-            // then
-            expect(ECS.hasEntity(entity.__id)).false;
         });
     });
 });

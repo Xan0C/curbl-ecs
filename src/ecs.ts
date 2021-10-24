@@ -1,29 +1,17 @@
-import { Entity, EntityHandle } from './entity';
-import { uuid } from './uuid';
+import { Entity } from './entity';
 import { injectSystem, System } from './system';
 import { ComponentBitMask } from './componentBitMask';
-import { noop } from './noop';
-import { CurblComponent } from './component';
+import { EntityStore } from './entityStore';
 
 export class ECS {
+    private entityStore: EntityStore;
     private readonly componentBitMask: ComponentBitMask;
     private updateCycleMethods: string[];
-    private entities: { [id: string]: Entity | undefined };
-    private componentPool: { [id: string]: CurblComponent[] };
-    private componentFactories: { [id: string]: (...args: any[]) => any };
-    private deletedEntities: Entity[];
-    private modifiedEntities: Entity[];
-    private entityPool: Entity[];
     private systems: System[];
 
     constructor() {
-        this.entities = Object.create(null);
+        this.entityStore = new EntityStore();
         this.componentBitMask = new ComponentBitMask();
-        this.componentPool = Object.create(null);
-        this.componentFactories = Object.create(null);
-        this.modifiedEntities = [];
-        this.deletedEntities = [];
-        this.entityPool = [];
         this.systems = [];
         this.updateCycleMethods = ['update'];
     }
@@ -33,50 +21,16 @@ export class ECS {
     }
 
     reset(full = false): void {
-        this.entities = Object.create(null);
-        this.modifiedEntities = [];
-        this.deletedEntities = [];
         this.systems = [];
+        this.entityStore.clear();
         if (full) {
             this.updateCycleMethods = ['update'];
-            this.entityPool = [];
             this.componentBitMask.clear();
         }
     }
 
     createEntity(...components: unknown[]): Entity {
-        const handle = this.entityPool.pop() || new EntityHandle(uuid(), this);
-        this.entities[handle.__id] = handle;
-        for (let i = 0, component: any; (component = components[i]); i++) {
-            handle.add(component);
-        }
-        return handle;
-    }
-
-    createComponent<T>(id: string, ...args: any[]): T {
-        const pooled = this.componentPool[id]!.pop();
-        if (pooled) {
-            pooled.init!(...args);
-            return pooled as unknown as T;
-        }
-        return this.componentFactories[id]!(...args);
-    }
-
-    __removeComponent(component: CurblComponent): void {
-        component.remove!();
-        this.componentPool[component.__id]!.push(component);
-    }
-
-    hasEntity(id: string): boolean {
-        return !!this.entities[id];
-    }
-
-    __removeEntity(id: string): void {
-        this.deletedEntities.push(this.entities[id]!);
-    }
-
-    __markEntityAsModified(id: string): void {
-        this.modifiedEntities.push(this.entities[id]!);
+        return this.entityStore.create(components);
     }
 
     addSystem(system: System): void {
@@ -84,7 +38,6 @@ export class ECS {
             this.systems.push(system);
             injectSystem(system, this.updateCycleMethods);
             system.setUp();
-            system.updateEntities(Object.values(this.entities) as Entity[]);
         }
     }
 
@@ -100,25 +53,22 @@ export class ECS {
         return this.systems.includes(system);
     }
 
-    private registerComponent<T>(id: string, factory: (...args: any[]) => T): number {
-        this.componentPool[id] = [];
-        this.componentFactories[id] = factory;
-        return this.componentBitMask.register(id);
-    }
-
-    Component<T>(id: string, factory: (...args: any) => T) {
-        const bitPos = this.registerComponent(id, factory);
+    /**
+     * Register as a Component
+     * *internal* sets the static __id and __bit property
+     * @param id
+     * @constructor
+     */
+    Component(id: string) {
+        const bitPos = this.componentBitMask.register(id);
         return function <T extends { new (...args: any[]): object }>(constructor: T) {
-            if (!constructor.prototype.init) {
-                constructor.prototype.init = noop;
-            }
-            if (!constructor.prototype.remove) {
-                constructor.prototype.remove = noop;
-            }
-            return class extends constructor {
-                __id = id;
-                __bit = bitPos;
-            };
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            constructor.__id = id;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            constructor.__bit = bitPos;
+            return constructor;
         };
     }
 
@@ -127,9 +77,25 @@ export class ECS {
             this.componentBitMask.register(component);
         }
         const bitmask = this.componentBitMask.buildMask(components);
+        const query = this.entityStore.registerQuery(bitmask);
+        const store = this.entityStore;
         return function <T extends { new (...args: any[]): any }>(constructor: T) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            constructor.__bitmask = bitmask;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            constructor.__entities = query;
             return class extends constructor {
-                __bitmask = bitmask;
+                constructor(...args: any[]) {
+                    super(...args);
+                    if (this['onEntityAdded']) {
+                        store.addQueryOnAdded(bitmask, this['onEntityAdded']);
+                    }
+                    if (this['onEntityRemoved']) {
+                        store.addQueryOnRemoved(bitmask, this['onEntityRemoved']);
+                    }
+                }
             };
         };
     }
@@ -151,34 +117,8 @@ export class ECS {
         }
     }
 
-    private deleteEntities(): void {
-        for (let i = 0, entity; (entity = this.deletedEntities[i]); i++) {
-            entity.__clear();
-            this.entityPool.push(entity);
-            delete this.entities[entity.__id];
-        }
-        this.deletedEntities.length = 0;
-    }
-
-    private updateEntities(): void {
-        for (let i = 0, entity; (entity = this.modifiedEntities[i]); i++) {
-            entity.__update();
-        }
-
-        for (let i = 0, system; (system = this.systems[i]); i++) {
-            system.updateEntities(this.modifiedEntities);
-        }
-
-        this.modifiedEntities.length = 0;
-    }
-
     update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
-        if (this.deletedEntities.length > 0) {
-            this.deleteEntities();
-        }
-        if (this.modifiedEntities.length > 0) {
-            this.updateEntities();
-        }
+        this.entityStore.update();
         for (let i = 0, method; (method = this.updateCycleMethods[i]); i++) {
             this.callMethodOnSystems(method, a1, a2, a3, a4, a5, a6, a7, a8, a9);
         }

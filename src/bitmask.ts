@@ -41,6 +41,16 @@ export class Bitmask {
         return true;
     }
 
+    isEqual(other: Bitmask): boolean {
+        this.balance(other);
+        for (let i = 0; i < this.mask.length; i++) {
+            if (this.mask[i] !== other.mask[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private balance(other: Bitmask): void {
         if (this.mask.length !== other.mask.length) {
             if (this.mask.length > other.mask.length) {

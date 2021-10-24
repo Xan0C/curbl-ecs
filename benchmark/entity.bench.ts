@@ -1,4 +1,4 @@
-import { ECS as ecs } from '@curbl/ecs';
+import { ECS as ecs, System } from '@curbl/ecs';
 import Benchmark, { Event } from 'benchmark';
 
 const ECS = new ecs();
@@ -6,15 +6,32 @@ const ECS = new ecs();
 const suite = new Benchmark.Suite();
 const entity = ECS.createEntity();
 
-@ECS.Component('InitialComponent', () => new InitialComponent())
+@ECS.System('InitialComponent')
+class InitSystem extends System {
+    setUp(): void {}
+
+    tearDown(): void {}
+}
+ECS.addSystem(new InitSystem());
+
+@ECS.System('TestComponent')
+class TestSystem extends System {
+    setUp(): void {}
+
+    tearDown(): void {}
+}
+ECS.addSystem(new TestSystem());
+
+@ECS.Component('InitialComponent')
 class InitialComponent {
     x = 0;
 }
 
-@ECS.Component('TestComponent', () => new TestComponent())
+@ECS.Component('TestComponent')
 class TestComponent {}
 
 entity.add(new InitialComponent());
+ECS.update();
 
 suite
     .add('Entity#create', function () {
