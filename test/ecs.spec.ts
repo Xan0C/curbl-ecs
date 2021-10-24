@@ -57,6 +57,7 @@ describe('ECS', function () {
         // given
         const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
         // when
+        ECS.update();
         // then
         expect(entity.get<Name>('Name').name).eql('Batman');
         expect(entity.get<Position>('Position').x).eql(13);
@@ -87,6 +88,7 @@ describe('ECS', function () {
         const system = new NameSystem();
         ECS.addSystem(system);
         // when
+        ECS.update();
         // then
         expect(system.entities.includes(entity)).eql(true, 'entity with position and name should be in system');
         expect(system.entities.includes(positionEntity)).eql(false, 'entity with position should not be in system');
@@ -120,6 +122,7 @@ describe('ECS', function () {
     it('should call onEntityRemoved if a entity removes a component needed by the system', () => {
         // given
         const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        ECS.update();
         const system = new TestSystem();
         ECS.addSystem(system);
         entity.remove('Name');
@@ -131,9 +134,10 @@ describe('ECS', function () {
 
     it('should call onEntityRemoved if a entity is removed from the ecs', () => {
         // given
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
         const system = new TestSystem();
         ECS.addSystem(system);
+        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        ECS.update();
         entity.dispose();
         // when
         ECS.update();

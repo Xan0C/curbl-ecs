@@ -64,6 +64,8 @@ describe('Component', function () {
         });
 
         it('should register component and create via factory method', () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             ECS.__removeComponent(new TestComponentExtended(''));
             const component = ECS.createComponent<TestComponentExtended>('TestComponentExtended', 'Test');
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment

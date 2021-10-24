@@ -26,7 +26,9 @@ class PositionComponent {
         return this;
     }
 }
-new PositionComponent();
+for (let i = 0; i < 10000; i++) {
+    ECS.__removeComponent(new PositionComponent() as any);
+}
 
 @ECS.System('Position')
 class PositionSystem extends System {
@@ -47,7 +49,7 @@ class PositionSystem extends System {
 
 const entities: Entity[] = [];
 
-for (let i = 0; i < 1; i++) {
+for (let i = 0; i < 50; i++) {
     ECS.addSystem(new PositionSystem());
 }
 for (let i = 0; i < 100_000; i++) {
@@ -62,7 +64,7 @@ suite
     .add('ECS#update_100k_entities_1System_1Components_no_change', function () {
         ECS.update();
     })
-    .add('ECS#add_and_remove_entities', function () {
+    .add('ECS#add_and_remove_entities_1k_1Component', function () {
         for (let i = 0; i < 1000; i++) {
             entities[i]!.dispose();
             const entity = ECS.createEntity(ECS.createComponent('Position', 13, 14));
@@ -70,7 +72,17 @@ suite
         }
         ECS.update();
     })
+    .add('ECS#add_modify_1k_Entities', function () {
+        for (let i = 0; i < 1000; i++) {
+            if (Math.random() > 0.5) {
+                entities[i]!.remove('Position');
+            } else {
+                entities[i]!.add(ECS.createComponent('Position', 12, 3));
+            }
+        }
+        ECS.update();
+    })
     .on('cycle', function (event: Event) {
         console.log(String(event.target));
     })
-    .run();
+    .run({ async: true });

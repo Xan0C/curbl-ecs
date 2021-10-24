@@ -59,10 +59,20 @@ suite
         }
         ecs.update();
     })
+    .add('yagl#add_modify_1k_Entities', function () {
+        for (let i = 0; i < 10; i++) {
+            if (Math.random() > 0.5) {
+                entities[i]!.removeComponent('pos');
+            } else {
+                entities[i]!.addComponent('pos', { x: 0, y: 0 });
+            }
+        }
+        ECS.update();
+    })
     .on('start', function () {
         ecs.update();
     })
     .on('cycle', function (event: Event) {
         console.log(String(event.target));
     })
-    .run();
+    .run({ async: true });
