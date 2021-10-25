@@ -1,61 +1,51 @@
 # CURBL-ECS
 
-curbl-ecs is an lightweight Entity Component System using decorator magic for Components, Entities and Systems.
-There is also a simple web worker support.
+curbl-ecs is a lightweight Entity Component.
 
 ## Example
 
 * Creating a Component
 
-```javascript
+```typescript
+import { ECS } from '@curbl/ecs';
 
-@Ecs.Component() class PositionComponent {
-    public x: number;
-    public y: number;
+const ecs = new ECS();
 
-    constructor(config: {x: number, y: number} = {x: 0, y: 0}) {
-        this.x = config.x;
-        this.y = config.y;
-    }
+@ecs.Component('Position') 
+class PositionComponent {
+    x: number = 0;
+    y: number = 0;
 }
 ```
 
-* Creating an Entity with components
+* Adding a Entity with components
 
-```javascript
-
-@Ecs.Entity(
-    {component: PositionComponent, config: {x: 12, y: 12}}
-) class PositionEntity {
-}
-```
-
-* Adding a Entity with predefined Components
-
-```javascript
-const entity = Ecs.addEntity(new PositionEntity());
+```typescript
+const ecs = new ECS();
+const entity = ecs.addEntity(new PositionComponent());
 ```
 
 * Create entity and add Component
 
-```javascript
-const entity = Ecs.addEntity();
+```typescript
+const ecs = new ECS();
+const entity = ecs.addEntity();
 entity.add(new PositionComponent());
 ```
 
 * Get Component from Entity
 
-```javascript
-entity.get(PositionComponent).x = 42;
-entity.get("PositionComponent").x = 42;
+```typescript
+entity.get<PositionComponent>('Position').x = 42;
 ```
 
 * Creating a System
 
-```javascript
+```typescript
 
-//All Entities with a PositionComponent will be added to the System
-@Ecs.System(PositionComponent)
+const ecs = new ECS();
+
+@ecs.System('Position')
 export class MySystem {
 
     setUp(): void {
@@ -67,28 +57,10 @@ export class MySystem {
     }
 
     update(): void {
-        for (let i = 0, entity: Entity; entity = this.entities[i]; i++) {
+        const entities = this.entities();
+        for (let i = 0, entity: Entity; entity = entities[i]; i++) {
             //Do stuff with the entities
         }
     }
 }
-```
-* Using Web Workers by adding the WebWorker to the main-thread.
-All Entities are automatically shared between all workers.
-
-```javascript
-@Ecs.Entity(
-    {component: PositionComponent, config: {x: 1, y: 2, z: 4}}
-) class PositionEntity {
-}
-
-Ecs.addEntity(new PositionEntity());
-
-const readWorker = new ReadWorker();
-Ecs.addWorker(readWorker);
-
-const writeWorker = new WriteWorker();
-Ecs.addWorker(writeWorker);
-
-Ecs.update();
 ```
