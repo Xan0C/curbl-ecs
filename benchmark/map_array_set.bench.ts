@@ -22,7 +22,7 @@ const removeList: Entity[] = [];
 const removeSet = new Set<Entity>();
 
 for (let i = 0; i < 1000; i++) {
-    const entity = ecs.createEntity(new Position());
+    const entity = ecs.addEntity(new Position());
     entities.push(entity);
     map_set.get(bitmask)!.add(entity);
     map_array.get(bitmask)!.push(entity);
@@ -56,7 +56,7 @@ suite
     .add('Map_Set#add', function () {
         const it = map_set.get(bitmask)!;
         for (let i = 0; i < 10; i++) {
-            it.add(ecs.createEntity(new Position()));
+            it.add(ecs.addEntity(new Position()));
         }
     })
     .add('Map_Array#iterate', function () {
@@ -68,7 +68,7 @@ suite
     .add('Map_Array#add', function () {
         const it = map_array.get(bitmask)!;
         for (let i = 0; i < 10; i++) {
-            it.push(ecs.createEntity(new Position()));
+            it.push(ecs.addEntity(new Position()));
         }
     })
     .add('array#iterate', function () {

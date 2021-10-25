@@ -38,7 +38,7 @@ const entities: Entity[] = [];
 ECS.addSystem(new PositionSystem());
 
 for (let i = 0; i < 100_000; i++) {
-    const entity = ECS.createEntity();
+    const entity = ECS.addEntity();
     entity.add(new PositionComponent());
     entities.push(entity);
 }
@@ -51,19 +51,36 @@ suite
     })
     .add('ECS#add_and_remove_entities_1k_1Component', function () {
         for (let i = 0; i < 1000; i++) {
-            entities[i]!.dispose();
-            const entity = ECS.createEntity(new PositionComponent());
+            entities.pop()!.dispose();
+            const entity = ECS.addEntity();
+            entity.add(new PositionComponent());
             entities.push(entity);
         }
         ECS.update();
     })
     .add('ECS#add_modify_1k_Entities', function () {
         for (let i = 0; i < 1000; i++) {
-            if (i % 2 === 0) {
+            if (Math.random() > 0.5) {
                 entities[i]!.remove('Position');
             } else {
                 entities[i]!.add(new PositionComponent());
             }
+        }
+        ECS.update();
+    })
+    .add('ECS#add_and_modify_1k_Entities', function () {
+        for (let i = 0; i < 1000; i++) {
+            entities.pop()!.dispose();
+            const modifiedEntity = entities.pop()!;
+            if (Math.random() > 0.5) {
+                modifiedEntity.remove('Position');
+            } else {
+                modifiedEntity.add(new PositionComponent());
+            }
+            entities.push(modifiedEntity);
+            const entity = ECS.addEntity();
+            entity.add(new PositionComponent());
+            entities.push(entity);
         }
         ECS.update();
     })

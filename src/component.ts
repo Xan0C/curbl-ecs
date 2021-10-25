@@ -1,4 +1,6 @@
-export class Component {
-    static readonly __id: string;
-    static readonly __bit: number;
+export interface Component {
+    constructor: {
+        __id: string;
+        __bit: number;
+    };
 }

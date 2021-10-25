@@ -41,7 +41,7 @@ describe('System', function () {
             /// given
             const system = new TestSystem();
             ECS.addSystem(system);
-            const entity = ECS.createEntity(new TestComponent());
+            const entity = ECS.addEntity(new TestComponent());
             // when
             ECS.update();
             // then

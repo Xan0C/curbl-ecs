@@ -1,6 +1,6 @@
 import { Bitmask } from './bitmask';
 
-export class ComponentBitMask {
+export class ComponentRegister {
     /**
      * name of the component and the bit position
      * @private
@@ -34,7 +34,6 @@ export class ComponentBitMask {
     }
 
     buildMask(components: string[]): Bitmask {
-        // Note: BitSet is significantly slower then the standard 32 bit number (8 to 14 ~ 43%) -> build own BitSet
         const bitmask = new Bitmask(this.size);
         for (let i = 0, component; (component = components[i]); i++) {
             bitmask.set(this.components[component]!, 1);

@@ -24,7 +24,7 @@ class TestComponentExtended extends TestComponent {
 
 describe('Component', function () {
     after(() => {
-        ECS.reset(true);
+        ECS.reset();
     });
 
     describe('#decorator', () => {

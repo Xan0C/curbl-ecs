@@ -18,14 +18,6 @@ suite
     .add('Bitmask#set', function () {
         bitmask.set(36, 1);
     })
-    .add('Bitmask#and', function () {
-        bitmask.and(bitmask_two);
-    })
-    .add('Bitmask#and_diff_size#with_instantiate', function () {
-        const bitmask = new Bitmask(64);
-        const bitmask_diff_size = new Bitmask(32);
-        bitmask.and(bitmask_diff_size);
-    })
     .add('Bitmask#compareAnd', function () {
         bitmask.compareAnd(bitmask_two);
     })

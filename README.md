@@ -39,7 +39,7 @@ const entity = Ecs.addEntity(new PositionEntity());
 * Create entity and add Component
 
 ```javascript
-const entity = Ecs.createEntity();
+const entity = Ecs.addEntity();
 entity.add(new PositionComponent());
 ```
 

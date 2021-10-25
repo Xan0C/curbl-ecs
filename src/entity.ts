@@ -40,9 +40,8 @@ export class EntityHandle implements Entity {
 
     add<T>(component: T): void {
         if (!this.dead) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this.updates.set(component.constructor.__id, { component: component, added: true });
+            const comp = component as unknown as Component;
+            this.updates.set(comp.constructor.__id, { component: comp, added: true });
             this.markDirty();
         }
     }
@@ -77,18 +76,10 @@ export class EntityHandle implements Entity {
         const it = this.updates.values();
         for (const update of it) {
             if (update.added) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 this.__bitmask.set(update.component.constructor.__bit, 1);
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 this.components.set(update.component.constructor.__id, update.component);
             } else if (update.component) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 this.__bitmask.set(update.component.constructor.__bit, 0);
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 this.components.delete(update.component.constructor.__id);
             }
         }

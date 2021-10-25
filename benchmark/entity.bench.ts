@@ -4,7 +4,7 @@ import Benchmark, { Event } from 'benchmark';
 const ECS = new ecs();
 
 const suite = new Benchmark.Suite();
-const entity = ECS.createEntity();
+const entity = ECS.addEntity();
 
 @ECS.System('InitialComponent')
 class InitSystem extends System {
@@ -35,7 +35,7 @@ ECS.update();
 
 suite
     .add('Entity#create', function () {
-        ECS.createEntity();
+        ECS.addEntity();
     })
     .add('Entity#add_component', function () {
         entity.add(new TestComponent());
@@ -54,7 +54,7 @@ suite
         entity.remove('TestComponent');
     })
     .add('Entity#dispose', function () {
-        const entity = ECS.createEntity();
+        const entity = ECS.addEntity();
         entity.dispose();
     })
     .on('cycle', function (event: Event) {

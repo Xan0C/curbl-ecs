@@ -17,13 +17,6 @@ export class Bitmask {
         }
     }
 
-    and(other: Bitmask): void {
-        this.balance(other);
-        for (let i = 0; i < this.mask.length; i++) {
-            this.mask[i] = (this.mask[i]! & other.mask[i]!) >>> 0;
-        }
-    }
-
     /**
      * compare two bitmasks with and
      * e.g. this(110) and other(111) is true 110 & 111 === 110

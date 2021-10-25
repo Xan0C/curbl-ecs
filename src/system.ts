@@ -12,7 +12,7 @@ export abstract class System {
      */
     abstract tearDown(): void;
 
-    entities(): Entity[] {
+    entities(): ReadonlyArray<Readonly<Entity>> {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return this.constructor.__entities;

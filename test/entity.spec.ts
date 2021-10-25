@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ECS as ecs } from '../src';
-import { System, Entity } from '../src';
+import { System } from '../src';
 
 const ECS = new ecs();
 
@@ -11,20 +11,18 @@ class TestComponent {}
 class TestSystem extends System {
     setUp(): void {}
     tearDown(): void {}
-    onEntityAdded(_: Entity): void {}
-    onEntityRemoved(_: Entity): void {}
 }
 ECS.addSystem(new TestSystem());
 
 describe('Entity', function () {
     describe('#create', () => {
         it('should create a new entity handle', () => {
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             expect(entity).not.eq(undefined);
         });
 
         it('should create a new entity handle with components', () => {
-            const entity = ECS.createEntity(new TestComponent());
+            const entity = ECS.addEntity(new TestComponent());
             ECS.update();
             expect(entity).not.eq(undefined);
             expect(entity.has('TestComponent')).true;
@@ -34,7 +32,7 @@ describe('Entity', function () {
     describe('#add', () => {
         it('should add a component to the entity ', () => {
             // given
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             const component = new TestComponent();
             // when
             entity.add(component);
@@ -47,7 +45,7 @@ describe('Entity', function () {
     describe('#has', () => {
         it('should have the component in the entity', () => {
             // given
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             const component = new TestComponent();
             // when
             entity.add(component);
@@ -58,7 +56,7 @@ describe('Entity', function () {
 
         it('should not have the component in the entity', () => {
             // given
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             ECS.update();
             // when
             // then
@@ -69,7 +67,7 @@ describe('Entity', function () {
     describe('#get', () => {
         it('should get component from entity', () => {
             // given
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             const component = new TestComponent();
             entity.add(component);
             ECS.update();
@@ -82,7 +80,7 @@ describe('Entity', function () {
     describe('#remove', () => {
         it('should remove component from entity', () => {
             // given
-            const entity = ECS.createEntity();
+            const entity = ECS.addEntity();
             const component = new TestComponent();
             entity.add(component);
             // when

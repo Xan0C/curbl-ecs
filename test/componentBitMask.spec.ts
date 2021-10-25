@@ -1,11 +1,11 @@
 import { expect } from 'chai';
-import { ComponentBitMask } from '../src/componentBitMask';
+import { ComponentRegister } from '../src/componentRegister';
 
 describe('ComponentBitMask', function () {
-    let componentBitMask: ComponentBitMask;
+    let componentBitMask: ComponentRegister;
 
     beforeEach(() => {
-        componentBitMask = new ComponentBitMask();
+        componentBitMask = new ComponentRegister();
     });
 
     describe('#buildMask', () => {

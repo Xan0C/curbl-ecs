@@ -65,7 +65,7 @@ describe('ECS', function () {
 
     it('should create entity with Name and Position component', () => {
         // given
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
         // when
         ECS.update();
         // then
@@ -78,9 +78,9 @@ describe('ECS', function () {
         // given
         const system = new TestSystem();
         ECS.addSystem(system);
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
-        const positionEntity = ECS.createEntity(new Position(13, 37));
-        const nameEntity = ECS.createEntity(new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
+        const positionEntity = ECS.addEntity(new Position(13, 37));
+        const nameEntity = ECS.addEntity(new Name('Batman'));
         // when
         ECS.update();
         // then
@@ -94,9 +94,9 @@ describe('ECS', function () {
         // given
         const system = new NameSystem();
         ECS.addSystem(system);
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
-        const positionEntity = ECS.createEntity(new Position(13, 37));
-        const nameEntity = ECS.createEntity(new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
+        const positionEntity = ECS.addEntity(new Position(13, 37));
+        const nameEntity = ECS.addEntity(new Name('Batman'));
         // when
         ECS.update();
         // then
@@ -110,7 +110,7 @@ describe('ECS', function () {
         const system = new TestSystem();
         ECS.addSystem(system);
         // when
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
         ECS.update();
         // then
         expect(system.entitiesAdded.includes(entity)).true;
@@ -120,7 +120,7 @@ describe('ECS', function () {
         // given
         const system = new TestSystem();
         ECS.addSystem(system);
-        const entity = ECS.createEntity(new Position(13, 37));
+        const entity = ECS.addEntity(new Position(13, 37));
         ECS.update();
         expect(system.entitiesAdded.includes(entity)).false;
         entity.add(new Name('Batman'));
@@ -134,7 +134,7 @@ describe('ECS', function () {
         // given
         const system = new TestSystem();
         ECS.addSystem(system);
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
         ECS.update();
         entity.remove('Name');
         // when
@@ -147,7 +147,7 @@ describe('ECS', function () {
         // given
         const system = new TestSystem();
         ECS.addSystem(system);
-        const entity = ECS.createEntity(new Position(13, 37), new Name('Batman'));
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
         ECS.update();
         entity.dispose();
         // when

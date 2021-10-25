@@ -1,56 +1,43 @@
 import { Entity } from './entity';
-import { injectSystem, System } from './system';
-import { ComponentBitMask } from './componentBitMask';
+import { System } from './system';
+import { ComponentRegister } from './componentRegister';
 import { EntityStore } from './entityStore';
+import { SystemStore } from './systemStore';
 
 export class ECS {
-    private entityStore: EntityStore;
-    private readonly componentBitMask: ComponentBitMask;
-    private updateCycleMethods: string[];
-    private systems: System[];
+    private readonly entityStore: EntityStore;
+    private readonly systemStore: SystemStore;
+    private readonly componentBitMask: ComponentRegister;
 
     constructor() {
         this.entityStore = new EntityStore();
-        this.componentBitMask = new ComponentBitMask();
-        this.systems = [];
-        this.updateCycleMethods = ['update'];
+        this.systemStore = new SystemStore();
+        this.componentBitMask = new ComponentRegister();
     }
 
-    setUpdateCycleMethods(methods: string[]): void {
-        this.updateCycleMethods = methods;
+    setUpdateMethods(methods: string[]): void {
+        this.systemStore.setUpdateMethods(methods);
     }
 
-    reset(full = false): void {
-        this.systems = [];
+    reset(): void {
+        this.systemStore.clear();
         this.entityStore.clear();
-        if (full) {
-            this.updateCycleMethods = ['update'];
-            this.componentBitMask.clear();
-        }
     }
 
-    createEntity(...components: unknown[]): Entity {
+    addEntity(...components: unknown[]): Readonly<Entity> {
         return this.entityStore.create(components);
     }
 
     addSystem(system: System): void {
-        if (!this.hasSystem(system)) {
-            this.systems.push(system);
-            injectSystem(system, this.updateCycleMethods);
-            system.setUp();
-        }
+        this.systemStore.addSystem(system);
     }
 
     removeSystem(system: System): void {
-        const index = this.systems.indexOf(system);
-        if (index !== -1) {
-            this.systems.splice(index, 1);
-            system.tearDown();
-        }
+        this.systemStore.removeSystem(system);
     }
 
     hasSystem(system: System): boolean {
-        return this.systems.includes(system);
+        return this.systemStore.hasSystem(system);
     }
 
     /**
@@ -61,7 +48,7 @@ export class ECS {
      */
     Component(id: string) {
         const bitPos = this.componentBitMask.register(id);
-        return function <T extends { new (...args: any[]): object }>(constructor: T) {
+        return function <T extends { new (...args: any[]): any }>(constructor: T) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             constructor.__id = id;
@@ -100,27 +87,8 @@ export class ECS {
         };
     }
 
-    private callMethodOnSystems(
-        method: string,
-        a1?: any,
-        a2?: any,
-        a3?: any,
-        a4?: any,
-        a5?: any,
-        a6?: any,
-        a7?: any,
-        a8?: any,
-        a9?: any
-    ): void {
-        for (let i = 0, system: any; (system = this.systems[i]); i++) {
-            system[method](a1, a2, a3, a4, a5, a6, a7, a8, a9);
-        }
-    }
-
     update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
         this.entityStore.update();
-        for (let i = 0, method; (method = this.updateCycleMethods[i]); i++) {
-            this.callMethodOnSystems(method, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-        }
+        this.systemStore.update(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 }

@@ -13,9 +13,10 @@ type Query = {
 };
 
 export class EntityStore {
-    private pool: Entity[] = [];
-    private queries: Map<Bitmask, Query> = new Map<Bitmask, Query>();
-    private modified: Entity[] = [];
+    private readonly entities: Set<Entity> = new Set<Entity>();
+    private readonly pool: Entity[] = [];
+    private readonly queries: Map<Bitmask, Query> = new Map<Bitmask, Query>();
+    private readonly modified: Entity[] = [];
 
     constructor() {
         this.markModified = this.markModified.bind(this);
@@ -28,7 +29,14 @@ export class EntityStore {
                 return this.queries.get(mask)!.list;
             }
         }
-        const query = { set: new Set<Entity>(), list: [], onEntityAdded: [], onEntityRemoved: [] };
+        const query: Query = { set: new Set<Entity>(), list: [], onEntityAdded: [], onEntityRemoved: [] };
+        const entities = this.entities.values();
+        for (const entity of entities) {
+            if (bitmask.compareAnd(entity.__bitmask)) {
+                query.set.add(entity);
+                query.list.push(entity);
+            }
+        }
         this.queries.set(bitmask, query);
         return query.list;
     }
@@ -46,10 +54,12 @@ export class EntityStore {
         for (let i = 0, component: any; (component = components[i]); i++) {
             handle.add(component);
         }
+        this.entities.add(handle);
         return handle;
     }
 
     private remove(entity: Entity): void {
+        this.entities.delete(entity);
         this.pool.push(entity);
     }
 
@@ -105,6 +115,7 @@ export class EntityStore {
 
     clear(): void {
         this.modified.length = 0;
+        this.entities.clear();
         const it = this.queries.values();
         for (const entities of it) {
             entities.set.clear();

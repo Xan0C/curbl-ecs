@@ -31,7 +31,7 @@ class EntityBase {
 const componentsList: any[] = [];
 for (let i = 0; i < 100000; i++) {
     const position = new Position();
-    const entity = ecs.createEntity(position);
+    const entity = ecs.addEntity(position);
     entities.push(entity);
     const base = new EntityBase();
     base.handle = entity;

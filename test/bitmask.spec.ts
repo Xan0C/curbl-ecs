@@ -36,47 +36,11 @@ describe('Bitmask', function () {
             expect(mask.toString()).eq('00000000000000000000000000000000');
         });
     });
-    describe('#and', () => {
-        it('and for 2 bitmasks with the same length', () => {
-            const mask = new Bitmask(64);
-            mask.set(34, 1);
-            mask.set(1, 0);
-            const other = new Bitmask(34);
-            other.set(1, 1);
-            other.set(34, 1);
-            // when
-            mask.and(other);
-            // then
-            expect(mask.toString()).eq('0000000000000000000000000000010000000000000000000000000000000000');
-        });
-
-        it('and for 2 bitmask of different sizes#this larger', () => {
-            const mask = new Bitmask(64);
-            mask.set(8, 1);
-            const other = new Bitmask(32);
-            other.set(8, 1);
-            // when
-            mask.and(other);
-            // then
-            expect(mask.toString()).eq('0000000000000000000000000000000000000000000000000000000100000000');
-        });
-
-        it('and for 2 bitmask of different sizes#other larger', () => {
-            const mask = new Bitmask(32);
-            mask.set(8, 1);
-            const other = new Bitmask(64);
-            other.set(8, 1);
-            // when
-            mask.and(other);
-            // then
-            expect(mask.toString()).eq('0000000000000000000000000000000000000000000000000000000100000000');
-        });
-    });
     describe('#compareAnd', () => {
         it('should compare two bitmasks with and', () => {
             const mask = new Bitmask(32);
             mask.set(31, 1);
-            const other = new Bitmask(32);
+            const other = new Bitmask(64);
             other.set(31, 1);
             other.set(4, 1);
             // when
