@@ -3,7 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "strictFunctionTypes": false,                         /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */
-    "strictBindCallApply": false
+    "strictBindCallApply": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
   "include": [
     "./src/**/*.ts",
