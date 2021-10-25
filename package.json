@@ -5,8 +5,8 @@
   "source": "./src/index.ts",
   "main": "./lib/ecs.js",
   "module": "./lib/ecs.module.js",
-  "umd:main": "dist/ecs.umd.js",
-  "unpkg": "dist/ecs.umd.js",
+  "unpkg": "./lib/ecs.umd.js",
+  "exports": "./lib/ecs.modern.js",
   "types": "./lib/index.d.ts",
   "typings": "./lib/index.d.ts",
   "scripts": {
@@ -16,14 +16,6 @@
     "tsc:check": "tsc --noEmit",
     "eslint": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts",
     "eslint:fix": "eslint ./src/**/*.ts ./test/**/*.ts ./example/src/**/*.ts --fix"
-  },
-  "exports": {
-    ".": {
-      "browser": "./lib/ecs.module.js",
-      "umd": "./lib/ecs.umd.js",
-      "import": "./lib/ecs.module.js",
-      "require": "./lib/ecs.js"
-    }
   },
   "repository": {
     "type": "git",

@@ -5,6 +5,8 @@
     "allowJs": true,
     "esModuleInterop": true,
     "downlevelIteration": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
   "include": [
     "./**/*.ts",

@@ -1,14 +1,13 @@
 import Benchmark, { Event } from 'benchmark';
-import { Bitmask, Entity } from '@curbl/ecs';
+import { Entity } from '@curbl/ecs';
 import { ECS } from '@curbl/ecs';
 
 const suite = new Benchmark.Suite();
 const ecs = new ECS();
 const entities: any[] = [];
-const map_set = new Map<Bitmask, Set<Entity>>();
-const map_array = new Map<Bitmask, Entity[]>();
-const bitmask = new Bitmask(32);
-bitmask.set(1, 0);
+const map_set = new Map<any, Set<Entity>>();
+const map_array = new Map<any, Entity[]>();
+const bitmask = { bit: 32 };
 map_set.set(bitmask, new Set());
 map_array.set(bitmask, []);
 
@@ -35,7 +34,7 @@ class SmallEntity {
 }
 
 const smallList: any[] = [];
-const smallMap_set = new Map<Bitmask, Set<SmallEntity>>();
+const smallMap_set = new Map<any, Set<SmallEntity>>();
 smallMap_set.set(bitmask, new Set());
 for (let i = 0; i < 1000; i++) {
     const entity = new SmallEntity();
