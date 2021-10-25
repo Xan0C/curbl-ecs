@@ -48,6 +48,18 @@ describe('System', function () {
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entity)).true;
         });
+
+        it('should add the existing matching entities to a new system', () => {
+            /// given
+            const entity = ECS.addEntity(new TestComponent());
+            ECS.update();
+            // when
+            const system = new TestSystem();
+            ECS.addSystem(system);
+            // then
+            expect(ECS.hasSystem(system)).true;
+            expect(system.entities().includes(entity)).true;
+        });
     });
 
     describe('#remove', () => {
