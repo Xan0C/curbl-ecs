@@ -1,0 +1,24 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "example usage for curbl/ecs",
+  "source": "./src/index.ts",
+  "main": "./dist/example.js",
+  "module": "./dist/example.module.js",
+  "unpkg": "./dist/example.umd.js",
+  "exports": "./dist/example.modern.js",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
+  "scripts": {
+    "build": "microbundle --external '@curbl/ecs'"
+  },
+  "author": "Sören Vullriede",
+  "license": "MIT",
+  "dependencies": {
+    "@curbl/ecs": "file:.."
+  },
+  "devDependencies": {
+    "microbundle": "^0.14.1",
+    "typescript": "^4.4.4"
+  }
+}
