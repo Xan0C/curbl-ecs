@@ -18,7 +18,7 @@ export class EntityHandle implements Entity {
     private dead: boolean;
     private dirty: boolean;
     private readonly groups: Map<string, Set<Component>>;
-    private components: Map<string, Component>;
+    private readonly components: Map<string, Component>;
     private readonly updates: Map<string, { component: Component; added: boolean }>;
     private readonly markModified: (entity: Entity) => void;
     private readonly addToPool: (entity: Entity) => void;
