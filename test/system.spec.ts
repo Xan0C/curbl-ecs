@@ -4,7 +4,7 @@ import { expect } from 'chai';
 
 const ECS = new ecs();
 
-@ECS.System('TestComponent')
+@ECS.System('TestGroup')
 class TestSystem extends System {
     setUpCalled = false;
     tearDownCalled = false;
@@ -22,8 +22,11 @@ class TestSystem extends System {
     onEntityRemoved(_: Entity): void {}
 }
 
-@ECS.Component('TestComponent')
+@ECS.Component('TestComponent', 'TestGroup')
 class TestComponent {}
+
+@ECS.Component('TestComponentTwo', 'TestGroup')
+class TestComponentTwo {}
 
 describe('System', function () {
     describe('#create', () => {
@@ -59,6 +62,20 @@ describe('System', function () {
             // then
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entity)).true;
+        });
+
+        it('should add components in the same group to the system', () => {
+            /// given
+            const system = new TestSystem();
+            ECS.addSystem(system);
+            const entityOne = ECS.addEntity(new TestComponent());
+            const entityTwo = ECS.addEntity(new TestComponentTwo());
+            // when
+            ECS.update();
+            // then
+            expect(ECS.hasSystem(system)).true;
+            expect(system.entities().includes(entityOne)).true;
+            expect(system.entities().includes(entityTwo)).true;
         });
     });
 
