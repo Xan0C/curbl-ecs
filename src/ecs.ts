@@ -42,40 +42,25 @@ export class ECS {
 
     /**
      * Register as a Component
-     * the group property allows to add different structs as the same ComponentType. 
-     * e.g.
-     * class Shape {
-     *  type: string;
-     * }
-     * 
-     * @ECS.Component('quad', 'shape')
-     * class Quad extends Shape {
+     *
+     * @ECS.Component('quad')
+     * class Quad {
      *  size: number;
      * }
-     * 
-     * @ECS.Component('rectangle', 'shape')
-     * class Rectangle extends Shape {
-     *  width: number;
-     *  height: number
-     * }
-     * 
-     * @ECS.System('shape')
-     * class ShapeSystem extends System {
+     *
+     * @ECS.System('quad')
+     * class QuadSystem extends System {
      *  update() {
      *      const entity = this.entities[0];
-     *      // could have rectangle
-     *      entity.get('rectangle');
-     *      // or quad component
-     *      entity.get('quad');    
+     *      entity.get('quad');
      *  }
      * }
-     * *internal* sets the static __id, __group and __bit property
+     * *internal* sets the static __id and __bit property
      * @param id
-     * @param group {optional} - add this component to a group
      * @constructor
      */
-    Component(id: string, group?: string) {
-        const bitPos = this.componentBitMask.register(group || id);
+    Component(id: string) {
+        const bitPos = this.componentBitMask.register(id);
         return function <T extends { new (...args: any[]): any }>(constructor: T) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -83,9 +68,6 @@ export class ECS {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             constructor.__bit = bitPos;
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            constructor.__group = group || id;
             return constructor;
         };
     }
@@ -97,8 +79,8 @@ export class ECS {
      * class Position { x = 0; y = 0; }
      * @ECS.System('position')
      * class PositionSystem extends System {}
-     * @param components 
-     * @returns 
+     * @param components
+     * @returns
      */
     System(...components: [string, ...string[]]) {
         for (let i = 0, component; (component = components[i]); i++) {

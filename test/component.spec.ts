@@ -12,25 +12,13 @@ class Shape {
     }
 }
 
-@ECS.Component('quad', 'shape')
+@ECS.Component('quad')
 class Quad extends Shape {
     size: number;
 
     constructor(name: string, size: number) {
         super(name);
         this.size = size;
-    }
-}
-
-@ECS.Component('rectangle', 'shape')
-class Rectangle extends Shape {
-    width: number;
-    height: number;
-
-    constructor(name: string, width: number, height: number) {
-        super(name);
-        this.width = width;
-        this.height = height;
     }
 }
 
@@ -46,7 +34,7 @@ describe('Component', function () {
     });
 
     describe('#decorator', () => {
-        it('should set __id, __group and __bit for the component', () => {
+        it('should set __id and __bit for the component', () => {
             const component = new Shape('shape');
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -54,9 +42,6 @@ describe('Component', function () {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             expect(component.constructor.__bit).eql(0);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(component.constructor.__group).eql('shape');
             expect(component.name).eql('shape');
         });
 
@@ -67,30 +52,16 @@ describe('Component', function () {
             expect(component.constructor.__id).eql('quad');
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            expect(component.constructor.__bit).eql(0);
-             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(component.constructor.__group).eql('shape');
+            expect(component.constructor.__bit).eql(1);
             expect(component.name).eql('quad');
             expect(component.size).eql(4711);
         });
 
-        it('should add components to the same group(same bit)', () => {
-            const quad = new Quad('quad', 4711);
-            const rectangle = new Rectangle('rect', 13, 37);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(quad.constructor.__bit).eql(0);
-             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(rectangle.constructor.__bit).eql(0);
-        });
-
-        it('should set bit for component in different group', () => {
+        it('should set bit for component', () => {
             const position = new Position();
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            expect(position.constructor.__bit).eql(1);             
+            expect(position.constructor.__bit).eql(2);
         });
     });
 });

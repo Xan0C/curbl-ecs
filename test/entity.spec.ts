@@ -4,11 +4,8 @@ import { System } from '../src';
 
 const ECS = new ecs();
 
-@ECS.Component('TestComponent', 'TestGroup')
+@ECS.Component('TestComponent')
 class TestComponent {}
-
-@ECS.Component('TestComponentTwo', 'TestGroup')
-class TestComponentTwo {}
 
 @ECS.System('TestComponent')
 class TestSystem extends System {
@@ -42,23 +39,6 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.get('TestComponent')).eql(component);
-        });
-
-        it('should add the components with the same group to the entity ', () => {
-            // given
-            const entity = ECS.addEntity();
-            const componentOne = new TestComponent();
-            const componentTwo = new TestComponentTwo();
-            // when
-            entity.add(componentOne);
-            entity.add(componentTwo);
-            ECS.update();
-            // then
-            expect(entity.get('TestComponent')).eql(componentOne);
-            expect(entity.get('TestComponentTwo')).eql(componentTwo);
-            expect(entity.group<any>('TestGroup').includes(componentOne)).eql(true);
-            expect(entity.group<any>('TestGroup').includes(componentTwo)).eql(true);
-            expect(entity.__bitmask.toString()).eql('00000000000000000000000000000001');
         });
     });
 
@@ -109,7 +89,6 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.has('TestComponent')).false;
-            expect(entity.group('TestGroup')).empty;
         });
     });
 });

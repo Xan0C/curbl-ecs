@@ -4,7 +4,6 @@ import { Component } from './component';
 export interface Entity {
     readonly __bitmask: Bitmask;
     get<T>(component: string): T;
-    group<T>(group: string): T[];
     has(component: string): boolean;
     add<T>(component: T): void;
     remove(component: string): void;
@@ -17,7 +16,6 @@ export class EntityHandle implements Entity {
     readonly __bitmask: Bitmask;
     private dead: boolean;
     private dirty: boolean;
-    private readonly groups: Map<string, Set<Component>>;
     private readonly components: Map<string, Component>;
     private readonly updates: Map<string, { component: Component; added: boolean }>;
     private readonly markModified: (entity: Entity) => void;
@@ -27,7 +25,6 @@ export class EntityHandle implements Entity {
         this.__bitmask = new Bitmask(32);
         this.components = new Map();
         this.updates = new Map();
-        this.groups = new Map();
         this.dirty = false;
         this.dead = false;
         this.markModified = markModified;
@@ -58,10 +55,6 @@ export class EntityHandle implements Entity {
         return this.components.get(component) as unknown as T;
     }
 
-    group<T>(group: string): T[] {
-        return Array.from(this.groups.get(group)! as unknown as Set<T>);
-    }
-
     has(component: string): boolean {
         return this.components.has(component);
     }
@@ -74,21 +67,13 @@ export class EntityHandle implements Entity {
     }
 
     private __add(component: Component): void {
-        if (!this.groups.has(component.constructor.__group)) {
-            this.groups.set(component.constructor.__group, new Set());
-        }
         this.__bitmask.set(component.constructor.__bit, 1);
         this.components.set(component.constructor.__id, component);
-        this.groups.get(component.constructor.__group)!.add(component);
     }
 
     private __remove(component: Component): void {
-        if (!this.groups.has(component.constructor.__group)) {
-            this.groups.set(component.constructor.__group, new Set());
-        }
         this.__bitmask.set(component.constructor.__bit, 0);
         this.components.delete(component.constructor.__id);
-        this.groups.get(component.constructor.__group)!.delete(component);
     }
 
     __update(): void {
@@ -113,7 +98,6 @@ export class EntityHandle implements Entity {
     __clear(): void {
         this.__bitmask.clear();
         this.components.clear();
-        this.groups.clear();
         this.updates.clear();
         this.dirty = false;
         this.dead = false;
