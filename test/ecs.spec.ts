@@ -38,11 +38,11 @@ class TestSystem extends System {
         }
     }
 
-    onEntityAdded(entity: Entity) {
+    override onEntityAdded(entity: Entity) {
         this.entitiesAdded.push(entity);
     }
 
-    onEntityRemoved(entity: Entity) {
+    override onEntityRemoved(entity: Entity) {
         this.entitiesRemoved.push(entity);
     }
 }
@@ -53,9 +53,9 @@ class NameSystem extends System {
 
     tearDown(): void {}
 
-    onEntityAdded(_: Entity) {}
+    override onEntityAdded(_: Entity) {}
 
-    onEntityRemoved(_: Entity) {}
+    override onEntityRemoved(_: Entity) {}
 }
 
 describe('ECS', function () {

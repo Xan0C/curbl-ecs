@@ -19,10 +19,10 @@ class PositionSystem extends System {
 
     tearDown(): void {}
 
-    onEntityAdded(entity: Entity): void {
+    override onEntityAdded(entity: Entity): void {
         entity;
     }
-    onEntityRemoved(entity: Entity): void {
+    override onEntityRemoved(entity: Entity): void {
         entity;
     }
 

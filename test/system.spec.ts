@@ -25,11 +25,11 @@ class TestSystem extends System {
         this.tearDownCalled = true;
     }
 
-    onEntityAdded(_: Entity): void {
+    override onEntityAdded(_: Entity): void {
         this.onEntityAddedCalled = true;
     }
 
-    onEntityRemoved(_: Entity): void {
+    override onEntityRemoved(_: Entity): void {
         this.onEntityRemovedCalled = true;
     }
 }
