@@ -12,6 +12,9 @@ export abstract class System {
      */
     abstract tearDown(): void;
 
+    abstract onEntityAdded?(entity: Entity): void;
+    abstract onEntityRemoved?(entity: Entity): void;
+
     entities(): ReadonlyArray<Readonly<Entity>> {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore

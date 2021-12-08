@@ -8,6 +8,14 @@ const ECS = new ecs();
 class TestSystem extends System {
     setUpCalled = false;
     tearDownCalled = false;
+    onEntityAddedCalled = false;
+    onEntityRemovedCalled = false;
+
+    constructor() {
+        super();
+        this.onEntityAdded = this.onEntityAdded.bind(this);
+        this.onEntityRemoved = this.onEntityRemoved.bind(this);
+    }
 
     setUp(): void {
         this.setUpCalled = true;
@@ -17,9 +25,13 @@ class TestSystem extends System {
         this.tearDownCalled = true;
     }
 
-    onEntityAdded(_: Entity): void {}
+    onEntityAdded(_: Entity): void {
+        this.onEntityAddedCalled = true;
+    }
 
-    onEntityRemoved(_: Entity): void {}
+    onEntityRemoved(_: Entity): void {
+        this.onEntityRemovedCalled = true;
+    }
 }
 
 @ECS.Component('TestComponent')
@@ -50,6 +62,7 @@ describe('System', function () {
             // then
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entity)).true;
+            expect(system.onEntityAddedCalled).true;
         });
 
         it('should add the existing matching entities to a new system', () => {
@@ -62,6 +75,7 @@ describe('System', function () {
             // then
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entity)).true;
+            expect(system.onEntityAddedCalled).false;
         });
 
         it('should only add components that match the system component mask', () => {
@@ -75,7 +89,24 @@ describe('System', function () {
             // then
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entityOne)).true;
+            expect(system.onEntityAddedCalled).true;
             expect(system.entities().includes(entityTwo)).false;
+        });
+
+        it('should remove entity from the system', () => {
+            /// given
+            const entity = ECS.addEntity(new TestComponent());
+            ECS.update();
+            // when
+            const system = new TestSystem();
+            ECS.addSystem(system);
+            expect(system.entities().includes(entity)).true;
+            entity.remove('TestComponent');
+            ECS.update();
+            // then
+            expect(ECS.hasSystem(system)).true;
+            expect(system.entities().includes(entity)).false;
+            expect(system.onEntityRemovedCalled).true;
         });
     });
 
