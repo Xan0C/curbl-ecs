@@ -87,12 +87,9 @@ export class ECS {
             this.componentBitMask.register(component);
         }
         const bitmask = this.componentBitMask.buildMask(components);
-        const query = this.entityStore.registerQuery(bitmask);
+        const [query, mask] = this.entityStore.registerQuery(bitmask);
         const store = this.entityStore;
         return function <T extends { new (...args: any[]): any }>(constructor: T) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            constructor.__bitmask = bitmask;
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             constructor.__entities = query;
@@ -100,10 +97,10 @@ export class ECS {
                 constructor(...args: any[]) {
                     super(...args);
                     if (this['onEntityAdded']) {
-                        store.addQueryOnAdded(bitmask, this['onEntityAdded']);
+                        store.addQueryOnAdded(mask, this['onEntityAdded']);
                     }
                     if (this['onEntityRemoved']) {
-                        store.addQueryOnRemoved(bitmask, this['onEntityRemoved']);
+                        store.addQueryOnRemoved(mask, this['onEntityRemoved']);
                     }
                 }
             };

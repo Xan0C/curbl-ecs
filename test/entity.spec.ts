@@ -8,10 +8,7 @@ const ECS = new ecs();
 class TestComponent {}
 
 @ECS.System('TestComponent')
-class TestSystem extends System {
-    setUp(): void {}
-    tearDown(): void {}
-}
+class TestSystem extends System {}
 ECS.addSystem(new TestSystem());
 
 describe('Entity', function () {

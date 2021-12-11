@@ -15,10 +15,6 @@ new PositionComponent();
 
 @ECS.System('Position')
 class PositionSystem extends System {
-    setUp(): void {}
-
-    tearDown(): void {}
-
     override onEntityAdded(entity: Entity): void {
         entity;
     }

@@ -10,10 +10,6 @@ export class VelocitySystem extends System {
         super();
     }
 
-    setUp(): void {}
-
-    tearDown(): void {}
-
     update(delta: number): void {
         const entities = this.entities();
         for (let i = 0, entity; (entity = entities[i]); i++) {

@@ -5,12 +5,12 @@ export abstract class System {
     /**
      * called when the systems gets added to the ecs
      */
-    abstract setUp(): void;
+    setUp(): void {}
 
     /**
      * called when the system gets removed from the ecs
      */
-    abstract tearDown(): void;
+    tearDown(): void {}
 
     onEntityAdded?(entity: Entity): void;
     onEntityRemoved?(entity: Entity): void;

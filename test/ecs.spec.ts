@@ -26,10 +26,6 @@ class TestSystem extends System {
         this.onEntityRemoved = this.onEntityRemoved.bind(this);
     }
 
-    setUp(): void {}
-
-    tearDown(): void {}
-
     update(): void {
         this.entityLengthOnUpdate = 0;
         const it = this.entities();
@@ -49,10 +45,6 @@ class TestSystem extends System {
 
 @ECS.System('Name')
 class NameSystem extends System {
-    setUp(): void {}
-
-    tearDown(): void {}
-
     override onEntityAdded(_: Entity) {}
 
     override onEntityRemoved(_: Entity) {}

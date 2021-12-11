@@ -11,10 +11,6 @@ export class RectangleCanvasRenderer extends System {
         this.ctx = ctx;
     }
 
-    setUp(): void {}
-
-    tearDown(): void {}
-
     update(): void {
         const entities = this.entities();
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);

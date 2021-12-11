@@ -8,8 +8,8 @@ export interface Entity {
     add<T>(component: T): void;
     remove(component: string): void;
     dispose(): void;
-    __update(): void;
-    __clear(): void;
+    __updateMaskAndNew(): void;
+    __updateRemoved(): void;
 }
 
 export class EntityHandle implements Entity {
@@ -18,6 +18,7 @@ export class EntityHandle implements Entity {
     private dirty: boolean;
     private readonly components: Map<string, Component>;
     private readonly updates: Map<string, { component: Component; added: boolean }>;
+    private readonly removedComponents: Component[];
     private readonly markModified: (entity: Entity) => void;
     private readonly addToPool: (entity: Entity) => void;
 
@@ -25,6 +26,7 @@ export class EntityHandle implements Entity {
         this.__bitmask = new Bitmask(32);
         this.components = new Map();
         this.updates = new Map();
+        this.removedComponents = [];
         this.dirty = false;
         this.dead = false;
         this.markModified = markModified;
@@ -71,15 +73,33 @@ export class EntityHandle implements Entity {
         this.components.set(component.constructor.__id, component);
     }
 
-    private __remove(component: Component): void {
-        this.__bitmask.set(component.constructor.__bit, 0);
-        this.components.delete(component.constructor.__id);
-    }
-
-    __update(): void {
+    /**
+     * update the removed components
+     */
+    __updateRemoved(): void {
         if (this.dead) {
             this.__clear();
             this.addToPool(this);
+            return;
+        }
+
+        for (let i = 0, component; (component = this.removedComponents[i]); i++) {
+            this.components.delete(component.constructor.__id);
+        }
+
+        this.removedComponents.length = 0;
+    }
+
+    /**
+     * update bitmask and add new components
+     */
+    __updateMaskAndNew(): void {
+        if (!this.dirty) {
+            return;
+        }
+
+        if (this.dead) {
+            this.__bitmask.clear();
             return;
         }
 
@@ -88,17 +108,20 @@ export class EntityHandle implements Entity {
             if (update.added) {
                 this.__add(update.component);
             } else if (update.component) {
-                this.__remove(update.component);
+                this.__bitmask.set(update.component.constructor.__bit, 0);
+                this.removedComponents.push(update.component);
             }
         }
-        this.dirty = false;
+
         this.updates.clear();
+        this.dirty = false;
     }
 
     __clear(): void {
         this.__bitmask.clear();
         this.components.clear();
         this.updates.clear();
+        this.removedComponents.length = 0;
         this.dirty = false;
         this.dead = false;
     }

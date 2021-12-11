@@ -17,11 +17,11 @@ class TestSystem extends System {
         this.onEntityRemoved = this.onEntityRemoved.bind(this);
     }
 
-    setUp(): void {
+    override setUp(): void {
         this.setUpCalled = true;
     }
 
-    tearDown(): void {
+    override tearDown(): void {
         this.tearDownCalled = true;
     }
 
@@ -97,8 +97,17 @@ describe('System', function () {
             /// given
             const entity = ECS.addEntity(new TestComponent());
             ECS.update();
+
+            @ECS.System('TestComponent')
+            class RemoveSystem extends System {
+                override onEntityRemoved(entity: Entity) {
+                    expect(entity.has('TestComponent')).true;
+                    entity.add(new TestComponent());
+                }
+            }
+
             // when
-            const system = new TestSystem();
+            const system = new RemoveSystem();
             ECS.addSystem(system);
             expect(system.entities().includes(entity)).true;
             entity.remove('TestComponent');
@@ -106,7 +115,9 @@ describe('System', function () {
             // then
             expect(ECS.hasSystem(system)).true;
             expect(system.entities().includes(entity)).false;
-            expect(system.onEntityRemovedCalled).true;
+            expect(entity.has('TestComponent')).false;
+            ECS.update();
+            expect(entity.has('TestComponent')).true;
         });
     });
 

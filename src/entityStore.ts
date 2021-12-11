@@ -16,17 +16,17 @@ export class EntityStore {
     private readonly entities: Set<Entity> = new Set<Entity>();
     private readonly pool: Entity[] = [];
     private readonly queries: Map<Bitmask, Query> = new Map<Bitmask, Query>();
-    private readonly modified: Entity[] = [];
+    private modified: Entity[] = [];
 
     constructor() {
         this.markModified = this.markModified.bind(this);
         this.remove = this.remove.bind(this);
     }
 
-    registerQuery(bitmask: Bitmask): Entity[] {
+    registerQuery(bitmask: Bitmask): [Entity[], Bitmask] {
         for (const mask of this.queries.keys()) {
             if (mask.isEqual(bitmask)) {
-                return this.queries.get(mask)!.list;
+                return [this.queries.get(mask)!.list, mask];
             }
         }
         const query: Query = { set: new Set<Entity>(), list: [], onEntityAdded: [], onEntityRemoved: [] };
@@ -38,7 +38,7 @@ export class EntityStore {
             }
         }
         this.queries.set(bitmask, query);
-        return query.list;
+        return [query.list, bitmask];
     }
 
     addQueryOnAdded(bitmask: Bitmask, cb: (_: Entity) => void) {
@@ -80,7 +80,6 @@ export class EntityStore {
     }
 
     private static updateQuery(entity: Entity, mask: Bitmask, query: Query): boolean {
-        entity.__update();
         const and = mask.compareAnd(entity.__bitmask);
         const has = query.set.has(entity);
         if (and && !has) {
@@ -100,9 +99,12 @@ export class EntityStore {
             return;
         }
 
+        const modified = [...this.modified];
+
         for (const [mask, query] of this.queries.entries()) {
             let updated = false;
-            for (let i = 0, entity; (entity = this.modified[i]); i++) {
+            for (let i = 0, entity; (entity = modified[i]); i++) {
+                entity.__updateMaskAndNew();
                 updated = EntityStore.updateQuery(entity, mask, query) || updated;
             }
             if (updated) {
@@ -110,7 +112,12 @@ export class EntityStore {
                 query.list.push(...Array.from(query.set));
             }
         }
-        this.modified.length = 0;
+
+        for (let i = 0, entity; (entity = modified[i]); i++) {
+            entity.__updateRemoved();
+        }
+
+        this.modified = this.modified.slice(modified.length, this.modified.length);
     }
 
     clear(): void {
