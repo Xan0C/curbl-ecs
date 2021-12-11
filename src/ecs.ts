@@ -32,6 +32,10 @@ export class ECS {
         this.systemStore.addSystem(system);
     }
 
+    active(entity: Entity): boolean {
+        return this.entityStore.active(entity);
+    }
+
     removeSystem(system: System): void {
         this.systemStore.removeSystem(system);
     }

@@ -55,5 +55,9 @@
   "bugs": {
     "url": "https://github.com/Xan0C/curbl-ecs/issues"
   },
-  "homepage": "https://github.com/Xan0C/curbl-ecs#readme"
+  "homepage": "https://github.com/Xan0C/curbl-ecs#readme",
+  "dependencies": {
+    "@types/uuid": "^8.3.3",
+    "uuid": "^8.3.2"
+  }
 }

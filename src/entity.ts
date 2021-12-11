@@ -1,43 +1,43 @@
-import { Bitmask } from './bitmask';
 import { Component } from './component';
+import { EntityStore } from './entityStore';
+import { Bitmask } from './bitmask';
 
 export interface Entity {
-    readonly __bitmask: Bitmask;
+    __id: string;
+    __bitmask: Bitmask;
     get<T>(component: string): T;
     has(component: string): boolean;
     add<T>(component: T): void;
     remove(component: string): void;
     dispose(): void;
+    pause(): void;
+    unpause(): void;
+    active(): boolean;
     __updateMaskAndNew(): void;
     __updateRemoved(): void;
 }
 
 export class EntityHandle implements Entity {
+    readonly __id: string;
     readonly __bitmask: Bitmask;
     private dead: boolean;
     private dirty: boolean;
+    private paused: boolean;
+    private readonly store: EntityStore;
     private readonly components: Map<string, Component>;
     private readonly updates: Map<string, { component: Component; added: boolean }>;
     private readonly removedComponents: Component[];
-    private readonly markModified: (entity: Entity) => void;
-    private readonly addToPool: (entity: Entity) => void;
 
-    constructor(markModified: (entity: Entity) => void, addToPool: (entity: Entity) => void) {
+    constructor(id: string, store: EntityStore) {
+        this.__id = id;
         this.__bitmask = new Bitmask(32);
+        this.store = store;
         this.components = new Map();
         this.updates = new Map();
         this.removedComponents = [];
         this.dirty = false;
         this.dead = false;
-        this.markModified = markModified;
-        this.addToPool = addToPool;
-    }
-
-    private markDirty(): void {
-        if (!this.dirty) {
-            this.dirty = true;
-            this.markModified(this);
-        }
+        this.paused = false;
     }
 
     add<T>(component: T): void {
@@ -46,11 +46,6 @@ export class EntityHandle implements Entity {
             this.updates.set(comp.constructor.__id, { component: comp, added: true });
             this.markDirty();
         }
-    }
-
-    dispose(): void {
-        this.dead = true;
-        this.markDirty();
     }
 
     get<T>(component: string): T {
@@ -68,9 +63,38 @@ export class EntityHandle implements Entity {
         }
     }
 
-    private __add(component: Component): void {
-        this.__bitmask.set(component.constructor.__bit, 1);
-        this.components.set(component.constructor.__id, component);
+    dispose(): void {
+        this.dead = true;
+        this.markDirty();
+    }
+
+    active(): boolean {
+        return this.store.active(this);
+    }
+
+    /**
+     * remove the entity from the ECS(all systems)
+     * and do not handle updates, components can still be removed or added
+     * but they wont be active until the entity is unpaused
+     * Note: this will trigger onEntityRemoved on all systems containing the entity
+     */
+    pause(): void {
+        if (!this.paused) {
+            this.markDirty();
+            this.paused = true;
+        }
+    }
+
+    /**
+     * unpause the entity adding it back to the ecs and all systems
+     * triggering onEntityAdded for all systems again
+     */
+    unpause(): void {
+        if (this.paused) {
+            this.paused = false;
+            this.store.add(this);
+            this.markDirty();
+        }
     }
 
     /**
@@ -79,7 +103,12 @@ export class EntityHandle implements Entity {
     __updateRemoved(): void {
         if (this.dead) {
             this.__clear();
-            this.addToPool(this);
+            this.store.delete(this);
+            return;
+        }
+
+        if (this.paused) {
+            this.store.remove(this);
             return;
         }
 
@@ -92,14 +121,18 @@ export class EntityHandle implements Entity {
 
     /**
      * update bitmask and add new components
+     * this way system update events like onEntityAdded will be called with the new components
+     * and onEntityRemoved will still have the removed components
+     * make sure to call __updateRemoved afterwards to actually remove the components
      */
     __updateMaskAndNew(): void {
         if (!this.dirty) {
             return;
         }
 
-        if (this.dead) {
+        if (this.dead || this.paused) {
             this.__bitmask.clear();
+            this.dirty = false;
             return;
         }
 
@@ -117,12 +150,25 @@ export class EntityHandle implements Entity {
         this.dirty = false;
     }
 
-    __clear(): void {
+    private markDirty(): void {
+        if (!this.dirty && !this.paused) {
+            this.dirty = true;
+            this.store.markModified(this);
+        }
+    }
+
+    private __add(component: Component): void {
+        this.__bitmask.set(component.constructor.__bit, 1);
+        this.components.set(component.constructor.__id, component);
+    }
+
+    private __clear(): void {
         this.__bitmask.clear();
         this.components.clear();
         this.updates.clear();
         this.removedComponents.length = 0;
         this.dirty = false;
         this.dead = false;
+        this.paused = false;
     }
 }

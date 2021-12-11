@@ -4,129 +4,69 @@
  */
 import { Bitmask } from './bitmask';
 import { Entity, EntityHandle } from './entity';
-
-type Query = {
-    set: Set<Entity>;
-    list: Entity[];
-    onEntityAdded: ((_: Entity) => void)[];
-    onEntityRemoved: ((_: Entity) => void)[];
-};
+import { v4 as uuidv4 } from 'uuid';
+import { QueryStore } from './queryStore';
 
 export class EntityStore {
-    private readonly entities: Set<Entity> = new Set<Entity>();
+    private readonly queryStore: QueryStore = new QueryStore();
+    private readonly entities: Map<string, Entity> = new Map();
     private readonly pool: Entity[] = [];
-    private readonly queries: Map<Bitmask, Query> = new Map<Bitmask, Query>();
     private modified: Entity[] = [];
 
-    constructor() {
-        this.markModified = this.markModified.bind(this);
-        this.remove = this.remove.bind(this);
-    }
-
     registerQuery(bitmask: Bitmask): [Entity[], Bitmask] {
-        for (const mask of this.queries.keys()) {
-            if (mask.isEqual(bitmask)) {
-                return [this.queries.get(mask)!.list, mask];
-            }
-        }
-        const query: Query = { set: new Set<Entity>(), list: [], onEntityAdded: [], onEntityRemoved: [] };
-        const entities = this.entities.values();
-        for (const entity of entities) {
-            if (bitmask.compareAnd(entity.__bitmask)) {
-                query.set.add(entity);
-                query.list.push(entity);
-            }
-        }
-        this.queries.set(bitmask, query);
-        return [query.list, bitmask];
+        return this.queryStore.registerQuery(this.entities.values(), bitmask);
     }
 
     addQueryOnAdded(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queries.get(bitmask)!.onEntityAdded.push(cb);
+        this.queryStore.addQueryOnAdded(bitmask, cb);
     }
 
     addQueryOnRemoved(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queries.get(bitmask)!.onEntityRemoved.push(cb);
+        this.queryStore.addQueryOnRemoved(bitmask, cb);
     }
 
     create(components: unknown[]): Entity {
-        const handle = this.pool.pop() || new EntityHandle(this.markModified, this.remove);
+        const handle = this.pool.pop() || new EntityHandle(uuidv4(), this);
+        this.entities.set(handle.__id, handle);
         for (let i = 0, component: any; (component = components[i]); i++) {
             handle.add(component);
         }
-        this.entities.add(handle);
         return handle;
     }
 
-    private remove(entity: Entity): void {
-        this.entities.delete(entity);
+    active(entity: Entity): boolean {
+        return this.entities.has(entity.__id);
+    }
+
+    add(entity: Entity): void {
+        this.entities.set(entity.__id, entity);
+    }
+
+    delete(entity: Entity): void {
+        this.entities.delete(entity.__id);
         this.pool.push(entity);
     }
 
-    private markModified(entity: Entity): void {
+    remove(entity: Entity): void {
+        this.entities.delete(entity.__id);
+    }
+
+    markModified(entity: Entity): void {
         this.modified.push(entity);
-    }
-
-    private static callEntityAdded(entity: Entity, query: Query): void {
-        for (let i = 0, cb; (cb = query.onEntityAdded[i]); i++) {
-            cb(entity);
-        }
-    }
-
-    private static callEntityRemoved(entity: Entity, query: Query): void {
-        for (let i = 0, cb; (cb = query.onEntityRemoved[i]); i++) {
-            cb(entity);
-        }
-    }
-
-    private static updateQuery(entity: Entity, mask: Bitmask, query: Query): boolean {
-        const and = mask.compareAnd(entity.__bitmask);
-        const has = query.set.has(entity);
-        if (and && !has) {
-            query.set.add(entity);
-            EntityStore.callEntityAdded(entity, query);
-            return true;
-        } else if (!and && has) {
-            query.set.delete(entity);
-            EntityStore.callEntityRemoved(entity, query);
-            return true;
-        }
-        return false;
     }
 
     update(): void {
         if (!this.modified.length) {
             return;
         }
-
         const modified = [...this.modified];
-
-        for (const [mask, query] of this.queries.entries()) {
-            let updated = false;
-            for (let i = 0, entity; (entity = modified[i]); i++) {
-                entity.__updateMaskAndNew();
-                updated = EntityStore.updateQuery(entity, mask, query) || updated;
-            }
-            if (updated) {
-                query.list.length = 0;
-                query.list.push(...Array.from(query.set));
-            }
-        }
-
-        for (let i = 0, entity; (entity = modified[i]); i++) {
-            entity.__updateRemoved();
-        }
-
+        this.queryStore.update(modified);
         this.modified = this.modified.slice(modified.length, this.modified.length);
     }
 
     clear(): void {
         this.modified.length = 0;
         this.entities.clear();
-        const it = this.queries.values();
-        for (const entities of it) {
-            entities.set.clear();
-            entities.list.length = 0;
-        }
+        this.queryStore.clear();
     }
 }
