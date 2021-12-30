@@ -5,10 +5,10 @@ import { Bitmask } from './bitmask';
 export interface Entity {
     __id: string;
     __bitmask: Bitmask;
-    get<T>(component: string): T;
-    has(component: string): boolean;
+    get<T>(component: string | (new (...args: any[]) => T)): T;
+    has<T>(component: string | (new (...args: any[]) => T)): boolean;
     add<T>(component: T): void;
-    remove(component: string): void;
+    remove<T>(component: string | (new (...args: any[]) => T)): void;
     dispose(): void;
     pause(): void;
     unpause(): void;
@@ -48,17 +48,24 @@ export class EntityHandle implements Entity {
         }
     }
 
-    get<T>(component: string): T {
-        return this.components.get(component) as unknown as T;
+    get<T>(component: string | (new (...args: any[]) => T)): T {
+        if (typeof component === 'string') {
+            return this.components.get(component) as unknown as T;
+        }
+        return this.components.get((component as unknown as any).__id) as unknown as T;
     }
 
-    has(component: string): boolean {
-        return this.components.has(component);
+    has<T>(component: string | (new (...args: any[]) => T)): boolean {
+        if (typeof component === 'string') {
+            return this.components.has(component);
+        }
+        return this.components.has((component as unknown as any).__id);
     }
 
-    remove(component: string): void {
-        if (!this.dead && (this.components.has(component) || this.updates.has(component))) {
-            this.updates.set(component, { component: this.components.get(component)!, added: false });
+    remove<T>(component: string | (new (...args: any[]) => T)): void {
+        const id = typeof component === 'string' ? component : (component as unknown as any).__id;
+        if (!this.dead && (this.components.has(id) || this.updates.has(id))) {
+            this.updates.set(id, { component: this.components.get(id)!, added: false });
             this.markDirty();
         }
     }

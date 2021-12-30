@@ -59,6 +59,17 @@ describe('Entity', function () {
             // then
             expect(entity.has('TestComponent')).eql(false);
         });
+
+        it('should have the component in the entity by class', () => {
+            // given
+            const entity = ECS.addEntity();
+            const component = new TestComponent();
+            // when
+            entity.add(component);
+            ECS.update();
+            // then
+            expect(entity.has(TestComponent)).eql(true);
+        });
     });
 
     describe('#get', () => {
@@ -71,6 +82,17 @@ describe('Entity', function () {
             // when
             // then
             expect(entity.get('TestComponent')).eql(component);
+        });
+
+        it('should get component from entity by class', () => {
+            // given
+            const entity = ECS.addEntity();
+            const component = new TestComponent();
+            entity.add(component);
+            ECS.update();
+            // when
+            // then
+            expect(entity.get(TestComponent)).eql(component);
         });
     });
 
@@ -147,6 +169,19 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.has('TestComponent')).false;
+        });
+
+        it('should remove component from entity by class', () => {
+            // given
+            const entity = ECS.addEntity();
+            const component = new TestComponent();
+            entity.add(component);
+            ECS.update();
+            // when
+            entity.remove(TestComponent);
+            ECS.update();
+            // then
+            expect(entity.has(TestComponent)).false;
         });
     });
 });
