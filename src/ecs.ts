@@ -86,9 +86,13 @@ export class ECS {
      * @param components
      * @returns
      */
-    System(...components: [string, ...string[]]) {
+    System(...components: [string, ...string[]] | [new (...args: any[]) => any, ...(new (...args: any[]) => any)[]]) {
         for (let i = 0, component; (component = components[i]); i++) {
-            this.componentBitMask.register(component);
+            if (typeof component === 'string') {
+                this.componentBitMask.register(component);
+            } else {
+                this.componentBitMask.register((component as unknown as any).__id);
+            }
         }
         const bitmask = this.componentBitMask.buildMask(components);
         const [query, mask] = this.entityStore.registerQuery(bitmask);

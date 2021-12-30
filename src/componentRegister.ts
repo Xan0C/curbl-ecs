@@ -33,10 +33,14 @@ export class ComponentRegister {
         }
     }
 
-    buildMask(components: string[]): Bitmask {
+    buildMask(components: string[] | (new (...args: any[]) => any)[]): Bitmask {
         const bitmask = new Bitmask(this.size);
         for (let i = 0, component; (component = components[i]); i++) {
-            bitmask.set(this.components[component]!, 1);
+            if (typeof component === 'string') {
+                bitmask.set(this.components[component]!, 1);
+            } else {
+                bitmask.set(this.components[(component as unknown as any).__id]!, 1);
+            }
         }
         return bitmask;
     }

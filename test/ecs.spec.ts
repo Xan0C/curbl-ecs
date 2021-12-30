@@ -14,7 +14,7 @@ class Name {
     constructor(public name: string) {}
 }
 
-@ECS.System('Position', 'Name')
+@ECS.System(Position, Name)
 class TestSystem extends System {
     entityLengthOnUpdate = 0;
     entitiesAdded: Entity[] = [];
