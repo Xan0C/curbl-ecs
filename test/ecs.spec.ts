@@ -66,6 +66,16 @@ describe('ECS', function () {
         expect(entity.get<Position>('Position').y).eql(37);
     });
 
+    it('should create 1kk entities with Name and Position component', () => {
+        // given
+        for (let i = 0; i < 1_000_000; i++) {
+            ECS.addEntity(new Position(13, 37), new Name('Batman'));
+        }
+        // when
+        ECS.update();
+        // then
+    }).timeout(20000);
+
     it('should only add entities with position and name component to system', () => {
         // given
         const system = new TestSystem();

@@ -72,7 +72,9 @@ export class QueryStore {
             }
             if (updated) {
                 query.list.length = 0;
-                query.list.push(...Array.from(query.set));
+                for (const q of query.set.values()) {
+                    query.list.push(q);
+                }
             }
         }
 
