@@ -1,6 +1,5 @@
 import Benchmark, { Event } from 'benchmark';
-import { Entity } from '@curbl/ecs';
-import { ECS } from '@curbl/ecs';
+import { ECS, Entity } from '@curbl/ecs';
 
 const suite = new Benchmark.Suite();
 const ecs = new ECS();

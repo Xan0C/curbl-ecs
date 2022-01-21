@@ -1,16 +1,12 @@
 import Benchmark, { Event } from 'benchmark';
-import {ECS, Entity, System} from '@curbl/ecs';
+import { ECS, Entity, System } from '@curbl/ecs';
 
 const suite = new Benchmark.Suite();
 const ecs = new ECS();
 const entities: any[] = [];
 
 @ecs.System('Position')
-class PositionSystem extends System {
-    setUp(): void {}
-
-    tearDown(): void {}
-}
+class PositionSystem extends System {}
 ecs.addSystem(new PositionSystem());
 
 @ecs.Component('Position')

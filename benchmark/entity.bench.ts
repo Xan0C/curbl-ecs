@@ -7,19 +7,11 @@ const suite = new Benchmark.Suite();
 const entity = ECS.addEntity();
 
 @ECS.System('InitialComponent')
-class InitSystem extends System {
-    setUp(): void {}
-
-    tearDown(): void {}
-}
+class InitSystem extends System {}
 ECS.addSystem(new InitSystem());
 
 @ECS.System('TestComponent')
-class TestSystem extends System {
-    setUp(): void {}
-
-    tearDown(): void {}
-}
+class TestSystem extends System {}
 ECS.addSystem(new TestSystem());
 
 @ECS.Component('InitialComponent')

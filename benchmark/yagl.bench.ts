@@ -30,7 +30,7 @@ class Gravity extends ECS.System {
     }
     enter(_: any) {}
     update(entity: any) {
-        entity;
+        entity.components.pos;
     }
     exit(_: any) {}
 }

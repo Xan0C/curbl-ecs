@@ -25,7 +25,7 @@ class PositionSystem extends System {
     update(): void {
         const entities = this.entities();
         for (let i = 0, entity; (entity = entities[i]); i++) {
-            entity;
+            entity.get('PositionComponent');
         }
     }
 }
