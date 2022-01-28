@@ -3,6 +3,7 @@
 node_modules
 dist
 lib
+build
 coverage
 npm-debug.log
 .rts*
