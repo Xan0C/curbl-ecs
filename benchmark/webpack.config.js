@@ -10,6 +10,7 @@ module.exports = {
     // output bundles (location)
     output: {
         path: path.resolve(__dirname, 'dist'),
+        hashFunction: 'xxhash64',
         filename: 'main.js',
     },
 

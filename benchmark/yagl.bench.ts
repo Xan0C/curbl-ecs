@@ -23,10 +23,18 @@ const Position = {
     defaults: { x: 0, y: 0 },
 };
 
+const Scale = {
+    // you can access the component data on each entity with `entity.components.pos`
+    name: 'scale',
+    // defaults attributes for the component. If not precised a void object {}
+    // is assigned instead.
+    defaults: { x: 0, y: 0 },
+};
+
 class Gravity extends ECS.System {
-    test(_: any) {
+    test(entity: any) {
         // the entity must have a position component
-        return true;
+        return !!entity.components.pos;
     }
     enter(_: any) {}
     update(entity: any) {
@@ -38,9 +46,22 @@ class Gravity extends ECS.System {
 const ecs = new ECS();
 ecs.addSystem(new Gravity());
 
+class ScaleSystem extends ECS.System {
+    test(entity: any) {
+        // the entity must have a position component
+        return !!entity.components.scale;
+    }
+    enter(_: any) {}
+    update(entity: any) {
+        entity.components.scale;
+    }
+    exit(_: any) {}
+}
+ecs.addSystem(new ScaleSystem());
+
 const entities: any[] = [];
 for (let i = 0; i < 100_000; i++) {
-    const entity = new ECS.Entity([Position]);
+    const entity = new ECS.Entity(null, [Position, Scale]);
     ecs.addEntity(entity);
     entities.push(entity);
 }
@@ -53,7 +74,7 @@ suite
     .add('yagl#add_and_remove_1000Entities', function () {
         for (let i = 0; i < 1000; i++) {
             ecs.removeEntity(entities[i]);
-            const entity = new ECS.Entity([Position]);
+            const entity = new ECS.Entity(null, [Position]);
             ecs.addEntity(entity);
             entities.push(entity);
         }

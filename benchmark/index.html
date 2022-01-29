@@ -163,14 +163,17 @@
         x = 0;
         y = 0;
     }
-    ECS.Component('Position')(PositionComponent)
-    console.log(new PositionComponent());
+    ECS.Component('PositionComponent')(PositionComponent)
+    new PositionComponent();
+
+    class ScaleComponent {
+        x = 0;
+        y = 0;
+    }
+    ECS.Component('ScaleComponent')(ScaleComponent)
+    new ScaleComponent();
 
     class PositionSystem extends System {
-        setUp() {}
-
-        tearDown() {}
-
         onEntityAdded(entity) {
             entity;
         }
@@ -181,30 +184,44 @@
         update() {
             const entities = this.entities();
             for (let i = 0, entity; (entity = entities[i]); i++) {
-                entity;
+                entity.get('PositionComponent');
             }
         }
     }
+    ECS.System('PositionComponent')(PositionSystem)
 
-    ECS.System('Position')(PositionSystem)
-    const system = new PositionSystem();
-    ECS.addSystem(system)
-    console.log(system);
+    class ScaleSystem extends System {
+        onEntityAdded(entity) {
+            entity;
+        }
+        onEntityRemoved(entity) {
+            entity;
+        }
+
+        update() {
+            const entities = this.entities();
+            for (let i = 0, entity; (entity = entities[i]); i++) {
+                entity.get('ScaleComponent');
+            }
+        }
+    }
+    ECS.System('ScaleComponent')(ScaleSystem)
 
     const entities = [];
+    ECS.addSystem(new PositionSystem());
+    ECS.addSystem(new ScaleSystem());
+
     for (let i = 0; i < 100_000; i++) {
         const entity = ECS.addEntity();
         entity.add(new PositionComponent());
+        entity.add(new ScaleComponent());
         entities.push(entity);
     }
-    console.log(entities[0]);
     ECS.update();
-    console.log(entities[0]);
-
 
     // Note(Sören): goal is minimum of 150 ops/s which to be fair is way to slow
     suite
-        .add('ECS#update_100k_entities_1System_1Components_no_change', function () {
+        .add('ECS#update_100k_entities_2Systems_2Components_no_change', function () {
             ECS.update();
         })
         .add('ECS#add_and_remove_entities_1k_1Component', function () {
@@ -216,7 +233,7 @@
             }
             ECS.update();
         })
-        .add('ECS#add_modify_1k_Entities', function () {
+        .add('ECS#modify_1k_Entities', function () {
             for (let i = 0; i < 1000; i++) {
                 if (Math.random() > 0.5) {
                     entities[i].remove('Position');
@@ -226,7 +243,7 @@
             }
             ECS.update();
         })
-        .add('ECS#add_and_modify_1k_Entities', function () {
+        .add('ECS#add_1k_Entities_and_modify_1k', function () {
             for (let i = 0; i < 1000; i++) {
                 entities.pop().dispose();
                 const modifiedEntity = entities.pop();
@@ -246,25 +263,6 @@
             console.log(String(event.target));
         })
         .run({ async: true });
-
-    // const step = () => {
-    //     for (let i = 0; i < 1000; i++) {
-    //         entities.pop().dispose();
-    //         const modifiedEntity = entities.pop();
-    //         if (Math.random() > 0.5) {
-    //             modifiedEntity.remove('Position');
-    //         } else {
-    //             modifiedEntity.add(new PositionComponent());
-    //         }
-    //         entities.push(modifiedEntity);
-    //         const entity = ECS.addEntity();
-    //         entity.add(new PositionComponent());
-    //         entities.push(entity);
-    //     }
-    //     ECS.update();
-    //     window.requestAnimationFrame(step);
-    // };
-    // window.requestAnimationFrame(step);
 </script>
 </body>
 </html>

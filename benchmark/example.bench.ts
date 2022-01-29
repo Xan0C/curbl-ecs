@@ -6,14 +6,21 @@ const ECS = new ecs();
 
 const suite = new Benchmark.Suite();
 
-@ECS.Component('Position')
+@ECS.Component('PositionComponent')
 class PositionComponent {
     x = 0;
     y = 0;
 }
 new PositionComponent();
 
-@ECS.System('Position')
+@ECS.Component('ScaleComponent')
+class ScaleComponent {
+    x = 0;
+    y = 0;
+}
+new ScaleComponent();
+
+@ECS.System('PositionComponent')
 class PositionSystem extends System {
     override onEntityAdded(entity: Entity): void {
         entity;
@@ -30,19 +37,38 @@ class PositionSystem extends System {
     }
 }
 
+@ECS.System('ScaleComponent')
+class ScaleSystem extends System {
+    override onEntityAdded(entity: Entity): void {
+        entity;
+    }
+    override onEntityRemoved(entity: Entity): void {
+        entity;
+    }
+
+    update(): void {
+        const entities = this.entities();
+        for (let i = 0, entity; (entity = entities[i]); i++) {
+            entity.get('ScaleComponent');
+        }
+    }
+}
+
 const entities: Entity[] = [];
 ECS.addSystem(new PositionSystem());
+ECS.addSystem(new ScaleSystem());
 
 for (let i = 0; i < 100_000; i++) {
     const entity = ECS.addEntity();
     entity.add(new PositionComponent());
+    entity.add(new ScaleComponent());
     entities.push(entity);
 }
 ECS.update();
 
 // Note(Sören): goal is minimum of 150 ops/s which to be fair is way to slow
 suite
-    .add('ECS#update_100k_entities_1System_1Components_no_change', function () {
+    .add('ECS#update_100k_entities_2Systems_2Components_no_change', function () {
         ECS.update();
     })
     .add('ECS#add_and_remove_entities_1k_1Component', function () {
@@ -54,7 +80,7 @@ suite
         }
         ECS.update();
     })
-    .add('ECS#add_modify_1k_Entities', function () {
+    .add('ECS#modify_1k_Entities', function () {
         for (let i = 0; i < 1000; i++) {
             if (Math.random() > 0.5) {
                 entities[i]!.remove('Position');
@@ -64,7 +90,7 @@ suite
         }
         ECS.update();
     })
-    .add('ECS#add_and_modify_1k_Entities', function () {
+    .add('ECS#add_1k_Entities_and_modify_1k', function () {
         for (let i = 0; i < 1000; i++) {
             entities.pop()!.dispose();
             const modifiedEntity = entities.pop()!;
