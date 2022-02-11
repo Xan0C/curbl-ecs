@@ -3,6 +3,7 @@ import { System } from './system';
 import { ComponentRegister } from './componentRegister';
 import { EntityStore } from './entityStore';
 import { SystemStore } from './systemStore';
+import { OnEntityAdded, OnEntityRemoved } from './queryStore';
 
 export class ECS {
     private readonly entityStore: EntityStore;
@@ -105,10 +106,10 @@ export class ECS {
                 constructor(...args: any[]) {
                     super(...args);
                     if (this['onEntityAdded']) {
-                        store.addQueryOnAdded(mask, this['onEntityAdded']);
+                        store.addQueryOnAdded(mask, this as unknown as OnEntityAdded);
                     }
                     if (this['onEntityRemoved']) {
-                        store.addQueryOnRemoved(mask, this['onEntityRemoved']);
+                        store.addQueryOnRemoved(mask, this as unknown as OnEntityRemoved);
                     }
                 }
             };

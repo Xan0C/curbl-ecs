@@ -5,7 +5,7 @@
 import { Bitmask } from './bitmask';
 import { Entity, EntityHandle } from './entity';
 import { v4 as uuidv4 } from 'uuid';
-import { QueryStore } from './queryStore';
+import { OnEntityAdded, OnEntityRemoved, QueryStore } from './queryStore';
 
 export class EntityStore {
     private readonly queryStore: QueryStore = new QueryStore();
@@ -17,12 +17,12 @@ export class EntityStore {
         return this.queryStore.registerQuery(this.entities.values(), bitmask);
     }
 
-    addQueryOnAdded(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queryStore.addQueryOnAdded(bitmask, cb);
+    addQueryOnAdded(bitmask: Bitmask, ctx: OnEntityAdded) {
+        this.queryStore.addQueryOnAdded(bitmask, ctx);
     }
 
-    addQueryOnRemoved(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queryStore.addQueryOnRemoved(bitmask, cb);
+    addQueryOnRemoved(bitmask: Bitmask, ctx: OnEntityRemoved) {
+        this.queryStore.addQueryOnRemoved(bitmask, ctx);
     }
 
     create(components: unknown[]): Entity {

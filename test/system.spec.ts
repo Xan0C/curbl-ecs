@@ -13,8 +13,6 @@ class TestSystem extends System {
 
     constructor() {
         super();
-        this.onEntityAdded = this.onEntityAdded.bind(this);
-        this.onEntityRemoved = this.onEntityRemoved.bind(this);
     }
 
     override setUp(): void {

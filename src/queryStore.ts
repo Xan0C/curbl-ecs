@@ -1,11 +1,14 @@
 import { Bitmask } from './bitmask';
 import { Entity } from './entity';
 
+export type OnEntityAdded = { onEntityAdded: (_: Entity) => void };
+export type OnEntityRemoved = { onEntityRemoved: (_: Entity) => void };
+
 type Query = {
     set: Set<Entity>;
     list: Entity[];
-    onEntityAdded: ((_: Entity) => void)[];
-    onEntityRemoved: ((_: Entity) => void)[];
+    onEntityAdded: OnEntityAdded[];
+    onEntityRemoved: OnEntityRemoved[];
 };
 
 export class QueryStore {
@@ -28,23 +31,23 @@ export class QueryStore {
         return [query.list, bitmask];
     }
 
-    addQueryOnAdded(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queries.get(bitmask)?.onEntityAdded.push(cb);
+    addQueryOnAdded(bitmask: Bitmask, ctx: OnEntityAdded) {
+        this.queries.get(bitmask)?.onEntityAdded.push(ctx);
     }
 
-    addQueryOnRemoved(bitmask: Bitmask, cb: (_: Entity) => void) {
-        this.queries.get(bitmask)?.onEntityRemoved.push(cb);
+    addQueryOnRemoved(bitmask: Bitmask, ctx: OnEntityRemoved) {
+        this.queries.get(bitmask)?.onEntityRemoved.push(ctx);
     }
 
     private static callEntityAdded(entity: Entity, query: Query): void {
-        for (let i = 0, cb; (cb = query.onEntityAdded[i]); i++) {
-            cb(entity);
+        for (let i = 0, ctx; (ctx = query.onEntityAdded[i]); i++) {
+            ctx.onEntityAdded(entity);
         }
     }
 
     private static callEntityRemoved(entity: Entity, query: Query): void {
-        for (let i = 0, cb; (cb = query.onEntityRemoved[i]); i++) {
-            cb(entity);
+        for (let i = 0, ctx; (ctx = query.onEntityRemoved[i]); i++) {
+            ctx.onEntityRemoved(entity);
         }
     }
 
