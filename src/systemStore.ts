@@ -1,7 +1,7 @@
 import { injectSystem, System } from './system';
 
 export class SystemStore {
-    private systemMethods: string[] = ['init', 'update', 'destroy'];
+    private systemMethods: string[] = ['update'];
     private readonly systems: System[] = [];
 
     setUpdateMethods(methods: string[]): void {
@@ -11,7 +11,7 @@ export class SystemStore {
     addSystem(system: System): void {
         if (!this.hasSystem(system)) {
             this.systems.push(system);
-            injectSystem(system, this.systemMethods);
+            injectSystem(system, [...this.systemMethods, 'init', 'destroy']);
             system.setUp();
         }
     }
@@ -55,7 +55,9 @@ export class SystemStore {
     }
 
     update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
-        this.callMethodOnSystems('update', a1, a2, a3, a4, a5, a6, a7, a8, a9);
+        for (let i = 0, method; (method = this.systemMethods[i]); i++) {
+            this.callMethodOnSystems(method, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+        }
     }
 
     destroy(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {

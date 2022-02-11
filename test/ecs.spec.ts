@@ -172,9 +172,8 @@ describe('ECS', function () {
 
     it('should call init method on all systems', () => {
         // given
+        ECS.addSystem(new TestSystem());
         const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
-        const system = new TestSystem();
-        ECS.addSystem(system);
         // when
         ECS.init();
         // then
@@ -184,8 +183,7 @@ describe('ECS', function () {
     it('should call destroy method on all systems', () => {
         // given
         const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
-        const system = new TestSystem();
-        ECS.addSystem(system);
+        ECS.addSystem(new TestSystem());
         // when
         ECS.destroy();
         // then
