@@ -1,17 +1,17 @@
 import { injectSystem, System } from './system';
 
 export class SystemStore {
-    private updateMethods: string[] = ['update'];
+    private systemMethods: string[] = ['init', 'update', 'destroy'];
     private readonly systems: System[] = [];
 
     setUpdateMethods(methods: string[]): void {
-        this.updateMethods = methods;
+        this.systemMethods = methods;
     }
 
     addSystem(system: System): void {
         if (!this.hasSystem(system)) {
             this.systems.push(system);
-            injectSystem(system, this.updateMethods);
+            injectSystem(system, this.systemMethods);
             system.setUp();
         }
     }
@@ -30,7 +30,7 @@ export class SystemStore {
 
     clear(): void {
         this.systems.length = 0;
-        this.updateMethods = ['update'];
+        this.systemMethods = ['update'];
     }
 
     private callMethodOnSystems(
@@ -50,9 +50,15 @@ export class SystemStore {
         }
     }
 
+    init(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        this.callMethodOnSystems('init', a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
+
     update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
-        for (let i = 0, method; (method = this.updateMethods[i]); i++) {
-            this.callMethodOnSystems(method, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-        }
+        this.callMethodOnSystems('update', a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
+
+    destroy(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        this.callMethodOnSystems('destroy', a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 }

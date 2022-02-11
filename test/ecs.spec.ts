@@ -32,6 +32,20 @@ class TestSystem extends System {
         }
     }
 
+    override init(): void {
+        const it = this.entities();
+        for (const entity of it) {
+            entity.get<Name>('Name').name = 'init';
+        }
+    }
+
+    override destroy(): void {
+        const it = this.entities();
+        for (const entity of it) {
+            entity.get<Name>('Name').name = 'destroy';
+        }
+    }
+
     override onEntityAdded(entity: Entity) {
         this.entitiesAdded.push(entity);
     }
@@ -154,5 +168,27 @@ describe('ECS', function () {
         ECS.update();
         // then
         expect(system.entitiesRemoved.includes(entity)).true;
+    });
+
+    it('should call init method on all systems', () => {
+        // given
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
+        const system = new TestSystem();
+        ECS.addSystem(system);
+        // when
+        ECS.init();
+        // then
+        expect(entity.get<Name>('Name').name).eql('init');
+    });
+
+    it('should call destroy method on all systems', () => {
+        // given
+        const entity = ECS.addEntity(new Position(13, 37), new Name('Batman'));
+        const system = new TestSystem();
+        ECS.addSystem(system);
+        // when
+        ECS.destroy();
+        // then
+        expect(entity.get<Name>('Name').name).eql('destroy');
     });
 });

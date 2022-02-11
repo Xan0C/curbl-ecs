@@ -116,8 +116,18 @@ export class ECS {
         };
     }
 
+    init(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        this.entityStore.update();
+        this.systemStore.init(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
+
     update(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
         this.entityStore.update();
         this.systemStore.update(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
+
+    destroy(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void {
+        this.entityStore.update();
+        this.systemStore.destroy(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 }
