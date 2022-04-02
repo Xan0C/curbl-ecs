@@ -13,7 +13,6 @@ export abstract class System {
     tearDown(): void {}
 
     onEntityAdded?(entity: Entity): void;
-
     onEntityRemoved?(entity: Entity): void;
 
     entities(): ReadonlyArray<Readonly<Entity>> {
@@ -21,10 +20,6 @@ export abstract class System {
         // @ts-ignore
         return this.constructor.__entities;
     }
-
-    init?(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void;
-
-    destroy?(a1?: any, a2?: any, a3?: any, a4?: any, a5?: any, a6?: any, a7?: any, a8?: any, a9?: any): void;
 }
 
 export function injectSystem<T extends System>(system: T, updateMethods: string[]): T {
