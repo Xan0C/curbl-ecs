@@ -11,7 +11,37 @@ class TestComponent {}
 class TestSystem extends System {}
 ECS.addSystem(new TestSystem());
 
+@ECS.Component('AsyncTestComponent')
+class AsyncTestComponent {
+    loadResolved = false;
+    unloadResolved = false;
+
+    async load(): Promise<void> {
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (this.loadResolved) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 0);
+        });
+    }
+
+    async unload(): Promise<void> {
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (this.unloadResolved) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 0);
+        });
+    }
+}
+
 describe('Entity', function () {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
     describe('#create', () => {
         it('should create a new entity handle', () => {
             const entity = ECS.addEntity();
@@ -36,6 +66,21 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.get('TestComponent')).eql(component);
+        });
+
+        it('should add a component to the entity once its load method has been resolved', async () => {
+            // given
+            const entity = ECS.addEntity();
+            const component = new AsyncTestComponent();
+            // when
+            entity.add(component);
+            ECS.update();
+            expect(entity.get('AsyncTestComponent')).eql(undefined);
+            component.loadResolved = true;
+            // then
+            await tick();
+            ECS.update();
+            expect(entity.get('AsyncTestComponent')).eql(component);
         });
     });
 
@@ -182,6 +227,26 @@ describe('Entity', function () {
             ECS.update();
             // then
             expect(entity.has(TestComponent)).false;
+        });
+
+        it('should remove a component from the entity once its unload method has been resolved', async () => {
+            // given
+            const entity = ECS.addEntity();
+            const component = new AsyncTestComponent();
+            component.loadResolved = true;
+            entity.add(component);
+            await tick();
+            ECS.update();
+            expect(entity.get('AsyncTestComponent')).eql(component);
+            // when
+            entity.remove('AsyncTestComponent');
+            ECS.update();
+            expect(entity.get('AsyncTestComponent')).eql(component);
+            component.unloadResolved = true;
+            // then
+            await tick();
+            ECS.update();
+            expect(entity.has('AsyncTestComponent')).false;
         });
     });
 });

@@ -1,4 +1,4 @@
-import { Component } from './component';
+import { CurblECSIntComponent } from './component';
 import { EntityStore } from './entityStore';
 import { Bitmask } from './bitmask';
 
@@ -24,9 +24,9 @@ export class EntityHandle implements Entity {
     private dirty: boolean;
     private paused: boolean;
     private readonly store: EntityStore;
-    private readonly components: Map<string, Component>;
-    private readonly updates: Map<string, { component: Component; added: boolean }>;
-    private readonly removedComponents: Component[];
+    private readonly components: Map<string, CurblECSIntComponent>;
+    private readonly updates: Map<string, { component: CurblECSIntComponent; added: boolean }>;
+    private readonly removedComponents: CurblECSIntComponent[];
 
     constructor(id: string, store: EntityStore) {
         this.__id = id;
@@ -40,11 +40,19 @@ export class EntityHandle implements Entity {
         this.paused = false;
     }
 
+    private addComponent(component: CurblECSIntComponent): void {
+        this.updates.set(component.constructor.__id, { component: component, added: true });
+        this.markDirty();
+    }
+
     add<T>(component: T): void {
         if (!this.dead) {
-            const comp = component as unknown as Component;
-            this.updates.set(comp.constructor.__id, { component: comp, added: true });
-            this.markDirty();
+            const comp = component as unknown as CurblECSIntComponent;
+            if (comp.load) {
+                comp.load().then(() => this.addComponent(comp));
+            } else {
+                this.addComponent(comp);
+            }
         }
     }
 
@@ -62,11 +70,20 @@ export class EntityHandle implements Entity {
         return this.components.has((component as unknown as any).__id);
     }
 
+    private removeComponent(id: string): void {
+        this.updates.set(id, { component: this.components.get(id)!, added: false });
+        this.markDirty();
+    }
+
     remove<T>(component: string | (new (...args: any[]) => T)): void {
         const id = typeof component === 'string' ? component : (component as unknown as any).__id;
         if (!this.dead && (this.components.has(id) || this.updates.has(id))) {
-            this.updates.set(id, { component: this.components.get(id)!, added: false });
-            this.markDirty();
+            const component = this.components.get(id)!;
+            if (component.unload) {
+                component.unload().then(() => this.removeComponent(id));
+            } else {
+                this.removeComponent(id);
+            }
         }
     }
 
@@ -164,7 +181,7 @@ export class EntityHandle implements Entity {
         }
     }
 
-    private __add(component: Component): void {
+    private __add(component: CurblECSIntComponent): void {
         this.__bitmask.set(component.constructor.__bit, 1);
         this.components.set(component.constructor.__id, component);
     }
