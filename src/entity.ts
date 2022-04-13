@@ -71,15 +71,19 @@ export class EntityHandle implements Entity {
     }
 
     private removeComponent(id: string): void {
-        this.updates.set(id, { component: this.components.get(id)!, added: false });
-        this.markDirty();
+        if (!this.components.has(id)) {
+            this.updates.delete(id);
+        } else {
+            this.updates.set(id, { component: this.components.get(id)!, added: false });
+            this.markDirty();
+        }
     }
 
     remove<T>(component: string | (new (...args: any[]) => T)): void {
         const id = typeof component === 'string' ? component : (component as unknown as any).__id;
         if (!this.dead && (this.components.has(id) || this.updates.has(id))) {
-            const component = this.components.get(id)!;
-            if (component.unload) {
+            const component = this.components.get(id);
+            if (component && component.unload) {
                 component.unload().then(() => this.removeComponent(id));
             } else {
                 this.removeComponent(id);

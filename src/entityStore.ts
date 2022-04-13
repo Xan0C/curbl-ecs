@@ -11,7 +11,15 @@ export class EntityStore {
     private readonly queryStore: QueryStore = new QueryStore();
     private readonly entities: Map<string, Entity> = new Map();
     private readonly pool: Entity[] = [];
+    private maxPoolSize = 10_000;
     private modified: Entity[] = [];
+
+    setMaxPoolSize(size: number): void {
+        this.maxPoolSize = size;
+        if (this.pool.length > this.maxPoolSize) {
+            this.pool.length = this.maxPoolSize;
+        }
+    }
 
     registerQuery(bitmask: Bitmask): [Entity[], Bitmask] {
         return this.queryStore.registerQuery(this.entities.values(), bitmask);
@@ -44,7 +52,9 @@ export class EntityStore {
 
     delete(entity: Entity): void {
         this.entities.delete(entity.__id);
-        this.pool.push(entity);
+        if (this.pool.length > this.maxPoolSize) {
+            this.pool.push(entity);
+        }
     }
 
     remove(entity: Entity): void {

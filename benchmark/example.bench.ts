@@ -83,7 +83,7 @@ suite
     .add('ECS#modify_1k_Entities', function () {
         for (let i = 0; i < 1000; i++) {
             if (Math.random() > 0.5) {
-                entities[i]!.remove('Position');
+                entities[i]!.remove(PositionComponent);
             } else {
                 entities[i]!.add(new PositionComponent());
             }
@@ -95,7 +95,7 @@ suite
             entities.pop()!.dispose();
             const modifiedEntity = entities.pop()!;
             if (Math.random() > 0.5) {
-                modifiedEntity.remove('Position');
+                modifiedEntity.remove(PositionComponent);
             } else {
                 modifiedEntity.add(new PositionComponent());
             }

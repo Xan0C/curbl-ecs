@@ -16,6 +16,10 @@ export class ECS {
         this.componentBitMask = new ComponentRegister();
     }
 
+    setMaxEntityPoolSize(size: number): void {
+        this.entityStore.setMaxPoolSize(size);
+    }
+
     setUpdateMethods(methods: string[]): void {
         this.systemStore.setUpdateMethods(methods);
     }
