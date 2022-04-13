@@ -52,7 +52,7 @@ export class EntityStore {
 
     delete(entity: Entity): void {
         this.entities.delete(entity.__id);
-        if (this.pool.length > this.maxPoolSize) {
+        if (this.pool.length < this.maxPoolSize) {
             this.pool.push(entity);
         }
     }
