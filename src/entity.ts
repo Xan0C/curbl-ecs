@@ -1,4 +1,4 @@
-import { CurblECSIntComponent } from './component';
+import { __Component } from './component';
 import { EntityStore } from './entityStore';
 import { Bitmask } from './bitmask';
 
@@ -24,9 +24,9 @@ export class EntityHandle implements Entity {
     private dirty: boolean;
     private paused: boolean;
     private readonly store: EntityStore;
-    private readonly components: Map<string, CurblECSIntComponent>;
-    private readonly updates: Map<string, { component: CurblECSIntComponent; added: boolean }>;
-    private readonly removedComponents: CurblECSIntComponent[];
+    private readonly components: Map<string, __Component>;
+    private readonly updates: Map<string, { component: __Component; added: boolean }>;
+    private readonly removedComponents: __Component[];
 
     constructor(id: string, store: EntityStore) {
         this.__id = id;
@@ -40,14 +40,14 @@ export class EntityHandle implements Entity {
         this.paused = false;
     }
 
-    private addComponent(component: CurblECSIntComponent): void {
+    private addComponent(component: __Component): void {
         this.updates.set(component.constructor.__id, { component: component, added: true });
         this.markDirty();
     }
 
     add<T>(component: T): void {
         if (!this.dead) {
-            const comp = component as unknown as CurblECSIntComponent;
+            const comp = component as unknown as __Component;
             if (comp.load) {
                 comp.load().then(() => this.addComponent(comp));
             } else {
@@ -185,7 +185,7 @@ export class EntityHandle implements Entity {
         }
     }
 
-    private __add(component: CurblECSIntComponent): void {
+    private __add(component: __Component): void {
         this.__bitmask.set(component.constructor.__bit, 1);
         this.components.set(component.constructor.__id, component);
     }

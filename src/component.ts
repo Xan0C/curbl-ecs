@@ -2,7 +2,7 @@
  * interface used for internal component type
  * that gets modified by the Component decorator
  */
-export interface CurblECSIntComponent extends Component {
+export interface __Component extends Component {
     constructor: {
         __id: string;
         __bit: number;
