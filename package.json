@@ -6,9 +6,15 @@
   "main": "./lib/ecs.js",
   "module": "./lib/ecs.module.js",
   "unpkg": "./lib/ecs.umd.js",
-  "exports": "./lib/ecs.modern.js",
   "types": "./lib/index.d.ts",
   "typings": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/ecs.modern.js",
+      "require": "./lib/ecs.js"
+    }
+  },
   "scripts": {
     "build": "microbundle --raw",
     "test": "karma start",
